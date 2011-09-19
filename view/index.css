@@ -1,0 +1,119 @@
+body
+{
+  padding: 0;
+  margin: 0;
+}
+
+#header
+{
+  position: absolute;
+  top: 0;
+  left: 0;
+  color: #fff;
+  background: #000;
+  opacity: 0.7;
+  font-family: sans-serif;
+  padding: 0.5em;
+  z-index: 2;
+}
+
+#header a
+{
+  text-decoration: none;
+  color: #fff;
+}
+
+#header a:hover
+{
+  text-decoration: underline;
+}
+
+#content
+{
+  position: absolute;
+  top: 0;
+  left: 0;
+  background: #000;
+  overflow: hidden;
+}
+
+#content img
+{
+  position: absolute;
+}
+
+#content #left
+{
+  position: absolute;
+  cursor: pointer;
+  left: 0;
+  width: 5%;
+  top: 0;
+  height: 100%;
+  z-index: 1;
+  background: url(left.png) no-repeat;
+  background-position: center;
+  opacity: 0;
+}
+
+#content #left:hover
+{
+  opacity: 0.3;
+}
+
+#content #right
+{
+  position: absolute;
+  cursor: pointer;
+  right: 0;
+  width: 5%;
+  top: 0;
+  height: 100%;
+  z-index: 1;
+  background: url(right.png) no-repeat;
+  background-position: center;
+  opacity: 0;
+}
+
+#content #right:hover
+{
+  opacity: 0.3;
+}
+
+#list
+{
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  background: #555;
+  overflow-y: hidden;
+  overflow-x: scroll;
+  white-space: nowrap;
+  box-shadow: inset 5px 5px 5px #000;
+}
+
+#list a:active
+{
+  outline: none;
+}
+
+#list img
+{
+  border: 2px solid #000;
+  box-shadow: 5px 5px 5px #333;
+}
+
+#list img.current
+{
+  border: 2px solid #f00;
+}
+
+#list img:hover
+{
+  border: 2px solid #fff;
+}
+
+#list img.current:hover
+{
+  border: 2px solid #f00;
+}
