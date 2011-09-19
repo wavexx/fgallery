@@ -1,53 +1,62 @@
+// Frak'in gallery, by wave++ 2011
 var padding = 22;
 var duration = 500;
+var thrdelay = 1500;
 
 Element.Events.hashchange =
 {
   onAdd: function()
   {
-    var hash = self.location.hash;
-    
+    var hash = window.location.hash;
+
     var hashchange = function()
     {
-      if (hash == self.location.hash) return;
-      else hash = self.location.hash;
-      
-      var value = (hash.indexOf('#') == 0 ? hash.substr(1) : hash);
+      if(hash == window.location.hash) return;
+      else hash = window.location.hash;
+
+      var value = (!hash.indexOf('#')? hash.substr(1): hash);
       window.fireEvent('hashchange', value);
       document.fireEvent('hashchange', value);
     };
-    
-    if ("onhashchange" in window)
+
+    if("onhashchange" in window
+    && (!Browser.ie || Browser.version > 7))
       window.onhashchange = hashchange;
     else
       hashchange.periodical(50);
   }
 };
 
-var ehdr;
-var elist;
-var econt;
-var oimg;
-var eimg;
-var limg;
-var eidx;
+// some state variables
+var emain;	// main object
+var ehdr;	// header
+var elist;	// thumbnail list
+var econt;	// picture container
+var eleft;	// go left
+var eright;	// go right
+var oimg;	// old image
+var eimg;	// new image
+var limg;	// current thumbnail
+var eidx;	// current index
+var tthr;	// throbber timeout
 
 function resize()
 {
-  var ln = imgs.thumbheight + padding;
-  var winsize = window.getSize();
-
-  econt.setStyles(
-  {
-    width: winsize.x,
-    height: winsize.y - ln
-  });
+  var msize = emain.measure(function(){ return this.getSize(); });
 
   elist.setStyles(
   {
-    width: winsize.x - padding,
-    height: ln,
+    width: msize.x - padding,
+    height: imgs.thumbheight + padding,
     padding: padding / 2
+  });
+
+  var epos = elist.measure(function(){ return this.getPosition(); });
+
+  econt.setStyles(
+  {
+    width: msize.x,
+    height: epos.y
   });
 
   if(oimg) resizeMainImg(oimg);
@@ -57,7 +66,7 @@ function resize()
 function resizeMainImg(img)
 {
   var contsize = econt.getSize();
-  imgrt = eimg.width / eimg.height;
+  var imgrt = img.width / img.height;
   if(imgrt > (contsize.x / contsize.y))
   {
     img.width = contsize.x - padding * 2;
@@ -65,14 +74,15 @@ function resizeMainImg(img)
   }
   else
   {
-    img.height = contsize.y - padding * 2;
-    img.width = img.height * imgrt;
+    img.set('height', contsize.y - padding * 2);
+    img.set('width', img.height * imgrt);
   }
 
   img.setStyles(
   {
-    top: (contsize.y - eimg.height) / 2,
-    left: (contsize.x - eimg.width) / 2
+    position: 'absolute',
+    top: (contsize.y - img.height) / 2,
+    left: (contsize.x - img.width) / 2
   });
 }
 
@@ -86,19 +96,22 @@ function detectSlowness(start)
 {
   var end = ts();
   var delta = end - start;
-  if(delta > duration * 3)
+  if(delta > duration * 2)
     duration = 0;
 }
 
 function onMainReady()
 {
   resizeMainImg(eimg);
+  eimg.setStyle('opacity', 0);
+  eimg.inject(emain);
 
   if(oimg)
   {
     var fx = new Fx.Tween(oimg, { duration: duration });
     fx.addEvent('complete', function(x) { x.destroy(); });
     fx.start('opacity', 1, 0);
+    oimg = undefined;
   }
 
   var fx = new Fx.Tween(eimg, { duration: duration });
@@ -112,6 +125,7 @@ function onMainReady()
   }
   fx.start('opacity', 0, 1);
 
+  clearTimeout(tthr);
   ehdr.set('html', imgs.data[eidx].dsc);
 
   var fx = new Fx.Scroll(elist, { duration: duration });
@@ -119,18 +133,26 @@ function onMainReady()
   fx.start(x - elist.getSize().x / 2 + limg.width / 2);
 }
 
+function showThrobber()
+{
+  var img = new Element('img');
+  img.src = "throbber.gif";
+  ehdr.empty();
+  img.inject(ehdr);
+}
+
 function load(i)
 {
   if(i == eidx) return;
 
   var data = imgs.data[i];
-  var img = new Element('img');
-  img.setStyle('opacity', 0);
-  img.inject(econt);
+  var img = Asset.image(data.img,
+  {
+    display: 'none',
+    onLoad: onMainReady
+  });
 
-  if(oimg) oimg.destroy();
-  oimg = eimg;
-  if(oimg) oimg.removeEvents('load');
+  if(!oimg) oimg = eimg;
   eimg = img;
   eidx = i;
 
@@ -138,25 +160,17 @@ function load(i)
   limg = imgs.data[eidx].limg;
   limg.addClass('current');
 
-  img.addEvent('load', onMainReady);
-  img.src = data.img;
-}
+  eleft.href = '#' + (eidx == 0? imgs.data.length - 1: eidx - 1);
+  eright.href = '#' + (eidx == imgs.data.length - 1? 0: eidx + 1);
 
-function prev()
-{
-  var idx = (eidx == 0? imgs.data.length - 1: idx = eidx - 1);
-  window.location.hash = "#" + idx;
-}
-
-function next()
-{
-  var idx = (eidx == imgs.data.length - 1? 0: eidx - 1);
-  window.location.hash = "#" + idx;
+  clearTimeout(tthr);
+  tthr = showThrobber.delay(thrdelay);
 }
 
 function getLocationIndex()
 {
-  var idx = parseInt(window.location.hash.substr(1));
+  var hash = window.location.hash;
+  var idx = parseInt(!hash.indexOf('#')? hash.substr(1): hash);
   if(isNaN(idx) || idx < 0)
     idx = 0;
   else if(idx >= imgs.data.length)
@@ -171,9 +185,21 @@ function change()
 
 function init()
 {
-  ehdr = $('header');
-  elist = $('list');
-  econt = $('content');
+  emain = $('gallery');
+
+  econt = new Element('div', { id: 'content' });
+  econt.inject(emain);
+
+  eleft = new Element('a', { id: 'left' });
+  eleft.inject(econt);
+  eright = new Element('a', { id: 'right' });
+  eright.inject(econt);
+
+  ehdr = new Element('div', { id: 'header' });
+  ehdr.inject(emain);
+
+  elist = new Element('div', { id: 'list' });
+  elist.inject(emain);
 
   imgs.data.each(function(x, i)
   {
@@ -189,14 +215,12 @@ function init()
     a.inject(elist);
   });
 
-  $('left').addEvent('click', prev);
-  $('right').addEvent('click', next);
-
   resize();
   window.addEvent('resize', resize);
-
   window.addEvent('hashchange', change);
   load(getLocationIndex());
+
+  emain.setStyle('display', 'block');
 }
 
 window.addEvent('domready', init);

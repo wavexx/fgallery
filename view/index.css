@@ -1,51 +1,78 @@
+html
+{
+  overflow: hidden; /* IE7 */
+}
+
 body
 {
   padding: 0;
   margin: 0;
+  border: 0;
 }
 
-#header
+h2
+{
+  margin: 1em;
+  font-family: monospace;
+}
+
+#gallery
+{
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #111;
+}
+
+#gallery a, #gallery a:active, #gallery a:focus
+{
+  outline: none;
+}
+
+#gallery #header
 {
   position: absolute;
   top: 0;
   left: 0;
   color: #fff;
   background: #000;
-  opacity: 0.7;
   font-family: sans-serif;
   padding: 0.5em;
   z-index: 2;
+
+  opacity: 0.7;
+  filter: alpha(opacity=70);
 }
 
-#header a
+#gallery #header a
 {
   text-decoration: none;
   color: #fff;
 }
 
-#header a:hover
+#gallery #header a:hover
 {
   text-decoration: underline;
 }
 
-#content
+#gallery #content
 {
   position: absolute;
   top: 0;
   left: 0;
-  background: #000;
-  overflow: hidden;
 }
 
-#content img
+#gallery #content img
 {
   position: absolute;
 }
 
-#content #left
+#gallery #content #left
 {
   position: absolute;
-  cursor: pointer;
   left: 0;
   width: 5%;
   top: 0;
@@ -53,18 +80,11 @@ body
   z-index: 1;
   background: url(left.png) no-repeat;
   background-position: center;
-  opacity: 0;
 }
 
-#content #left:hover
-{
-  opacity: 0.3;
-}
-
-#content #right
+#gallery #content #right
 {
   position: absolute;
-  cursor: pointer;
   right: 0;
   width: 5%;
   top: 0;
@@ -72,15 +92,23 @@ body
   z-index: 1;
   background: url(right.png) no-repeat;
   background-position: center;
-  opacity: 0;
 }
 
-#content #right:hover
+#gallery #content #left,
+#gallery #content #right
+{
+  opacity: 0;
+  filter: alpha(opacity=0);
+}
+
+#gallery #content #left:hover,
+#gallery #content #right:hover
 {
   opacity: 0.3;
+  filter: alpha(opacity=30);
 }
 
-#list
+#gallery #list
 {
   position: absolute;
   left: 0;
@@ -89,31 +117,32 @@ body
   overflow-y: hidden;
   overflow-x: scroll;
   white-space: nowrap;
-  box-shadow: inset 5px 5px 5px #000;
+
+  box-shadow: inset 0 5px 5px #000;
+  -moz-box-shadow: inset 0 5px 5px #000;
+  -webkit-box-shadow: inset 0 5px 5px #000;
 }
 
-#list a:active
+#gallery #list img
 {
-  outline: none;
-}
+  border: 2px solid #111;
 
-#list img
-{
-  border: 2px solid #000;
   box-shadow: 5px 5px 5px #333;
+  -moz-box-shadow: 5px 5px 5px #333;
+  -webkit-box-shadow: 5px 5px 5px #333;
 }
 
-#list img.current
+#gallery #list img.current
 {
   border: 2px solid #f00;
 }
 
-#list img:hover
+#gallery #list img:hover
 {
   border: 2px solid #fff;
 }
 
-#list img.current:hover
+#gallery #list img.current:hover
 {
   border: 2px solid #f00;
 }
