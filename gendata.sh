@@ -60,9 +60,12 @@ EOF
   echo -n . >&2
 done
 
+# trim the last , for f!ing IE
+sed -i -e '$s/,$//' "$out/data.js"
+
 cat <<EOF >> "$out/data.js"
   ]
-}
+};
 EOF
 
 zip -q9j "$out/files/all.zip" $zlist
