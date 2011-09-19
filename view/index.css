@@ -111,12 +111,12 @@ h2
 #gallery #list
 {
   position: absolute;
-  left: 0;
-  bottom: 0;
+  right: 0;
+  top: 0;
   background: #555;
-  overflow-y: hidden;
-  overflow-x: scroll;
-  white-space: nowrap;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  text-align: center;
 
   box-shadow: inset 0 5px 5px #000;
   -moz-box-shadow: inset 0 5px 5px #000;

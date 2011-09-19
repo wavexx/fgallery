@@ -1,7 +1,7 @@
 #!/bin/zsh
 dir="$1"
 out="$2"
-maxthumb=x150
+maxthumb=150x300
 maxout=1600x1200
 
 if [ ! -d "$dir" -o ! -d "$out" ]
@@ -19,15 +19,14 @@ zlist=()
 rm -rf $dirs
 mkdir -p $dirs
 
-maxheight=${maxout#*x}
+thumbwidth=${maxthumb%x*}
 thumbheight=${maxthumb#*x}
 
 cat <<EOF > "$out/data.js"
 var imgs =
 {
   download: "files/all.zip",
-  maxheight: $maxheight,
-  thumbheight: $thumbheight,
+  thumb: [$thumbwidth, $thumbheight],
   data:
   [
 EOF

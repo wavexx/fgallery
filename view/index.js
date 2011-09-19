@@ -46,8 +46,8 @@ function resize()
 
   elist.setStyles(
   {
-    width: msize.x - padding,
-    height: imgs.thumbheight + padding,
+    width: imgs.thumb[0] + padding,
+    height: msize.y - padding,
     padding: padding / 2
   });
 
@@ -55,8 +55,8 @@ function resize()
 
   econt.setStyles(
   {
-    width: msize.x,
-    height: epos.y
+    width: epos.x,
+    height: msize.y
   });
 
   if(oimg) resizeMainImg(oimg);
@@ -129,8 +129,8 @@ function onMainReady()
   ehdr.set('html', imgs.data[eidx].dsc);
 
   var fx = new Fx.Scroll(elist, { duration: duration });
-  var x = limg.getPosition().x + elist.getScroll().x;
-  fx.start(x - elist.getSize().x / 2 + limg.width / 2);
+  var y = limg.getPosition().y + elist.getScroll().y;
+  fx.start(0, y - elist.getSize().y / 2 + limg.height / 2);
 }
 
 function showThrobber()
@@ -207,7 +207,7 @@ function init()
     a.href = "#" + i;
 
     var img = new Element('img');
-    img.setStyle('margin-right', padding / 2);
+    img.setStyle('margin-bottom', padding / 2);
     img.src = x.thumb;
     x.limg = img;
     img.inject(a);
