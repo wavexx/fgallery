@@ -26,7 +26,7 @@ cat <<EOF > "$out/data.js"
 var imgs =
 {
   download: "files/all.zip",
-  thumb: [$thumbwidth, $thumbheight],
+  thumb: [ $thumbwidth, $thumbheight ],
   data:
   [
 EOF
