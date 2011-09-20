@@ -32,6 +32,7 @@ var emain;	// main object
 var ehdr;	// header
 var elist;	// thumbnail list
 var econt;	// picture container
+var ebuff;	// picture buffer
 var eleft;	// go left
 var eright;	// go right
 var oimg;	// old image
@@ -43,7 +44,7 @@ var tthr;	// throbber timeout
 function resize()
 {
   var msize = emain.measure(function(){ return this.getSize(); });
-
+  if(Browser.ie && Browser.version < 8) msize = window.getSize();
   elist.setStyles(
   {
     width: imgs.thumb[0] + padding,
@@ -52,7 +53,6 @@ function resize()
   });
 
   var epos = elist.measure(function(){ return this.getPosition(); });
-
   econt.setStyles(
   {
     width: epos.x,
@@ -104,7 +104,7 @@ function onMainReady()
 {
   resizeMainImg(eimg);
   eimg.setStyle('opacity', 0);
-  eimg.inject(emain);
+  eimg.inject(ebuff);
 
   if(oimg)
   {
@@ -190,13 +190,23 @@ function init()
   econt = new Element('div', { id: 'content' });
   econt.inject(emain);
 
-  eleft = new Element('a', { id: 'left' });
-  eleft.inject(econt);
-  eright = new Element('a', { id: 'right' });
-  eright.inject(econt);
+  ebuff = new Element('div');
+  ebuff.inject(econt);
 
+  // avoid z-levels by div layering (due to IE7 ofkourse)
+  var tmp;
+
+  tmp = new Element('div');
+  eleft = new Element('a', { id: 'left' });
+  eleft.inject(tmp);
+  eright = new Element('a', { id: 'right' });
+  eright.inject(tmp);
+  tmp.inject(econt);
+
+  tmp = new Element('div');
   ehdr = new Element('div', { id: 'header' });
-  ehdr.inject(emain);
+  ehdr.inject(tmp);
+  tmp.inject(econt);
 
   elist = new Element('div', { id: 'list' });
   elist.inject(emain);
@@ -220,7 +230,12 @@ function init()
   window.addEvent('hashchange', change);
   load(getLocationIndex());
 
-  emain.setStyle('display', 'block');
+  emain.setStyles(
+  {
+    'display': 'block',
+    'min-width': padding * 2,
+    'min-height': padding * 2
+  });
 }
 
 window.addEvent('domready', init);
