@@ -1,12 +1,13 @@
 #!/bin/zsh
 dir="$1"
 out="$2"
+name="${3:=unnamed}"
 maxthumb=150x300
 maxout=1600x1200
 
 if [ ! -d "$dir" -o ! -d "$out" ]
 then
-  echo "Usage: $0 input-dir output-dir" >&2
+  echo "Usage: $0 input-dir output-dir [album name]" >&2
   exit 2
 fi
 
@@ -26,6 +27,7 @@ cat <<EOF > "$out/data.js"
 var imgs =
 {
   download: "files/all.zip",
+  name: "$name",
   thumb: [ $thumbwidth, $thumbheight ],
   data:
   [
