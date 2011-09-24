@@ -1,13 +1,25 @@
 #!/bin/zsh
-dir="$1"
-out="$2"
-name="${3:=unnamed}"
+slim=false
+error=false
 maxthumb=150x300
 maxout=1600x1200
 
-if [ ! -d "$dir" -o ! -d "$out" ]
+while getopts s opt
+do
+  case $opt in
+  s) slim=true;;
+  ?) error=true;;
+  esac
+done
+shift $(($OPTIND - 1))
+
+dir="$1"
+out="$2"
+name="${3:=$(basename -- '$dir')}"
+
+if [ "$error" = "true" -o ! -d "$dir" -o -z "$out" ]
 then
-  echo "Usage: $0 input-dir output-dir [album name]" >&2
+  echo "Usage: $0 [-s] input-dir output-dir [album name]" >&2
   exit 2
 fi
 
@@ -26,7 +38,14 @@ thumbheight=${maxthumb#*x}
 cat <<EOF > "$out/data.js"
 var imgs =
 {
+EOF
+if [ "$slim" != "true" ]
+then
+cat <<EOF >> "$out/data.js"
   download: "files/all.zip",
+EOF
+fi
+cat <<EOF >> "$out/data.js"
   name: "$name",
   thumb: [ $thumbwidth, $thumbheight ],
   data:
@@ -51,10 +70,21 @@ do
 
   cat <<EOF >> "$out/data.js"
     {
-      file: "files/$base.jpg",
       img: "imgs/$base.jpg",
       thumb: "thumbs/$base.jpg",
+EOF
+  if [ "$slim" = "true" ]
+  then
+    cat <<EOF >> "$out/data.js"
+      dsc: "<strong>Date:</strong> $date"
+EOF
+  else
+    cat <<EOF >> "$out/data.js"
+      file: "files/$base.jpg",
       dsc: "<strong>Date:</strong> $date (download: <a href=\"files/$base.jpg\">$base</a>, <a href=\"files/all.zip\">album</a>)"
+EOF
+  fi
+  cat <<EOF >> "$out/data.js"
     },
 EOF
 
@@ -69,5 +99,11 @@ cat <<EOF >> "$out/data.js"
 };
 EOF
 
-zip -q9j "$out/files/all.zip" $zlist
+if [ "$slim" = "true" ]
+then
+  rm -rf "$out/files"
+else
+  zip -q9j "$out/files/all.zip" $zlist
+fi
+
 echo
