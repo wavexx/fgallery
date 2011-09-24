@@ -20,7 +20,7 @@ shift $(($OPTIND - 1))
 
 dir="$1"
 out="$2"
-name="${3:=$(basename -- '$dir')}"
+name="${3:=$(basename -- "$dir")}"
 
 if [ "$error" = "true" -o ! -d "$dir" -o -z "$out" ]
 then
