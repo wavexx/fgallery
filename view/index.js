@@ -141,6 +141,28 @@ function showThrobber()
   img.inject(ehdr);
 }
 
+function prev()
+{
+  if(eidx != 0)
+    window.location.hash = "#" + (eidx - 1);
+  else
+  {
+    emain.highlight('#fff');
+    window.location.hash = "#" + (imgs.data.length - 1);
+  }
+}
+
+function next()
+{
+  if(eidx != imgs.data.length - 1)
+    window.location.hash = "#" + (eidx + 1);
+  else
+  {
+    emain.highlight('#fff');
+    window.location.hash = "#0";
+  }
+}
+
 function load(i)
 {
   if(i == eidx) return;
@@ -159,9 +181,6 @@ function load(i)
   if(limg) limg.removeClass('current');
   limg = imgs.data[eidx].limg;
   limg.addClass('current');
-
-  eleft.href = '#' + (eidx == 0? imgs.data.length - 1: eidx - 1);
-  eright.href = '#' + (eidx == imgs.data.length - 1? 0: eidx + 1);
 
   clearTimeout(tthr);
   tthr = showThrobber.delay(thrdelay);
@@ -226,6 +245,8 @@ function init()
   });
 
   resize();
+  eleft.addEvent('click', prev);
+  eright.addEvent('click', next);
   window.addEvent('resize', resize);
   window.addEvent('hashchange', change);
   load(getLocationIndex());
