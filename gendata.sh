@@ -1,13 +1,18 @@
 #!/bin/zsh
+mode=0644
 slim=false
 error=false
 maxthumb=150x300
 maxout=1600x1200
+fullq=100
+imgq=90
+orient=true
 
-while getopts s opt
+while getopts 'so' opt
 do
   case $opt in
   s) slim=true;;
+  o) orient=false;;
   ?) error=true;;
   esac
 done
@@ -19,7 +24,12 @@ name="${3:=$(basename -- '$dir')}"
 
 if [ "$error" = "true" -o ! -d "$dir" -o -z "$out" ]
 then
-  echo "Usage: $0 [-s] input-dir output-dir [album name]" >&2
+cat <<EOF >&2
+Usage: $(basename $0) [-so] input-dir output-dir [album name]
+
+  -s	slim output (no original files and downloads)
+  -o	do not auto-orient
+EOF
   exit 2
 fi
 
@@ -29,11 +39,14 @@ list=( (#i)$dir/*.(jpg|png) )
 dirs=( $out/{thumbs,imgs} $out/files )
 zlist=()
 
-rm -rf $dirs
-mkdir -p $dirs
+rm -rf $dirs || exit 1
+mkdir -p $dirs || exit 1
 
 thumbwidth=${maxthumb%x*}
 thumbheight=${maxthumb#*x}
+
+flags=()
+[ "$orient" = "true" ] && flags+=(-auto-orient)
 
 cat <<EOF > "$out/data.js"
 var imgs =
@@ -57,16 +70,20 @@ do
   base=${file:r:t}
   tmp="$out/files/$base.jpg"
   zlist+=( $tmp )
-  if [ ${file:e:l} != "jpg" ]
+  if [ "$fullq" != "100" -o $(identify -format "%m" "$file") != "JPEG" ]
   then
-    gm convert -quality 90 "$file" "$tmp"
+    convert $flags -quality $fullq "$file" "$tmp"
+    chmod $mode "$tmp"
+    touch -r "$file" "$tmp"
   else
-    cp "$file" "$tmp"
-    exifautotran "$tmp" 2>/dev/null
+    # lossless path
+    cp --preserve=timestamps "$file" "$tmp"
+    chmod $mode "$tmp"
+    [ "$orient" = "true" ] && exifautotran "$tmp" 2>/dev/null
   fi
-  date=$(gm identify -format '%[EXIF:DateTime]' "$tmp")
-  gm convert -geometry "$maxthumb" "$tmp" "$out/thumbs/$base.jpg"
-  gm convert -geometry "$maxout" "$tmp" "$out/imgs/$base.jpg"
+  date=$(identify -format '%[EXIF:DateTime]' "$tmp")
+  convert $flags -quality $imgq -geometry "$maxthumb" "$file" "$out/thumbs/$base.jpg"
+  convert $flags -quality $imgq -geometry "$maxout" "$file" "$out/imgs/$base.jpg"
 
   cat <<EOF >> "$out/data.js"
     {
@@ -101,7 +118,7 @@ EOF
 
 if [ "$slim" = "true" ]
 then
-  rm -rf "$out/files"
+  rm -r "$out/files"
 else
   zip -q9j "$out/files/all.zip" $zlist
 fi
