@@ -2,7 +2,8 @@
 mode=0644
 slim=false
 error=false
-maxthumb=150x300
+minthumb='150x112'
+maxthumb='150x200'
 maxout=1600x1200
 fullq=100
 imgq=90
@@ -82,7 +83,7 @@ do
     [ "$orient" = "true" ] && exifautotran "$tmp" 2>/dev/null
   fi
   date=$(identify -format '%[EXIF:DateTime]' "$tmp")
-  convert $flags -quality $imgq -geometry "$maxthumb" "$file" "$out/thumbs/$base.jpg"
+  convert $flags -quality $imgq -thumbnail "$minthumb^" -gravity center -crop "$maxthumb+0x0" "$file" "$out/thumbs/$base.jpg"
   convert $flags -quality $imgq -geometry "$maxout" "$file" "$out/imgs/$base.jpg"
 
   cat <<EOF >> "$out/data.js"
