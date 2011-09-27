@@ -83,6 +83,7 @@ do
     [ "$orient" = "true" ] && exifautotran "$tmp" 2>/dev/null
   fi
   date=$(identify -format '%[EXIF:DateTime]' "$tmp")
+  date=${date:=unknown}
   convert $flags -quality $imgq -thumbnail "$minthumb^" -gravity center -crop "$maxthumb+0x0" "$file" "$out/thumbs/$base.jpg"
   convert $flags -quality $imgq -geometry "$maxout" "$file" "$out/imgs/$base.jpg"
 
