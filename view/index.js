@@ -1,4 +1,5 @@
 // Frak'in gallery, by wave++ 2011
+var datafile = 'data.json';
 var padding = 22;
 var duration = 500;
 var thrdelay = 1500;
@@ -40,6 +41,7 @@ var eimg;	// new image
 var limg;	// current thumbnail
 var eidx;	// current index
 var tthr;	// throbber timeout
+var imgs;	// image list
 
 function resize()
 {
@@ -202,8 +204,9 @@ function change()
   load(getLocationIndex());
 }
 
-function init()
+function initGallery(data)
 {
+  imgs = data;
   emain = $('gallery');
 
   econt = new Element('div', { id: 'content' });
@@ -257,6 +260,11 @@ function init()
     'min-width': padding * 2,
     'min-height': padding * 2
   });
+}
+
+function init()
+{
+  new Request.JSON({ url: datafile, onSuccess: initGallery }).get();
 }
 
 window.addEvent('domready', init);

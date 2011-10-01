@@ -49,20 +49,17 @@ thumbheight=${maxthumb#*x}
 flags=()
 [ "$orient" = "true" ] && flags+=(-auto-orient)
 
-cat <<EOF > "$out/data.js"
-var imgs =
-{
-EOF
+echo "{" > "$out/data.json"
 if [ "$slim" != "true" ]
 then
-cat <<EOF >> "$out/data.js"
-  download: "files/all.zip",
+cat <<EOF >> "$out/data.json"
+  "download": "files/all.zip",
 EOF
 fi
-cat <<EOF >> "$out/data.js"
-  name: "$name",
-  thumb: [ $thumbwidth, $thumbheight ],
-  data:
+cat <<EOF >> "$out/data.json"
+  "name": "$name",
+  "thumb": [ $thumbwidth, $thumbheight ],
+  "data":
   [
 EOF
 
@@ -87,23 +84,23 @@ do
   convert $flags -quality $imgq -thumbnail "$minthumb^" -gravity center -crop "$maxthumb+0x0" "$file" "$out/thumbs/$base.jpg"
   convert $flags -quality $imgq -geometry "$maxout" "$file" "$out/imgs/$base.jpg"
 
-  cat <<EOF >> "$out/data.js"
+  cat <<EOF >> "$out/data.json"
     {
-      img: "imgs/$base.jpg",
-      thumb: "thumbs/$base.jpg",
+      "img": "imgs/$base.jpg",
+      "thumb": "thumbs/$base.jpg",
 EOF
   if [ "$slim" = "true" ]
   then
-    cat <<EOF >> "$out/data.js"
-      dsc: "<strong>Date:</strong> $date"
+    cat <<EOF >> "$out/data.json"
+      "dsc": "<strong>Date:</strong> $date"
 EOF
   else
-    cat <<EOF >> "$out/data.js"
-      file: "files/$base.jpg",
-      dsc: "<strong>Date:</strong> $date (download: <a href=\"files/$base.jpg\">$base</a>, <a href=\"files/all.zip\">album</a>)"
+    cat <<EOF >> "$out/data.json"
+      "file": "files/$base.jpg",
+      "dsc": "<strong>Date:</strong> $date (download: <a href=\"files/$base.jpg\">$base</a>, <a href=\"files/all.zip\">album</a>)"
 EOF
   fi
-  cat <<EOF >> "$out/data.js"
+  cat <<EOF >> "$out/data.json"
     },
 EOF
 
@@ -111,11 +108,11 @@ EOF
 done
 
 # trim the last , for f!ing IE
-sed -i -e '$s/,$//' "$out/data.js"
+sed -i -e '$s/,$//' "$out/data.json"
 
-cat <<EOF >> "$out/data.js"
+cat <<EOF >> "$out/data.json"
   ]
-};
+}
 EOF
 
 if [ "$slim" = "true" ]
