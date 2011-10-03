@@ -1,6 +1,7 @@
 #!/bin/zsh
 mode=0644
 slim=false
+nofile=true
 error=false
 minthumb='150x112'
 maxthumb='150x200'
@@ -9,10 +10,11 @@ fullq=100
 imgq=90
 orient=true
 
-while getopts 'so' opt
+while getopts 'son' opt
 do
   case $opt in
   s) slim=true;;
+  n) nofile=true;;
   o) orient=false;;
   ?) error=true;;
   esac
@@ -29,6 +31,7 @@ cat <<EOF >&2
 Usage: $(basename $0) [-so] input-dir output-dir [album name]
 
   -s	slim output (no original files and downloads)
+  -n	no files (no single original files, only full album download)
   -o	do not auto-orient
 EOF
   exit 2
@@ -97,6 +100,11 @@ EOF
     cat <<EOF >> "$out/data.js"
       dsc: "<strong>Date:</strong> $date"
 EOF
+  elif [ "$nofile" = "true" ]
+  then
+    cat <<EOF >> "$out/data.js"
+      dsc: "<strong>Date:</strong> $date (download: <a href=\"files/all.zip\">album</a>)"
+EOF
   else
     cat <<EOF >> "$out/data.js"
       file: "files/$base.jpg",
@@ -123,6 +131,7 @@ then
   rm -r "$out/files"
 else
   zip -q9j "$out/files/all.zip" $zlist
+  [ "$nofile" = "true" ] && rm $zlist
 fi
 
 echo
