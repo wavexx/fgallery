@@ -1,7 +1,7 @@
 #!/bin/zsh
 mode=0644
 slim=false
-nofile=true
+nofile=false
 error=false
 minthumb='150x112'
 maxthumb='150x200'
@@ -95,19 +95,21 @@ EOF
   if [ "$slim" = "true" ]
   then
     cat <<EOF >> "$out/data.json"
-      "dsc": "<strong>Date:</strong> $date"
+      "dsc": "<strong>Date:</strong> $date",
 EOF
   elif [ "$nofile" = "true" ]
   then
-    cat <<EOF >> "$out/data.js"
-      dsc: "<strong>Date:</strong> $date (download: <a href=\"files/all.zip\">album</a>)"
+    cat <<EOF >> "$out/data.json"
+      "dsc": "<strong>Date:</strong> $date (download: <a href=\"files/all.zip\">album</a>)",
 EOF
   else
     cat <<EOF >> "$out/data.json"
       "file": "files/$base.jpg",
-      "dsc": "<strong>Date:</strong> $date (download: <a href=\"files/$base.jpg\">$base</a>, <a href=\"files/all.zip\">album</a>)"
+      "dsc": "<strong>Date:</strong> $date (download: <a href=\"files/$base.jpg\">$base</a>, <a href=\"files/all.zip\">album</a>)",
 EOF
   fi
+
+  sed -i -e '$s/,$//' "$out/data.json"
   cat <<EOF >> "$out/data.json"
     },
 EOF
@@ -115,9 +117,7 @@ EOF
   echo -n . >&2
 done
 
-# trim the last , for f!ing IE
 sed -i -e '$s/,$//' "$out/data.json"
-
 cat <<EOF >> "$out/data.json"
   ]
 }
