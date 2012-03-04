@@ -4,7 +4,7 @@ use warnings;
 use JSON::PP qw{encode_json};
 use Getopt::Std qw{getopts};
 use File::Path qw{make_path remove_tree};
-use File::Basename qw{basename};
+use File::Basename qw{fileparse};
 use Date::Parse qw{str2time};
 use File::Glob qw(:globally :nocase);
 
@@ -62,15 +62,15 @@ for my $path("$out/thumbs", "$out/imgs", "$out/files")
 }
 
 my @data;
-for my $file(glob("$dir/*{" . join(",", @exts) . "}"))
+for my $file(glob("$dir/*.{" . join(",", @exts) . "}"))
 {
-  my $base = basename($file, map { ".$_" } @exts);
+  my $base = fileparse($file, qr/\.[^.]*$/);
+  print(STDERR "$base ...\n");
+
   my $fbase = "$base.$ext";
   my $fimg = "imgs/$fbase";
   my $fthumb = "thumbs/$fbase";
   my $ffile = "files/$fbase";
-
-  print(STDERR "$base ...\n");
 
   my $flags = "";
   $flags .= " -auto-orient" if($orient);
