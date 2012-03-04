@@ -123,14 +123,14 @@ if($timesort)
 }
 
 my $fdownload = "files/album.zip";
-if(!$nofile && !$slim)
+if(!$slim)
 {
   my @files;
   for my $fdata(@data) {
     push(@files, "'$out/$fdata->{'file'}'");
   }
   my $flist = join(" ", @files);
-  system(qq{zip -q9j '$out/$fdownload' $flist\n});
+  system(qq{zip -q9j '$out/$fdownload' $flist});
 }
 if($nofile || $slim)
 {
