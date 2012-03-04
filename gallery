@@ -6,6 +6,7 @@ use Getopt::Std qw{getopts};
 use File::Path qw{make_path remove_tree};
 use File::Basename qw{basename};
 use Date::Parse qw{str2time};
+use File::Glob qw(:globally :nocase);
 
 # defaults
 my $mode = '0644';
