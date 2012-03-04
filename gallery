@@ -1,0 +1,157 @@
+#!/usr/bin/env perl
+use strict;
+use warnings;
+use JSON::PP qw{encode_json};
+use Getopt::Std qw{getopts};
+use File::Path qw{make_path remove_tree};
+use File::Basename qw{basename};
+use Date::Parse qw{str2time};
+
+# defaults
+my $mode = '0644';
+my $slim = 0;
+my $nofile = 0;
+my $orient = 1;
+my $timesort = 1;
+my @exts = ("jpg", "png");
+my $ext = "jpg";
+my @minthumb = (150, 112);
+my @maxthumb = (150, 200);
+my @maxfull = (1600, 1200);
+my $maxq = 100;
+my $imgq = 90;
+my $imflags = "";
+
+# options
+$Getopt::Std::STANDARD_HELP_VERSION = 1;
+
+sub HELP_MESSAGE()
+{
+  print(STDERR qq{Usage: $0 [-snot] input-dir output-dir [album name]
+
+  -h, --help	this help
+  -s		slim output (no original files and downloads)
+  -n		no files (no single original files, only full album download)
+  -o		do not auto-orient
+  -t		do not time-sort
+
+});
+}
+
+my %flags;
+exit(2) unless(getopts('snoth', \%flags));
+if(@ARGV < 2 || @ARGV > 3 || $flags{'h'})
+{
+  HELP_MESSAGE();
+  exit(2);
+}
+my $dir = $ARGV[0];
+my $out = $ARGV[1];
+my $name = $ARGV[2] || undef;
+$slim = 1 if($flags{'s'});
+$nofile = 1 if($flags{'n'});
+$orient = 0 if($flags{'o'});
+$timesort = 0 if($flags{'t'});
+
+# cleanup target paths
+for my $path("$out/thumbs", "$out/imgs", "$out/files")
+{
+  remove_tree($path);
+  make_path($path);
+}
+
+my @data;
+for my $file(glob("$dir/*{" . join(",", @exts) . "}"))
+{
+  my $base = basename($file, map { ".$_" } @exts);
+  my $fbase = "$base.$ext";
+  my $fimg = "imgs/$fbase";
+  my $fthumb = "thumbs/$fbase";
+  my $ffile = "files/$fbase";
+
+  print(STDERR "$base ...\n");
+
+  my $flags = "";
+  $flags .= " -auto-orient" if($orient);
+
+  chomp(my $ifmt = qx{identify -format '%m' '$file'});
+  chomp(my $idate = qx{identify -format '%[EXIF:DateTime]' '$file'});
+
+  if($maxq != 100 || $ifmt ne "JPEG")
+  {
+    # lossy path
+    system(qq{convert $flags $imflags -quality '$maxq' '$file' '$out/$ffile'});
+    system(qq{chmod '$mode' '$out/$ffile'});
+    system(qq{touch -r '$file' '$out/$ffile'});
+  }
+  else
+  {
+    # lessless path
+    system(qq{cp --preserve=timestamps '$file' '$out/$ffile'});
+    system(qq{chmod '$mode' '$out/$ffile'});
+    system(qq{exiftran -aip '$out/$ffile' >/dev/null 2>&1}) if($orient);
+  }
+
+  # generate images
+  my @minthumb = @minthumb;
+  my @maxthumb = @maxthumb;
+  system(qq{convert $flags $imflags -quality '$imgq' \\
+      -thumbnail '$minthumb[0]x$minthumb[1]^' \\
+      -gravity center -crop '$maxthumb[0]x$maxthumb[1]+0x0' \\
+      '$file' '$out/$fthumb'});
+  system(qq{convert $flags $imflags -quality '$imgq' \\
+      -geometry '$maxfull[0]x$maxfull[1]' \\
+      '$file' '$out/$fimg'});
+
+  my %fdata;
+  $fdata{'img'} = $fimg;
+  $fdata{'thumb'} = $fthumb;
+  $fdata{'file'} = $ffile;
+  $fdata{'date'} = $idate if($idate);
+
+  push(@data, \%fdata);
+}
+
+if($timesort)
+{
+  @data = sort
+  {
+    return 0 if(!$a->{'date'} || !$b->{'date'});
+    str2time($a->{'date'}) <=> str2time($b->{'date'});
+  } @data;
+}
+
+my $fdownload = "files/album.zip";
+if(!$nofile && !$slim)
+{
+  my @files;
+  for my $fdata(@data) {
+    push(@files, "'$out/$fdata->{'file'}'");
+  }
+  my $flist = join(" ", @files);
+  system(qq{zip -q9j '$out/$fdownload' $flist\n});
+}
+if($nofile || $slim)
+{
+  for my $fdata(@data)
+  {
+    unlink("$out/$fdata->{'file'}");
+    delete($fdata->{'file'});
+  }
+}
+if($slim)
+{
+  $fdownload = undef;
+  remove_tree("$out/files");
+}
+
+# output
+my %json;
+$json{'name'} = $name if($name);
+$json{'download'} = $fdownload if($fdownload);
+$json{'thumb'} = \@maxthumb;
+$json{'data'} = \@data;
+
+open(JSON, ">$out/data.json");
+print(JSON encode_json(\%json));
+close(JSON);
