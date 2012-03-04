@@ -1,4 +1,4 @@
-// Frak'in gallery, by wave++ 2011
+// Frak'in gallery, by wave++ 2011-2012
 var datafile = 'data.json';
 var padding = 22;
 var duration = 500;
@@ -128,7 +128,15 @@ function onMainReady()
   fx.start('opacity', 0, 1);
 
   clearTimeout(tthr);
-  ehdr.set('html', imgs.data[eidx].dsc);
+
+  var dsc = [];
+  if(imgs.data[eidx].file)
+    dsc.push("<a title=\"Download image\" href=\"" + encodeURI(imgs.data[eidx].file) + "\"><img src=\"eye.png\"/></a>");
+  if(imgs.download)
+    dsc.push("<a title=\"Download album\" href=\"" + encodeURI(imgs.download) + "\"><img src=\"download.png\"/></a>");
+  if(imgs.data[eidx].date)
+    dsc.push("<b>Date</b>: " + imgs.data[eidx].date);
+  ehdr.set('html', dsc.join(' '));
 
   var fx = new Fx.Scroll(elist, { duration: duration });
   var y = limg.getPosition().y + elist.getScroll().y;

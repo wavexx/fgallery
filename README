@@ -17,4 +17,5 @@ git://src.thregr.org/gallery
 TODO:
 
 - Differentiate between normal and panorama shots in the thumbnail (black bands?)
-- Slow animation in FF
+- Slow animation in FF sometimes. Slowness detection doesn't work in these cases.
+- Show prev/next at startup, then implement autohide.
