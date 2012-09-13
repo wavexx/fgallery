@@ -62,6 +62,7 @@ for my $path("$out/thumbs", "$out/imgs", "$out/files")
 }
 
 my @data;
+my $ostamp = undef;
 for my $file(glob("$dir/*.{" . join(",", @exts) . "}"))
 {
   my $base = fileparse($file, qr/\.[^.]*$/);
@@ -108,18 +109,22 @@ for my $file(glob("$dir/*.{" . join(",", @exts) . "}"))
   $fdata{'img'} = $fimg;
   $fdata{'thumb'} = $fthumb;
   $fdata{'file'} = $ffile;
-  $fdata{'date'} = $idate if($idate);
+  if(!$idate)
+  {
+    # no date available, cheat by using the previous timestamp
+    $fdata{'stamp'} = $ostamp = $ostamp + 1;
+  }
+  else
+  {
+    $fdata{'date'} = $idate;
+    $fdata{'stamp'} = $ostamp = str2time($idate);
+  }
 
   push(@data, \%fdata);
 }
 
-if($timesort)
-{
-  @data = sort
-  {
-    return 0 if(!$a->{'date'} || !$b->{'date'});
-    str2time($a->{'date'}) <=> str2time($b->{'date'});
-  } @data;
+if($timesort) {
+  @data = sort { ($a->{'stamp'} // 0) <=> ($b->{'stamp'} // 0); } @data;
 }
 
 my $fdownload = "files/album.zip";
