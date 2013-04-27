@@ -9,12 +9,34 @@ Please note: ... right now it's rather incomplete.
 
 Demo: http://www.thregr.org/~wavexx/tmp/gallery-demo/
 
-Usage:
+
+Usage
+-----
 
 - Copy "view" into a destination path.
 - Generate all the static files with ./gendata::
 
     ./gendata photo-dir dest-view-dir
+
+
+Dependencies
+------------
+
+Frontend/viewer: none (static html/js/css)
+
+Backend:
+
+* ImageMagick
+* exiftran
+* zip
+* perl, with the following modules:
+
+  - JSON::PP (libjson-perl and optionally libjson-xs-perl)
+  - Date::Parse (libtimedate-perl)
+
+
+Authors
+-------
 
 "gallery" is distributed under GPL2 (see COPYING) WITHOUT ANY WARRANTY.
 Copyright(c) 2011 by wave++ "Yuri D'Elia" <wavexx@users.sf.net>.
@@ -22,7 +44,9 @@ Source repository available at::
 
   git://src.thregr.org/gallery
 
-TODO:
+
+TODO
+----
 
 - Preload next image
 - Differentiate between normal and panorama shots in the thumbnail (black bands?)
