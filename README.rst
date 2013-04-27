@@ -1,5 +1,5 @@
-Frak!in gallery - a modern, minimalist javascript photo gallery
----------------------------------------------------------------
+gallery - a modern, minimalist javascript photo gallery
+-------------------------------------------------------
 
 I wanted just a web gallery with no frills that doesn't look like it's year
 2000 again. No server-side processing, only static generation. Couldn't find
