@@ -14,9 +14,9 @@ Usage
 -----
 
 - Copy "view" into a destination path.
-- Generate all the static files with ./gendata::
+- Generate all the static files with ./gallery::
 
-    ./gendata photo-dir dest-view-dir
+    ./gallery photo-dir dest-view-dir
 
 
 Dependencies
