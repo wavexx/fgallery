@@ -18,6 +18,13 @@ Usage
 
     ./gallery photo-dir dest-view-dir
 
+You actually need a web server to test the gallery. If you have python
+installed, a quick way to test the gallery locally is to run:
+
+  python -m SimpleHTTPServer 8000
+
+and then open http://localhost:8000 with a browser.
+
 
 Dependencies
 ------------
