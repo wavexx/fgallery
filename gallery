@@ -39,6 +39,20 @@ sub HELP_MESSAGE()
 });
 }
 
+
+# support functions
+sub sys
+{
+  my $cmd = shift;
+  if(system($cmd))
+  {
+    print(STDERR "error: command \"$cmd\" failed\n");
+    exit(1);
+  }
+}
+
+
+# main program
 my %flags;
 exit(2) unless(getopts('snoth', \%flags));
 if(@ARGV < 2 || @ARGV > 3 || $flags{'h'})
@@ -82,26 +96,26 @@ for my $file(glob("$dir/*.{" . join(",", @exts) . "}"))
   if($maxq != 100 || $ifmt ne "JPEG")
   {
     # lossy path
-    system(qq{convert $flags $imflags -quality '$maxq' '$file' '$out/$ffile'});
-    system(qq{chmod '$mode' '$out/$ffile'});
-    system(qq{touch -r '$file' '$out/$ffile'});
+    sys(qq{convert $flags $imflags -quality '$maxq' '$file' '$out/$ffile'});
+    sys(qq{chmod '$mode' '$out/$ffile'});
+    sys(qq{touch -r '$file' '$out/$ffile'});
   }
   else
   {
     # lessless path
-    system(qq{cp -p '$file' '$out/$ffile'});
-    system(qq{chmod '$mode' '$out/$ffile'});
-    system(qq{exiftran -aip '$out/$ffile' >/dev/null 2>&1}) if($orient);
+    sys(qq{cp -p '$file' '$out/$ffile'});
+    sys(qq{chmod '$mode' '$out/$ffile'});
+    sys(qq{exiftran -aip '$out/$ffile' >/dev/null 2>&1}) if($orient);
   }
 
   # generate images
   my @minthumb = @minthumb;
   my @maxthumb = @maxthumb;
-  system(qq{convert $flags $imflags -quality '$imgq' \\
+  sys(qq{convert $flags $imflags -quality '$imgq' \\
       -thumbnail '$minthumb[0]x$minthumb[1]^' \\
       -gravity center -crop '$maxthumb[0]x$maxthumb[1]+0x0' \\
       '$file' '$out/$fthumb'});
-  system(qq{convert $flags $imflags -quality '$imgq' \\
+  sys(qq{convert $flags $imflags -quality '$imgq' \\
       -geometry '$maxfull[0]x$maxfull[1]' \\
       '$file' '$out/$fimg'});
 
@@ -135,7 +149,7 @@ if(!$slim)
     push(@files, "'$out/$fdata->{'file'}'");
   }
   my $flist = join(" ", @files);
-  system(qq{zip -q9j '$out/$fdownload' $flist});
+  sys(qq{zip -q9j '$out/$fdownload' $flist});
 }
 if($nofile || $slim)
 {
