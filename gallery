@@ -1,10 +1,10 @@
 #!/usr/bin/env perl
 use strict;
 use warnings;
-use JSON::PP qw{encode_json};
-use Getopt::Std qw{getopts};
-use File::Path qw{make_path remove_tree};
+use Getopt::Long;
 use File::Basename qw{fileparse};
+use JSON::PP qw{encode_json};
+use File::Path qw{make_path remove_tree};
 use Date::Parse qw{str2time};
 use File::Glob qw(:globally :nocase);
 
@@ -23,50 +23,81 @@ my $maxq = 100;
 my $imgq = 90;
 my $imflags = "";
 
-# options
-$Getopt::Std::STANDARD_HELP_VERSION = 1;
 
-sub HELP_MESSAGE()
+# support functions
+sub fatal
 {
-  print(STDERR qq{Usage: $0 [-snot] input-dir output-dir [album name]
-
-  -h, --help	this help
-  -s		slim output (no original files and downloads)
-  -n		no files (no single original files, only full album download)
-  -o		do not auto-orient
-  -t		do not time-sort
-
-});
+  print(STDERR "error: " . join(" ", @_) . "\n");
+  exit(1);
 }
 
 
-# support functions
 sub sys
 {
   my $cmd = shift;
-  if(system($cmd))
-  {
-    print(STDERR "error: command \"$cmd\" failed\n");
-    exit(1);
+  if(system($cmd)) {
+    fatal("command \"$cmd\" failed");
   }
 }
 
 
-# main program
-my %flags;
-exit(2) unless(getopts('snoth', \%flags));
-if(@ARGV < 2 || @ARGV > 3 || $flags{'h'})
+# options
+sub parse_wh
 {
-  HELP_MESSAGE();
+  my ($opt, $spec) = @_;
+  my ($w, $h) = ($spec =~ /^(\d+)x(\d+)$/);
+  unless(defined($w) && defined($h)) {
+    fatal("bad WxH specification in option $opt");
+  }
+  return ($w, $h);
+}
+
+
+sub print_help()
+{
+  print(STDERR qq{Usage: $0 [options] input-dir output-dir [album name]
+
+  -h, --help		this help
+  -s			slim output (no original files and downloads)
+  -n			no files (no single original files, only full album download)
+  -o			do not auto-orient
+  -t			do not time-sort
+  --min-thumb WxH	minimum thumbnail size ($minthumb[0]x$minthumb[1])
+  --max-thumb WxH	maximum thumbnail size ($maxthumb[0]x$maxthumb[1])
+  --max-full WxH	maximum full image size ($maxfull[0]x$maxfull[1])
+  --quality Q		preview image quality (0-100, currently: $imgq)
+});
+}
+
+
+# main program
+my $help = 0;
+
+my ($ret, @ARGS) = GetOptions('help|h' => \$help,
+	   's' => sub { $slim = 1; },
+	   'n' => sub { $nofile = 1; },
+	   'o' => sub { $orient = 0; },
+	   't' => sub { $timesort = 0; },
+	   'min-thumb=s' => sub { @minthumb = parse_wh(@_); },
+	   'max-thumb=s' => sub { @maxthumb = parse_wh(@_); },
+	   'max-full=s' => sub { @maxfull = parse_wh(@_); },
+	   'quality=i' => sub { $imgq = $_[1]; });
+
+if(@ARGV < 2 || @ARGV > 3 || $help || !$ret)
+{
+  print_help();
   exit(2);
 }
 my $dir = $ARGV[0];
 my $out = $ARGV[1];
 my $name = $ARGV[2] || undef;
-$slim = 1 if($flags{'s'});
-$nofile = 1 if($flags{'n'});
-$orient = 0 if($flags{'o'});
-$timesort = 0 if($flags{'t'});
+
+# check paths
+if(!-d $dir) {
+  fatal("input directory \"$dir\" does not exist");
+} elsif(!-d $out) {
+  fatal("output directory \"$out\" does not exist (should be a template copy)");
+}
 
 # cleanup target paths
 for my $path("$out/thumbs", "$out/imgs", "$out/files")
@@ -76,7 +107,7 @@ for my $path("$out/thumbs", "$out/imgs", "$out/files")
 }
 
 my @data;
-my $ostamp = undef;
+my $ostamp = 0;
 for my $file(glob("$dir/*.{" . join(",", @exts) . "}"))
 {
   my $base = fileparse($file, qr/\.[^.]*$/);
