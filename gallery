@@ -89,7 +89,7 @@ for my $file(glob("$dir/*.{" . join(",", @exts) . "}"))
   else
   {
     # lessless path
-    system(qq{cp --preserve=timestamps '$file' '$out/$ffile'});
+    system(qq{cp -p '$file' '$out/$ffile'});
     system(qq{chmod '$mode' '$out/$ffile'});
     system(qq{exiftran -aip '$out/$ffile' >/dev/null 2>&1}) if($orient);
   }
