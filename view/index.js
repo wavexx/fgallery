@@ -255,11 +255,29 @@ function initGallery(data)
     a.inject(elist);
   });
 
-  resize();
+  // events
   eleft.addEvent('click', prev);
   eright.addEvent('click', next);
   window.addEvent('resize', resize);
   window.addEvent('hashchange', change);
+
+  // navigation shortcuts
+  window.addEvent('keydown', function(ev)
+  {
+    if(ev.key == 'up' || ev.key == 'left')
+    {
+      ev.stop();
+      prev();
+    }
+    else if(ev.key == 'down' || ev.key == 'right' || ev.key == 'space')
+    {
+      ev.stop();
+      next();
+    }
+  });
+
+  // first image
+  resize();
   load(getLocationIndex());
 
   emain.setStyles(
