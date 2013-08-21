@@ -13,13 +13,15 @@ Demo: http://www.thregr.org/~wavexx/tmp/gallery-demo/
 Usage
 -----
 
-- Copy "view" into a destination path::
+1) Copy "view" into a destination path::
 
-    cp -r view my-gallery
+     cp -r view my-gallery
 
-- Generate all the static files with ./gallery::
+2) Generate all the static files with ./gallery::
 
-    ./gallery photo-dir my-gallery
+     ./gallery photo-dir my-gallery
+
+3) Upload "my-gallery" somewhere.
 
 You actually need a web server to test the gallery. If you have python
 installed, a quick way to test the gallery locally is to run::
