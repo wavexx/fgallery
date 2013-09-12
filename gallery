@@ -122,7 +122,7 @@ for my $file(glob("$dir/*.{" . join(",", @exts) . "}"))
   $flags .= " -auto-orient" if($orient);
 
   chomp(my $ifmt = qx{identify -format '%m' '$file'});
-  chomp(my $idate = qx{identify -format '%[EXIF:DateTime]' '$file'});
+  chomp(my $idate = qx{identify -format '%[EXIF:DateTimeOriginal]' '$file'});
 
   if($maxq != 100 || $ifmt ne "JPEG")
   {
