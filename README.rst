@@ -67,11 +67,9 @@ Source repository available at::
 TODO
 ----
 
-- Preload next image
 - Differentiate between normal and panorama shots in the thumbnail (black bands?)
 - Handle panorama shots (allow to zoom/pan?)
 - Slow animation in FF sometimes. Slowness detection doesn't work in these cases
 - Maybe use CSS transitions and degrade with a simple swap?
-- Show prev/next arrows at startup, then implement autohide
 - Handle videos too
 - Add an "overview" mode, which shows a screenful of thumbnails.
