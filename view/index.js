@@ -149,7 +149,7 @@ function onMainReady()
   y = y - elist.getSize().y / 2 + limg.height / 2;
   new Fx.Scroll(elist, { duration: d }).start(0, y);
 
-  emain.setStyle('background-image', 'url(' + encodeURI(imgs.data[eidx].blur) + ')');
+  emain.setStyle('background-image', 'url(noise.png), url(' + encodeURI(imgs.data[eidx].blur) + ')');
   clearTimeout(tthr);
   showHdr();
 
@@ -343,7 +343,8 @@ function initGallery(data)
     'display': 'block',
     'min-width': padding * 2,
     'min-height': padding * 2,
-    'background-size': '100% 100%'
+    'background-repeat': 'repeat, no-repeat',
+    'background-size': 'auto, 100% 100%'
   });
 
   // setup an idle callback for mouse movement only
@@ -358,7 +359,11 @@ function initGallery(data)
 
 function init()
 {
+  // read the data
   new Request.JSON({ url: datafile, onSuccess: initGallery }).get();
+
+  // preload some resources
+  Asset.images(['noise.png', 'left.png', 'right.png', 'eye.png', 'download.png']);
 }
 
 window.addEvent('domready', init);
