@@ -43,6 +43,7 @@ var limg;	// current thumbnail
 var eidx;	// current index
 var tthr;	// throbber timeout
 var imgs;	// image list
+var first;	// first image
 
 function resize()
 {
@@ -109,16 +110,19 @@ function onMainReady()
   eimg.setStyle('opacity', 0);
   eimg.inject(ebuff);
 
+  var d = (first? 0: duration);
+  first = false;
+
   if(oimg)
   {
-    var fx = new Fx.Tween(oimg, { duration: duration });
+    var fx = new Fx.Tween(oimg, { duration: d });
     fx.addEvent('complete', function(x) { x.destroy(); });
     fx.start('opacity', 1, 0);
     oimg = undefined;
   }
 
-  var fx = new Fx.Tween(eimg, { duration: duration });
-  if(duration)
+  var fx = new Fx.Tween(eimg, { duration: d });
+  if(d)
   {
     var now = ts();
     fx.addEvent('complete', function()
@@ -140,9 +144,9 @@ function onMainReady()
     dsc.push("<b>Date</b>: " + imgs.data[eidx].date);
   ehdr.set('html', dsc.join(' '));
 
-  var fx = new Fx.Scroll(elist, { duration: duration });
   var y = limg.getPosition().y + elist.getScroll().y;
-  fx.start(0, y - elist.getSize().y / 2 + limg.height / 2);
+  y = y - elist.getSize().y / 2 + limg.height / 2;
+  new Fx.Scroll(elist, { duration: d }).start(0, y);
 }
 
 function showThrobber()
@@ -303,6 +307,7 @@ function initGallery(data)
   });
 
   // first image
+  first = true;
   resize();
   load(getLocationIndex());
 
