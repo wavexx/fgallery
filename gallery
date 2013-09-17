@@ -11,7 +11,7 @@ use File::Glob qw(:globally :nocase);
 # defaults
 my $mode = '0644';
 my $slim = 0;
-my $nofile = 0;
+my $ofile = 0;
 my $orient = 1;
 my $timesort = 1;
 my @exts = ("jpg", "png");
@@ -59,7 +59,7 @@ sub print_help()
 
   -h, --help		this help
   -s			slim output (no original files and downloads)
-  -n			no files (no single original files, only full album download)
+  -i			include individual originals
   -o			do not auto-orient
   -t			do not time-sort
   --min-thumb WxH	minimum thumbnail size ($minthumb[0]x$minthumb[1])
@@ -75,7 +75,7 @@ my $help = 0;
 
 my ($ret, @ARGS) = GetOptions('help|h' => \$help,
 	   's' => sub { $slim = 1; },
-	   'n' => sub { $nofile = 1; },
+	   'i' => sub { $ofile = 1; },
 	   'o' => sub { $orient = 0; },
 	   't' => sub { $timesort = 0; },
 	   'min-thumb=s' => sub { @minthumb = parse_wh(@_); },
@@ -182,7 +182,7 @@ if(!$slim)
   my $flist = join(" ", @files);
   sys(qq{zip -q9j '$out/$fdownload' $flist});
 }
-if($nofile || $slim)
+if(!$ofile || $slim)
 {
   for my $fdata(@data)
   {
