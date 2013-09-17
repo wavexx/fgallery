@@ -18,6 +18,7 @@ my @exts = ("jpg", "png");
 my $ext = "jpg";
 my @minthumb = (150, 112);
 my @maxthumb = (150, 200);
+my $blurq = 32;
 my @maxfull = (1600, 1200);
 my $maxq = 100;
 my $imgq = 90;
@@ -64,6 +65,7 @@ sub print_help()
   -t			do not time-sort
   --min-thumb WxH	minimum thumbnail size ($minthumb[0]x$minthumb[1])
   --max-thumb WxH	maximum thumbnail size ($maxthumb[0]x$maxthumb[1])
+  --back-darkness	background darkness (0-100, currently: $blurq)
   --max-full WxH	maximum full image size ($maxfull[0]x$maxfull[1])
   --quality Q		preview image quality (0-100, currently: $imgq)
 });
@@ -80,6 +82,7 @@ my ($ret, @ARGS) = GetOptions('help|h' => \$help,
 	   't' => sub { $timesort = 0; },
 	   'min-thumb=s' => sub { @minthumb = parse_wh(@_); },
 	   'max-thumb=s' => sub { @maxthumb = parse_wh(@_); },
+	   'back-darkness' => sub { $blurq = $_[1]; },
 	   'max-full=s' => sub { @maxfull = parse_wh(@_); },
 	   'quality=i' => sub { $imgq = $_[1]; });
 
@@ -99,8 +102,11 @@ if(!-d $dir) {
   fatal("output directory \"$out\" does not exist (should be a template copy)");
 }
 
+# derived arguments
+my @backblur = ($minthumb[0] / 2, $minthumb[1] / 2);
+
 # cleanup target paths
-for my $path("$out/thumbs", "$out/imgs", "$out/files")
+for my $path("$out/thumbs", "$out/blurs", "$out/imgs", "$out/files")
 {
   remove_tree($path);
   make_path($path);
@@ -116,6 +122,7 @@ for my $file(glob("$dir/*.{" . join(",", @exts) . "}"))
   my $fbase = "$base.$ext";
   my $fimg = "imgs/$fbase";
   my $fthumb = "thumbs/$fbase";
+  my $fblur = "blurs/$fbase";
   my $ffile = "files/$fbase";
 
   my $flags = "";
@@ -146,6 +153,9 @@ for my $file(glob("$dir/*.{" . join(",", @exts) . "}"))
       -thumbnail '$minthumb[0]x$minthumb[1]^' \\
       -gravity center -crop '$maxthumb[0]x$maxthumb[1]+0x0' \\
       '$file' '$out/$fthumb'});
+  sys(qq{convert $imflags -quality '$imgq' \\
+      -blur '$backblur[0]x$backblur[1]' -modulate '$blurq' \\
+      '$out/$fthumb' '$out/$fblur'});
   sys(qq{convert $flags $imflags -quality '$imgq' \\
       -geometry '$maxfull[0]x$maxfull[1]' \\
       '$file' '$out/$fimg'});
@@ -153,6 +163,7 @@ for my $file(glob("$dir/*.{" . join(",", @exts) . "}"))
   my %fdata;
   $fdata{'img'} = $fimg;
   $fdata{'thumb'} = $fthumb;
+  $fdata{'blur'} = $fblur;
   $fdata{'file'} = $ffile;
   if(!$idate)
   {

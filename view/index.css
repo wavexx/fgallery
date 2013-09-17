@@ -54,6 +54,14 @@ h2
   position: absolute;
 }
 
+#gallery #content img.current
+{
+  box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
+  -moz-box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
+  -webkit-box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
+  behavior: url(PIE.htc);
+}
+
 #gallery #content #header
 {
   position: absolute;
@@ -121,14 +129,14 @@ h2
   position: absolute;
   right: 0;
   top: 0;
-  background: #555;
+  background: #444;
   overflow-y: scroll;
   overflow-x: hidden;
   text-align: center;
 
-  box-shadow: inset 0 0 5px #000;
-  -moz-box-shadow: inset 0 0 5px #000;
-  -webkit-box-shadow: inset 0 0 5px #000;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+  -moz-box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+  -webkit-box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
   behavior: url(PIE.htc);
 }
 

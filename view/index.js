@@ -109,6 +109,7 @@ function onMainReady()
 {
   resizeMainImg(eimg);
   eimg.setStyle('opacity', 0);
+  eimg.addClass('current');
   eimg.inject(ebuff);
 
   var d = (first? 0: duration);
@@ -116,6 +117,7 @@ function onMainReady()
 
   if(oimg)
   {
+    oimg.removeClass('current');
     var fx = new Fx.Tween(oimg, { duration: d });
     fx.addEvent('complete', function(x) { x.destroy(); });
     fx.start('opacity', 1, 0);
@@ -133,9 +135,6 @@ function onMainReady()
   }
   fx.start('opacity', 0, 1);
 
-  clearTimeout(tthr);
-  showHdr();
-
   var dsc = [];
   if(imgs.data[eidx].file)
     dsc.push("<a title=\"Download image\" href=\"" + encodeURI(imgs.data[eidx].file) + "\"><img src=\"eye.png\"/></a>");
@@ -148,6 +147,10 @@ function onMainReady()
   var y = limg.getPosition().y + elist.getScroll().y;
   y = y - elist.getSize().y / 2 + limg.height / 2;
   new Fx.Scroll(elist, { duration: d }).start(0, y);
+
+  emain.setStyle('background-image', 'url(' + encodeURI(imgs.data[eidx].blur) + ')');
+  clearTimeout(tthr);
+  showHdr();
 }
 
 function showThrobber()
@@ -160,25 +163,28 @@ function showThrobber()
 
 function hideHdr()
 {
-  ehdr.fade('out');
+  ehdr.tween('opacity', [1, 0], { link: 'ignore' });
 }
 
 function hideNav()
 {
   emain.setStyle('cursor', 'none');
-  eleft.fade('out');
-  eright.fade('out');
+  eleft.tween('opacity', [1, 0], { link: 'ignore' });
+  eright.tween('opacity', [1, 0], { link: 'ignore' });
 }
 
 function showHdr()
 {
+  ehdr.get('tween').cancel();
   ehdr.fade('show');
 }
 
 function showNav()
 {
   emain.setStyle('cursor');
+  eleft.get('tween').cancel();
   eleft.fade('show');
+  eright.get('tween').cancel();
   eright.fade('show');
 }
 
@@ -214,14 +220,14 @@ function load(i)
   if(i == eidx) return;
 
   var data = imgs.data[i];
-  var img = Asset.image(data.img,
+  var assets = Asset.images([data.img, data.blur],
   {
     display: 'none',
-    onLoad: onMainReady
+    onComplete: onMainReady
   });
 
   if(!oimg) oimg = eimg;
-  eimg = img;
+  eimg = assets[0];
   eidx = i;
 
   if(limg) limg.removeClass('current');
@@ -328,7 +334,8 @@ function initGallery(data)
   {
     'display': 'block',
     'min-width': padding * 2,
-    'min-height': padding * 2
+    'min-height': padding * 2,
+    'background-size': '100% 100%'
   });
 
   // setup an idle callback for mouse movement only
