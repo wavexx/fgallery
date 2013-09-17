@@ -31,6 +31,7 @@ Element.Events.hashchange =
 
 // some state variables
 var emain;	// main object
+var eflash;	// flashing object
 var ehdr;	// header
 var elist;	// thumbnail list
 var econt;	// picture container
@@ -181,13 +182,18 @@ function showNav()
   eright.fade('show');
 }
 
+function flash()
+{
+  eflash.tween('opacity', [1, 0]);
+}
+
 function prev()
 {
   if(eidx != 0)
     window.location.hash = "#" + (eidx - 1);
   else
   {
-    emain.highlight('#fff');
+    flash();
     window.location.hash = "#" + (imgs.data.length - 1);
   }
 }
@@ -198,7 +204,7 @@ function next()
     window.location.hash = "#" + (eidx + 1);
   else
   {
-    emain.highlight('#fff');
+    flash();
     window.location.hash = "#0";
   }
 }
@@ -257,6 +263,12 @@ function initGallery(data)
   var tmp;
 
   tmp = new Element('div');
+
+  eflash = new Element('div', { id: 'flash' });
+  eflash.setStyle('opacity', 0);
+  eflash.set('tween', { duration: duration, link: 'cancel' });
+  eflash.inject(tmp);
+
   eleft = new Element('a', { id: 'left' });
   eleft.inject(tmp);
   eright = new Element('a', { id: 'right' });
@@ -266,6 +278,7 @@ function initGallery(data)
   tmp = new Element('div');
   ehdr = new Element('div', { id: 'header' });
   ehdr.inject(tmp);
+
   tmp.inject(econt);
 
   elist = new Element('div', { id: 'list' });
