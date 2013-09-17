@@ -319,7 +319,7 @@ function initGallery(data)
   });
 
   // setup an idle callback for mouse movement only
-  var idleTimer = new IdleTimer(window, { timeout: hidedelay, events: ['mousemove'] }).start();
+  var idleTimer = new IdleTimer(window, { timeout: hidedelay, events: ['mousemove', 'mousedown', 'mousewheel'] }).start();
   idleTimer.addEvent('idle', function() { hideNav(); hideHdr(); });
   idleTimer.addEvent('active', function() { showNav(); showHdr(); });
 
