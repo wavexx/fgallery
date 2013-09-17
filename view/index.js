@@ -35,6 +35,7 @@ var emain;	// main object
 var eflash;	// flashing object
 var ehdr;	// header
 var elist;	// thumbnail list
+var fscr;	// thumbnail list scroll fx
 var econt;	// picture container
 var ebuff;	// picture buffer
 var eleft;	// go left
@@ -146,8 +147,9 @@ function onMainReady()
   ehdr.set('html', dsc.join(' '));
 
   var y = limg.getPosition().y + elist.getScroll().y;
-  y = y - elist.getSize().y / 2 + limg.height / 2;
-  new Fx.Scroll(elist, { duration: d }).start(0, y);
+  y = y - elist.getSize().y / 2 + limg.getSize().y / 2;
+  if(fscr) fscr.cancel();
+  fscr = new Fx.Scroll(elist, { duration: d }).start(0, y);
 
   emain.setStyle('background-image', 'url(noise.png), url(' + encodeURI(imgs.data[eidx].blur) + ')');
   clearTimeout(tthr);
