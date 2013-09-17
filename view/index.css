@@ -50,12 +50,9 @@ h2
   top: 0;
   left: 0;
   color: #fff;
-  background: #000;
+  background: rgba(0, 0, 0, 0.7);
   font-family: sans-serif;
   padding: 0.5em;
-
-  opacity: 0.7;
-  filter: alpha(opacity=70);
 }
 
 #gallery #content #header img
@@ -74,8 +71,9 @@ h2
   text-decoration: underline;
 }
 
-#gallery #content #left
+#gallery #content #left:after
 {
+  content: "";
   position: absolute;
   left: 0;
   width: 5%;
@@ -83,10 +81,13 @@ h2
   height: 100%;
   background: url(left.png) no-repeat;
   background-position: center;
+  opacity: 0.3;
+  filter: alpha(opacity=30);
 }
 
-#gallery #content #right
+#gallery #content #right:after
 {
+  content: "";
   position: absolute;
   right: 0;
   width: 5%;
@@ -94,20 +95,15 @@ h2
   height: 100%;
   background: url(right.png) no-repeat;
   background-position: center;
-}
-
-#gallery #content #left,
-#gallery #content #right
-{
-  opacity: 0;
-  filter: alpha(opacity=0);
-}
-
-#gallery #content #left:hover,
-#gallery #content #right:hover
-{
   opacity: 0.3;
   filter: alpha(opacity=30);
+}
+
+#gallery #content #left:hover:after,
+#gallery #content #right:hover:after
+{
+  opacity: 0.6;
+  filter: alpha(opacity=60);
 }
 
 #gallery #list

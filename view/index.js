@@ -1,8 +1,9 @@
-// Frak'in gallery, by wave++ 2011-2012
+// Frak'in gallery, by wave++ 2011-2013
 var datafile = 'data.json';
 var padding = 22;
 var duration = 500;
 var thrdelay = 1500;
+var hidedelay = 3000;
 
 Element.Events.hashchange =
 {
@@ -128,6 +129,7 @@ function onMainReady()
   fx.start('opacity', 0, 1);
 
   clearTimeout(tthr);
+  showHdr();
 
   var dsc = [];
   if(imgs.data[eidx].file)
@@ -149,6 +151,30 @@ function showThrobber()
   img.src = "throbber.gif";
   ehdr.empty();
   img.inject(ehdr);
+}
+
+function hideHdr()
+{
+  ehdr.fade('out');
+}
+
+function hideNav()
+{
+  emain.setStyle('cursor', 'none');
+  eleft.fade('out');
+  eright.fade('out');
+}
+
+function showHdr()
+{
+  ehdr.fade('show');
+}
+
+function showNav()
+{
+  emain.setStyle('cursor');
+  eleft.fade('show');
+  eright.fade('show');
 }
 
 function prev()
@@ -286,6 +312,15 @@ function initGallery(data)
     'min-width': padding * 2,
     'min-height': padding * 2
   });
+
+  // setup an idle callback for mouse movement only
+  var idleTimer = new IdleTimer(window, { timeout: hidedelay, events: ['mousemove'] }).start();
+  idleTimer.addEvent('idle', function() { hideNav(); hideHdr(); });
+  idleTimer.addEvent('active', function() { showNav(); showHdr(); });
+
+  // general idle callback
+  var idleTimer = new IdleTimer(window, { timeout: hidedelay }).start();
+  idleTimer.addEvent('idle', hideHdr);
 }
 
 function init()
