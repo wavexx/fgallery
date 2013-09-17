@@ -4,6 +4,7 @@ var padding = 22;
 var duration = 500;
 var thrdelay = 1500;
 var hidedelay = 3000;
+var prefetch = 1;
 
 Element.Events.hashchange =
 {
@@ -151,6 +152,13 @@ function onMainReady()
   emain.setStyle('background-image', 'url(' + encodeURI(imgs.data[eidx].blur) + ')');
   clearTimeout(tthr);
   showHdr();
+
+  // prefetch next image
+  if(prefetch && eidx != imgs.data.length - 1)
+  {
+    var data = imgs.data[eidx + 1];
+    Asset.images([data.img, data.blur]);
+  }
 }
 
 function showThrobber()
