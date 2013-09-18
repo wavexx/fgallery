@@ -44,6 +44,7 @@ IdleTimer = new Class({
 		this.activeBound = this.active.bind(this);
 		this.isIdle = false;
 		this.started = false;
+		this.lastPos = false;
 	},
 	
 	/**
@@ -58,6 +59,7 @@ IdleTimer = new Class({
 		}
 		this.bound = false;
 		this.started = false;
+		this.lastPos = false;
 		this.fireEvent('stop');
 		return this;
 	},
@@ -68,7 +70,17 @@ IdleTimer = new Class({
 	 * which does not trigger the documents onmousemove event, you could have the flash
 	 * call this method to prevent the idle event from being triggered.
 	 */
-	active: function() {
+	active: function(e) {
+		if(e.event.type == 'mousemove')
+		{
+		  // Fix https://code.google.com/p/chromium/issues/detail?id=103041
+		  var pos = [e.event.clientX, e.event.clientY];
+		  if(this.lastPos === false ||
+		      (this.lastPos[0] != pos[0] && this.lastPos[1] != pos[1]))
+		    this.lastPos = pos;
+		  else
+		    return;
+		}
 		clearTimeout(this.timer);
 		if(this.isIdle) this.fireEvent('active');
 		this.isIdle = false;
