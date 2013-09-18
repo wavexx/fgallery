@@ -140,6 +140,11 @@ h2
   behavior: url(PIE.htc);
 }
 
+#gallery #list:focus
+{
+  outline: 0;
+}
+
 #gallery #list .thumb
 {
   display: inline-block;
@@ -161,12 +166,14 @@ h2
   border: 2px solid #f00;
 }
 
-#gallery #list .thumb a:hover
+#gallery #list .thumb a:hover,
+#gallery #list .thumb a:focus
 {
   border: 2px solid #fff;
 }
 
-#gallery #list .thumb.current a:hover
+#gallery #list .thumb.current a:hover,
+#gallery #list .thumb.current a:focus
 {
   border: 2px solid #f00;
 }
