@@ -5,9 +5,16 @@ I wanted just a web gallery with no frills that doesn't look like it's year
 2000 again. No server-side processing, only static generation. Couldn't find
 any OSS project I liked, so I made one.
 
-Please note: ... right now it's rather incomplete.
-
 Demo: http://www.thregr.org/~wavexx/tmp/gallery-demo/
+
+It may not be production ready yet, but it has some nice features:
+
+- Automatically orient pictures without fuss and quality loss.
+- Multi-camera friendly: automatically sort pictures by timestamp.
+- Just throw your (and your friends) photos and movies in a directory and
+  process them in one go.
+- Includes original pictures (in a zip) file for downloading.
+- Shows full-size panoramas by default.
 
 
 Usage
@@ -58,7 +65,7 @@ Authors
 -------
 
 "gallery" is distributed under GPL2 (see COPYING) WITHOUT ANY WARRANTY.
-Copyright(c) 2011 by wave++ "Yuri D'Elia" <wavexx@users.sf.net>.
+Copyright(c) 2011-2013 by wave++ "Yuri D'Elia" <wavexx@users.sf.net>.
 Source repository available at::
 
   git://src.thregr.org/gallery
