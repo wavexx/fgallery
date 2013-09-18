@@ -41,6 +41,15 @@ sub sys
 }
 
 
+sub get_wh
+{
+  my $file = shift;
+  chomp(my $xy = qx{identify -format '%wx%h' '$file'});
+  return ($xy =~ /^(\d+)x(\d+)$/);
+}
+
+
+
 # options
 sub parse_wh
 {
@@ -158,11 +167,16 @@ for my $file(glob("$dir/*.{" . join(",", @exts) . "}"))
       -geometry '$maxfull[0]x$maxfull[1]' \\
       '$file' '$out/$fimg'});
 
+  # sizes
+  my @simg = get_wh("$out/$fimg");
+  my @sthumb = get_wh("$out/$fthumb");
+  my @sfile = get_wh("$file");
+
   my %fdata;
-  $fdata{'img'} = $fimg;
-  $fdata{'thumb'} = $fthumb;
+  $fdata{'img'} = [ $fimg, \@simg ];
+  $fdata{'thumb'} = [ $fthumb, \@sthumb ];
+  $fdata{'file'} = [ $ffile, \@sfile ];
   $fdata{'blur'} = $fblur;
-  $fdata{'file'} = $ffile;
   if(!$idate)
   {
     # no date available, cheat by using the previous timestamp
@@ -186,7 +200,7 @@ if(!$slim)
 {
   my @files;
   for my $fdata(@data) {
-    push(@files, "'$out/$fdata->{'file'}'");
+    push(@files, "'$out/$fdata->{'file'}[0]'");
   }
   my $flist = join(" ", @files);
   sys(qq{zip -q9j '$out/$fdownload' $flist});

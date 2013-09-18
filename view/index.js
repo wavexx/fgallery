@@ -139,7 +139,7 @@ function onMainReady()
 
   var dsc = [];
   if(imgs.data[eidx].file)
-    dsc.push("<a title=\"Download image\" href=\"" + encodeURI(imgs.data[eidx].file) + "\"><img src=\"eye.png\"/></a>");
+    dsc.push("<a title=\"Download image\" href=\"" + encodeURI(imgs.data[eidx].file[0]) + "\"><img src=\"eye.png\"/></a>");
   if(imgs.download)
     dsc.push("<a title=\"Download album\" href=\"" + encodeURI(imgs.download) + "\"><img src=\"download.png\"/></a>");
   if(imgs.data[eidx].date)
@@ -159,7 +159,7 @@ function onMainReady()
   if(prefetch && eidx != imgs.data.length - 1)
   {
     var data = imgs.data[eidx + 1];
-    Asset.images([data.img, data.blur]);
+    Asset.images([data.img[0], data.blur]);
   }
 }
 
@@ -230,7 +230,7 @@ function load(i)
   if(i == eidx) return;
 
   var data = imgs.data[i];
-  var assets = Asset.images([data.img, data.blur],
+  var assets = Asset.images([data.img[0], data.blur],
   {
     display: 'none',
     onComplete: onMainReady
@@ -307,7 +307,7 @@ function initGallery(data)
 
     var img = new Element('img');
     img.setStyle('margin-bottom', padding / 2);
-    img.src = x.thumb;
+    img.src = x.thumb[0];
     x.limg = img;
     img.inject(a);
 
