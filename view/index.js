@@ -303,16 +303,29 @@ function initGallery(data)
 
   imgs.data.each(function(x, i)
   {
+    var ethumb = new Element('div', { class: 'thumb' });
+    ethumb.setStyle('margin-bottom', padding / 2);
+    x.limg = ethumb;
+
+    // identify picture type
+    var tr = x.thumb[1][0] / x.thumb[1][1];
+    var ir = x.img[1][0] / x.img[1][1];
+    var rd = tr - ir;
+    if(Math.abs(rd) >= 0.5)
+      ethumb.addClass(rd < 0? 'pano-w': 'pano-h');
+
     var a = new Element('a');
     a.href = "#" + i;
 
     var img = new Element('img');
-    img.setStyle('margin-bottom', padding / 2);
     img.src = x.thumb[0];
-    x.limg = img;
     img.inject(a);
 
-    a.inject(elist);
+    var ovr = new Element('div', { class: 'ovr' });
+    ovr.inject(a);
+
+    a.inject(ethumb);
+    ethumb.inject(elist);
   });
 
   // events
@@ -366,7 +379,9 @@ function init()
   new Request.JSON({ url: datafile, onSuccess: initGallery }).get();
 
   // preload some resources
-  Asset.images(['noise.png', 'left.png', 'right.png', 'eye.png', 'download.png']);
+  Asset.images(['noise.png', 'left.png', 'right.png',
+		'eye.png', 'download.png', 'throbber.gif',
+		'cut-left.png', 'cut-right.png', 'cut-mov.png']);
 }
 
 window.addEvent('domready', init);
