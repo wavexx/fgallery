@@ -151,7 +151,10 @@ function onMainReady()
   if(fscr) fscr.cancel();
   fscr = new Fx.Scroll(elist, { duration: d }).start(0, y);
 
+  var rp = Math.floor(Math.random() * 100);
   emain.setStyle('background-image', 'url(noise.png), url(' + encodeURI(imgs.data[eidx].blur) + ')');
+  emain.setStyle('background-position', rp + 'px ' + rp + 'px, 0 0');
+
   clearTimeout(tthr);
   showHdr();
 
