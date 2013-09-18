@@ -112,7 +112,7 @@ if(!-d $dir) {
 }
 
 # derived arguments
-my @backblur = ($minthumb[0] / 2, $minthumb[1] / 2);
+my @backblur = (int($minthumb[0] * 0.5), int($minthumb[1] * 0.5));
 my @backsize = (500, 500);
 
 # cleanup target paths
