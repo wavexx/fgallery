@@ -22,6 +22,7 @@ my @maxfull = (1600, 1200);
 my $maxq = 100;
 my $imgq = 90;
 my $imflags = "";
+my $fullpano = 1;
 
 
 # support functions
@@ -71,6 +72,7 @@ sub print_help()
   -i			include individual originals
   -o			do not auto-orient
   -t			do not time-sort
+  -p			do not automatically include full-sized panoramas
   --min-thumb WxH	minimum thumbnail size ($minthumb[0]x$minthumb[1])
   --max-thumb WxH	maximum thumbnail size ($maxthumb[0]x$maxthumb[1])
   --max-full WxH	maximum full image size ($maxfull[0]x$maxfull[1])
@@ -87,6 +89,7 @@ my ($ret, @ARGS) = GetOptions('help|h' => \$help,
 	   'i' => sub { $ofile = 1; },
 	   'o' => sub { $orient = 0; },
 	   't' => sub { $timesort = 0; },
+	   'p' => sub { $fullpano = 0; },
 	   'min-thumb=s' => sub { @minthumb = parse_wh(@_); },
 	   'max-thumb=s' => sub { @maxthumb = parse_wh(@_); },
 	   'max-full=s' => sub { @maxfull = parse_wh(@_); },
@@ -209,8 +212,17 @@ if(!$ofile || $slim)
 {
   for my $fdata(@data)
   {
-    unlink("$out/$fdata->{'file'}");
-    delete($fdata->{'file'});
+    my $keep = 0;
+
+    if($fullpano) {
+      $keep = (abs($fdata->{'file'}[1][0] / $fdata->{'file'}[1][1]) >= 2);
+    }
+
+    if(!$keep)
+    {
+      unlink("$out/$fdata->{'file'}[0]");
+      delete($fdata->{'file'});
+    }
   }
 }
 if($slim)
