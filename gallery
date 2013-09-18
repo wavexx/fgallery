@@ -112,7 +112,7 @@ if(!-d $dir) {
 }
 
 # derived arguments
-my @backblur = (int($minthumb[0] * 0.5), int($minthumb[1] * 0.5));
+my $backblur = int(($minthumb[0] + $minthumb[1]) / 2 * 0.1);
 my @backsize = (500, 500);
 
 # cleanup target paths
@@ -164,7 +164,8 @@ for my $file(glob("$dir/*.{" . join(",", @exts) . "}"))
       -gravity center -crop '$maxthumb[0]x$maxthumb[1]+0x0' \\
       '$file' '$out/$fthumb'});
   sys(qq{convert $imflags -quality 90 \\
-      -blur '$backblur[0]x$backblur[1]' -scale '$backsize[0]x$backsize[1]' \\
+      -virtual-pixel Mirror -gaussian-blur '0x$backblur' \\
+      -scale '$backsize[0]x$backsize[1]' \\
       '$out/$fthumb' '$out/$fblur'});
   sys(qq{convert $flags $imflags -quality '$imgq' \\
       -geometry '$maxfull[0]x$maxfull[1]' \\
