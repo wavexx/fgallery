@@ -67,8 +67,6 @@ Source repository available at::
 TODO
 ----
 
-- Differentiate between normal and panorama shots in the thumbnail (black bands?)
-- Handle panorama shots (allow to zoom/pan?)
 - Slow animation in FF sometimes. Slowness detection doesn't work in these cases
 - Maybe use CSS transitions and degrade with a simple swap?
 - Handle videos too
