@@ -212,10 +212,12 @@ if(!$ofile || $slim)
 {
   for my $fdata(@data)
   {
-    my $keep = 0;
+    my $keep = !$slim && $ofile;
 
-    if($fullpano) {
-      $keep = (abs($fdata->{'file'}[1][0] / $fdata->{'file'}[1][1]) >= 2);
+    if(!$slim && !$keep && $fullpano) {
+      if(abs($fdata->{'file'}[1][0] / $fdata->{'file'}[1][1]) >= 2) {
+	$keep = 1;
+      }
     }
 
     if(!$keep)
