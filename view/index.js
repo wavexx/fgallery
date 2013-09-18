@@ -169,6 +169,7 @@ function showThrobber()
   img.src = "throbber.gif";
   ehdr.empty();
   img.inject(ehdr);
+  showHdr();
 }
 
 function hideHdr()
