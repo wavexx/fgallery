@@ -24,6 +24,7 @@ my $imgq = 90;
 my $imflags = "";
 my $fullpano = 1;
 my $nodown = 0;
+my $panort = 2.;
 
 
 # support functions
@@ -224,20 +225,27 @@ if(!$ofile || $slim)
 {
   for my $fdata(@data)
   {
+    my $file = "$out/$fdata->{'file'}[0]";
     my $keep = !$slim && $ofile;
 
     if(!$slim && !$keep && $fullpano)
     {
-      my $rt = $fdata->{'file'}[1][0] / $fdata->{'file'}[1][1];
-      my $mp = ($fdata->{'file'}[1][0] * $fdata->{'file'}[1][1]) / 1e6;
-      if(abs($rt) >= 2 && $mp > $amp * 1.5) {
+      my ($x, $y) = @{$fdata->{'file'}[1]};
+      my $mp = ($x * $y / 1e6);
+
+      # try to see if the source file is just a crop of the original
+      chomp(my $xy = qx{identify -format '%[EXIF:PixelXDimension]x%[EXIF:PixelYDimension]' '$file'});
+      my ($ox, $oy) = ($xy =~ /^(\d+)x(\d+)$/);
+      my $omp = (defined($ox) && defined($oy)? $ox * $oy / 1e6: 0);
+
+      if($mp >= $omp && $mp > $amp && abs($x / $y) >= $panort) {
 	$keep = 1;
       }
     }
 
     if(!$keep)
     {
-      unlink("$out/$fdata->{'file'}[0]");
+      unlink($file);
       delete($fdata->{'file'});
     }
   }
