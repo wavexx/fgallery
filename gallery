@@ -124,6 +124,7 @@ for my $path("$out/thumbs", "$out/blurs", "$out/imgs", "$out/files")
 
 my @data;
 my $ostamp = 0;
+my $amp = 0;
 for my $file(glob("$dir/*.{" . join(",", @exts) . "}"))
 {
   my $base = fileparse($file, qr/\.[^.]*$/);
@@ -176,6 +177,10 @@ for my $file(glob("$dir/*.{" . join(",", @exts) . "}"))
   my @sthumb = get_wh("$out/$fthumb");
   my @sfile = get_wh("$file");
 
+  # rolling mp average
+  my $mp = ($sfile[0] * $sfile[1] / 1e6);
+  $amp += ($mp - $amp) / (@data + 1);
+
   my %fdata;
   $fdata{'img'} = [ $fimg, \@simg ];
   $fdata{'thumb'} = [ $fthumb, \@sthumb ];
@@ -215,8 +220,11 @@ if(!$ofile || $slim)
   {
     my $keep = !$slim && $ofile;
 
-    if(!$slim && !$keep && $fullpano) {
-      if(abs($fdata->{'file'}[1][0] / $fdata->{'file'}[1][1]) >= 2) {
+    if(!$slim && !$keep && $fullpano)
+    {
+      my $rt = $fdata->{'file'}[1][0] / $fdata->{'file'}[1][1];
+      my $mp = ($fdata->{'file'}[1][0] * $fdata->{'file'}[1][1]) / 1e6;
+      if(abs($rt) >= 2 && $mp > $amp * 1.5) {
 	$keep = 1;
       }
     }
