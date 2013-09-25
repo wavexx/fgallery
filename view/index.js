@@ -236,11 +236,7 @@ function load(i)
   if(i == eidx) return;
 
   var data = imgs.data[i];
-  var assets = Asset.images([data.img[0], data.blur],
-  {
-    display: 'none',
-    onComplete: onMainReady
-  });
+  var assets = Asset.images([data.img[0], data.blur], { onComplete: onMainReady });
 
   if(!oimg) oimg = eimg;
   eimg = assets[0];
