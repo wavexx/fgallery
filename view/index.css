@@ -1,6 +1,7 @@
+/* General reset */
 html
 {
-  overflow: hidden; /* IE7 */
+  overflow: hidden; /* IE7/8 */
 }
 
 body
@@ -10,7 +11,13 @@ body
   border: 0;
 }
 
-h2
+img
+{
+  border: none;
+}
+
+/* Main gallery elements */
+#gallery h2
 {
   margin: 1em;
   font-family: monospace;
@@ -49,19 +56,15 @@ h2
   background: #fff;
 }
 
-#gallery #content > img
-{
-  position: absolute;
-}
-
+/* Main image */
 #gallery #content img.current
 {
   box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
   -moz-box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
   -webkit-box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
-  behavior: url(PIE.htc);
 }
 
+/* Header */
 #gallery #content #header
 {
   position: absolute;
@@ -89,6 +92,7 @@ h2
   text-decoration: underline;
 }
 
+/* Navigation arrows */
 #gallery #content #left:after
 {
   content: "";
@@ -100,7 +104,6 @@ h2
   background: url(left.png) no-repeat;
   background-position: center;
   opacity: 0.3;
-  filter: alpha(opacity=30);
 }
 
 #gallery #content #right:after
@@ -114,16 +117,15 @@ h2
   background: url(right.png) no-repeat;
   background-position: center;
   opacity: 0.3;
-  filter: alpha(opacity=30);
 }
 
 #gallery #content #left:hover:after,
 #gallery #content #right:hover:after
 {
   opacity: 0.6;
-  filter: alpha(opacity=60);
 }
 
+/* Thumbnail list */
 #gallery #list
 {
   position: absolute;
@@ -137,21 +139,20 @@ h2
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
   -moz-box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
   -webkit-box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-  behavior: url(PIE.htc);
 }
 
 #gallery #list:focus
 {
-  outline: 0;
+  outline: none;
 }
 
+/* Invidivual thumbnails */
 #gallery #list .thumb
 {
   display: inline-block;
   box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.5);
   -moz-box-shadow: 5px 5px rgba(0, 0, 0, 0.5);
   -webkit-box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.5);
-  behavior: url(PIE.htc);
 }
 
 #gallery #list .thumb a
@@ -184,6 +185,7 @@ h2
   padding: 0px;
 }
 
+/* Thumbnail styles */
 #gallery #list .thumb.pano-w .ovr
 {
   position: absolute;

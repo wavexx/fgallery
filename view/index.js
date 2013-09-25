@@ -304,7 +304,7 @@ function initGallery(data)
 
   imgs.data.each(function(x, i)
   {
-    var ethumb = new Element('div', { class: 'thumb' });
+    var ethumb = new Element('div', { 'class': 'thumb' });
     ethumb.setStyle('margin-bottom', padding / 2);
     x.limg = ethumb;
 
@@ -322,7 +322,7 @@ function initGallery(data)
     img.src = x.thumb[0];
     img.inject(a);
 
-    var ovr = new Element('div', { class: 'ovr' });
+    var ovr = new Element('div', { 'class': 'ovr' });
     ovr.inject(a);
 
     a.inject(ethumb);
