@@ -1,5 +1,5 @@
-fgallery - a modern, minimalist javascript photo gallery
---------------------------------------------------------
+fgallery: a modern, minimalist javascript photo gallery
+-------------------------------------------------------
 
 "fgallery" is a static photo gallery generator with no frills that has a
 stylish, minimalist look. "fgallery" shows your photos, and nothing else.
