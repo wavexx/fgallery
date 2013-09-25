@@ -1,6 +1,7 @@
+/* General reset */
 html
 {
-  overflow: hidden; /* IE7 */
+  overflow: hidden; /* IE<9 */
 }
 
 body
@@ -10,7 +11,13 @@ body
   border: 0;
 }
 
-h2
+img
+{
+  border: none;
+}
+
+/* Main gallery elements */
+#gallery h2
 {
   margin: 1em;
   font-family: monospace;
@@ -49,19 +56,15 @@ h2
   background: #fff;
 }
 
-#gallery #content > img
-{
-  position: absolute;
-}
-
+/* Main image */
 #gallery #content img.current
 {
   box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
   -moz-box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
   -webkit-box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
-  behavior: url(PIE.htc);
 }
 
+/* Header */
 #gallery #content #header
 {
   position: absolute;
@@ -89,46 +92,63 @@ h2
   text-decoration: underline;
 }
 
-#gallery #content #left:after
+/* Navigation arrows */
+#gallery #content #left
 {
-  content: "";
   position: absolute;
   left: 0;
   width: 5%;
   top: 0;
   height: 100%;
-  background: url(left.png) no-repeat;
-  background-position: center;
-  opacity: 0.3;
-  filter: alpha(opacity=30);
 }
 
-#gallery #content #right:after
+#gallery #content #right
 {
-  content: "";
   position: absolute;
   right: 0;
   width: 5%;
   top: 0;
   height: 100%;
-  background: url(right.png) no-repeat;
-  background-position: center;
+}
+
+#gallery #content #left div,
+#gallery #content #right div
+{
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
   opacity: 0.3;
   filter: alpha(opacity=30);
 }
 
-#gallery #content #left:hover:after,
-#gallery #content #right:hover:after
+#gallery #content #left div:hover,
+#gallery #content #right div:hover
 {
   opacity: 0.6;
   filter: alpha(opacity=60);
 }
 
+#gallery #content #left img,
+#gallery #content #right img
+{
+  position: absolute;
+  display: block;
+  margin: auto;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+}
+
+/* Thumbnail list */
 #gallery #list
 {
   position: absolute;
   right: 0;
   top: 0;
+  background: #333; /* IE<9 */
   background: rgba(255, 255, 255, 0.1);
   overflow-y: scroll;
   overflow-x: hidden;
@@ -137,21 +157,20 @@ h2
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
   -moz-box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
   -webkit-box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-  behavior: url(PIE.htc);
 }
 
 #gallery #list:focus
 {
-  outline: 0;
+  outline: none;
 }
 
+/* Invidivual thumbnails */
 #gallery #list .thumb
 {
   display: inline-block;
   box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.5);
   -moz-box-shadow: 5px 5px rgba(0, 0, 0, 0.5);
   -webkit-box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.5);
-  behavior: url(PIE.htc);
 }
 
 #gallery #list .thumb a
@@ -184,6 +203,7 @@ h2
   padding: 0px;
 }
 
+/* Thumbnail styles */
 #gallery #list .thumb.pano-w .ovr
 {
   position: absolute;
