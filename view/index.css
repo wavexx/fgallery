@@ -71,6 +71,7 @@ img
   top: 0;
   left: 0;
   color: #fff;
+  background: #111; /* IE<9 */
   background: rgba(0, 0, 0, 0.7);
   font-family: sans-serif;
   padding: 0.5em;
