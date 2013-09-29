@@ -100,6 +100,7 @@ IdleTimer = new Class({
 	 * Starts the timer which eventually will reach idle() if the user is inactive
 	 */
 	start: function() {
+		if(this.timer) clearTimeout(this.timer); // If called twice, timer will have to be removed
 		this.timer = this.idle.delay(this.options.timeout, this);
 		this.lastActive = Date.now();
 		if(!this.bound) this.bind();

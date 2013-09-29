@@ -49,6 +49,7 @@ var eidx;	// current index
 var tthr;	// throbber timeout
 var imgs;	// image list
 var first;	// first image
+var idle;	// idle timer
 
 function resize()
 {
@@ -158,6 +159,7 @@ function onMainReady()
   emain.setStyle('background-position', rp + 'px ' + rp + 'px, 0 0');
 
   clearTimeout(tthr);
+  idle.start();
   showHdr();
 
   // prefetch next image
@@ -174,12 +176,14 @@ function showThrobber()
   img.src = "throbber.gif";
   ehdr.empty();
   img.inject(ehdr);
+  idle.stop();
   showHdr();
 }
 
 function hideHdr()
 {
-  ehdr.tween('opacity', [1, 0], { link: 'ignore' });
+  if(idle.started)
+    ehdr.tween('opacity', [1, 0], { link: 'ignore' });
 }
 
 function hideNav()
@@ -368,13 +372,13 @@ function initGallery(data)
   });
 
   // setup an idle callback for mouse movement only
-  var idleTimer = new IdleTimer(window, { timeout: hidedelay, events: ['mousemove', 'mousedown', 'mousewheel'] }).start();
-  idleTimer.addEvent('idle', function() { hideNav(); hideHdr(); });
-  idleTimer.addEvent('active', function() { showNav(); showHdr(); });
+  idleTmp = new IdleTimer(window, { timeout: hidedelay, events: ['mousemove', 'mousedown', 'mousewheel'] }).start();
+  idleTmp.addEvent('idle', function() { hideNav(); hideHdr(); });
+  idleTmp.addEvent('active', function() { showNav(); showHdr(); });
 
   // general idle callback
-  var idleTimer = new IdleTimer(window, { timeout: hidedelay }).start();
-  idleTimer.addEvent('idle', hideHdr);
+  idle = new IdleTimer(window, { timeout: hidedelay }).start();
+  idle.addEvent('idle', hideHdr);
 }
 
 function init()
