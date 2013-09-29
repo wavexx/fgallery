@@ -4,6 +4,12 @@
 # Distributed under GPL2 (see COPYING) WITHOUT ANY WARRANTY.
 use strict;
 use warnings;
+
+use locale;
+use utf8;
+require Encode;
+require encoding;
+
 use Getopt::Long;
 use File::Basename qw{fileparse};
 use JSON::PP qw{encode_json};
@@ -102,6 +108,7 @@ sub print_help()
 
 # main program
 my $help = 0;
+my $locale = encoding::_get_locale_encoding();
 
 my ($ret, @ARGS) = GetOptions('help|h' => \$help,
 	   's' => sub { $slim = 1; },
@@ -148,16 +155,25 @@ my $ostamp = 0;
 my $amp = 0;
 for my $file(glob("$dir/*.{" . join(",", @exts) . "}"))
 {
-  my $base = fileparse($file, qr/\.[^.]*$/);
+  my $base = fileparse(Encode::decode($locale, $file), qr/\.[^.]*$/);
   print(STDERR "$base ...\n");
   my %props = get_props($file);
 
+  # sanitize file name
+  $base =~ s/[^\w]/_/gu;
   my $fbase = "$base.$ext";
+  my $ffile = "files/$fbase";
+  my $fout = "$out/$ffile";
+  for(my $c = 0; -f $fout; ++$c)
+  {
+    $fbase = "${base}_$c.$ext";
+    $ffile = "files/$fbase";
+    $fout = "$out/$ffile";
+  }
+
   my $fimg = "imgs/$fbase";
   my $fthumb = "thumbs/$fbase";
   my $fblur = "blurs/$fbase";
-  my $ffile = "files/$fbase";
-  my $fout = "$out/$ffile";
 
   my @flags = ();
   push(@flags, "-auto-orient") if($orient);
