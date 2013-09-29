@@ -9,7 +9,7 @@ use File::Basename qw{fileparse};
 use JSON::PP qw{encode_json};
 use File::Path qw{make_path remove_tree};
 use Date::Parse qw{str2time};
-use File::Glob qw(:globally :nocase);
+use File::Glob qw{:globally :nocase};
 
 # defaults
 my $mode = '0644';
@@ -24,7 +24,7 @@ my @maxthumb = (150, 200);
 my @maxfull = (1600, 1200);
 my $maxq = 100;
 my $imgq = 90;
-my $imflags = "";
+my @imflags = ();
 my $fullpano = 1;
 my $nodown = 0;
 my $panort = 2.;
@@ -40,18 +40,31 @@ sub fatal
 
 sub sys
 {
-  my $cmd = shift;
-  if(system($cmd)) {
-    fatal("command \"$cmd\" failed");
+  my @cmd = @_;
+
+  my $fd;
+  unless(open($fd, '-|', @cmd)) {
+    fatal("cannot execute \"$cmd[0]\"");
   }
+
+  local $/ = undef;
+  my $out = <$fd>;
+
+  unless(close($fd)) {
+    fatal("command \"@cmd\" failed");
+  }
+
+  return split("\n", $out);
 }
 
 
-sub get_wh
+sub get_props
 {
   my $file = shift;
-  chomp(my $xy = qx{identify -format '%wx%h' '$file'});
-  return ($xy =~ /^(\d+)x(\d+)$/);
+  my @cmd = ('identify', '-format',
+	     '%[*]%[exif:*]width=%w\nheight=%h\nformat=%m',
+	     $file);
+  return map { /^([^=]+)=(.*)/ } sys(@cmd);
 }
 
 
@@ -64,7 +77,7 @@ sub parse_wh
   unless(defined($w) && defined($h)) {
     fatal("bad WxH specification in option $opt");
   }
-  return ($w, $h);
+  return (int($w), int($h));
 }
 
 
@@ -129,6 +142,7 @@ for my $path("$out/thumbs", "$out/blurs", "$out/imgs", "$out/files")
   make_path($path);
 }
 
+# processing
 my @data;
 my $ostamp = 0;
 my $amp = 0;
@@ -136,94 +150,94 @@ for my $file(glob("$dir/*.{" . join(",", @exts) . "}"))
 {
   my $base = fileparse($file, qr/\.[^.]*$/);
   print(STDERR "$base ...\n");
+  my %props = get_props($file);
 
   my $fbase = "$base.$ext";
   my $fimg = "imgs/$fbase";
   my $fthumb = "thumbs/$fbase";
   my $fblur = "blurs/$fbase";
   my $ffile = "files/$fbase";
+  my $fout = "$out/$ffile";
 
-  my $flags = "";
-  $flags .= " -auto-orient" if($orient);
+  my @flags = ();
+  push(@flags, "-auto-orient") if($orient);
+  push(@flags, '-quality', $imgq);
 
-  chomp(my $ifmt = qx{identify -format '%m' '$file'});
-  chomp(my $idate = qx{identify -format '%[EXIF:DateTimeOriginal]' '$file'});
-
-  if($maxq != 100 || $ifmt ne "JPEG")
+  if($maxq != 100 || $props{format} ne "JPEG")
   {
     # lossy path
-    sys(qq{convert $flags $imflags -quality '$maxq' '$file' '$out/$ffile'});
-    sys(qq{chmod '$mode' '$out/$ffile'});
-    sys(qq{touch -r '$file' '$out/$ffile'});
+    sys('convert', @flags, @imflags, '-quality', $maxq, $file, $fout);
+    sys('chmod', $mode, $fout);
+    sys('touch', '-r', $file, $fout);
   }
   else
   {
-    # lessless path
-    sys(qq{cp -p '$file' '$out/$ffile'});
-    sys(qq{chmod '$mode' '$out/$ffile'});
-    sys(qq{exiftran -aip '$out/$ffile' >/dev/null 2>&1}) if($orient);
+    # lossless path
+    sys('cp', '-p', $file, $fout);
+    sys('chmod', $mode, $fout);
+    sys("exiftran -aip $fout 2>/dev/null") if($orient);
   }
 
-  # generate images
-  my @minthumb = @minthumb;
+  # avoid conversion to string
   my @maxthumb = @maxthumb;
-  sys(qq{convert $flags $imflags -quality '$imgq' \\
-      -thumbnail '$minthumb[0]x$minthumb[1]^' \\
-      -gravity center -crop '$maxthumb[0]x$maxthumb[1]+0x0' \\
-      '$file' '$out/$fthumb'});
-  sys(qq{convert $imflags -quality 90 \\
-      -virtual-pixel Mirror -gaussian-blur '0x$backblur' \\
-      -scale '$backsize[0]x$backsize[1]' \\
-      '$out/$fthumb' '$out/$fblur'});
-  sys(qq{convert $flags $imflags -quality '$imgq' \\
-      -geometry '$maxfull[0]x$maxfull[1]' \\
-      '$file' '$out/$fimg'});
+  my @backsize = @backsize;
 
-  # sizes
-  my @simg = get_wh("$out/$fimg");
-  my @sthumb = get_wh("$out/$fthumb");
-  my @sfile = get_wh("$file");
+  # generate images
+  my @sfile = ($props{width}, $props{height});
+  my @sthumb = sys('convert', @flags, @imflags,
+		   '-thumbnail', "$minthumb[0]x$minthumb[1]^",
+		   '-gravity', 'center',
+		   '-crop', "$maxthumb[0]x$maxthumb[1]+0x0",
+		   '-print', '%w\n%h',
+		   $file, "$out/$fthumb");
+  my @simg = sys('convert', @flags, @imflags,
+		 '-geometry', "$maxfull[0]x$maxfull[1]",
+		 '-print', '%w\n%h',
+		 $file, "$out/$fimg");
+  sys('convert', @imflags, '-quality', '90',
+      '-virtual-pixel',  'Mirror',
+      '-gaussian-blur', "0x$backblur",
+      '-scale', "$backsize[0]x$backsize[1]",
+      "$out/$fthumb", "$out/$fblur");
 
   # rolling mp average
   my $mp = ($sfile[0] * $sfile[1] / 1e6);
   $amp += ($mp - $amp) / (@data + 1);
 
   my %fdata;
-  $fdata{'img'} = [ $fimg, \@simg ];
-  $fdata{'thumb'} = [ $fthumb, \@sthumb ];
-  $fdata{'file'} = [ $ffile, \@sfile ];
-  $fdata{'blur'} = $fblur;
-  if(!$idate)
+  $fdata{props} = \%props;
+  $fdata{img} = [$fimg, [map { int } @simg]];
+  $fdata{thumb} = [$fthumb, [map { int } @sthumb]];
+  $fdata{file} = [$ffile, [map { int } @sfile]];
+  $fdata{blur} = $fblur;
+
+  unless(my $idate = $props{'exif:DateTimeOriginal'})
   {
     # no date available, cheat by using the previous timestamp
-    $fdata{'stamp'} = $ostamp = $ostamp + 1;
+    $fdata{stamp} = $ostamp = $ostamp + 1;
   }
   else
   {
-    $fdata{'date'} = $idate;
-    $fdata{'stamp'} = $ostamp = str2time($idate);
+    $fdata{date} = $idate;
+    $fdata{stamp} = $ostamp = str2time($idate);
   }
 
   push(@data, \%fdata);
 }
 
 if($timesort) {
-  @data = sort { ($a->{'stamp'} // 0) <=> ($b->{'stamp'} // 0); } @data;
+  @data = sort { ($a->{stamp} // 0) <=> ($b->{stamp} // 0); } @data;
 }
 
+# generate zip file
 my $fdownload = undef;
 if(!$nodown && !$slim)
 {
   $fdownload = "files/album.zip";
-
-  my @files;
-  for my $fdata(@data) {
-    push(@files, "'$out/$fdata->{'file'}[0]'");
-  }
-  my $flist = join(" ", @files);
-  sys(qq{zip -q9j '$out/$fdownload' $flist});
+  sys('zip', '-q9j', "$out/$fdownload", map { "$out/$_->{'file'}[0]" } @data);
 }
 
+# remove unnecessary raw files
 if(!$ofile || $slim)
 {
   for my $fdata(@data)
@@ -233,13 +247,13 @@ if(!$ofile || $slim)
 
     if(!$slim && !$keep && $fullpano)
     {
-      my ($x, $y) = @{$fdata->{'file'}[1]};
+      my ($x, $y) = @{$fdata->{file}[1]};
       my $mp = ($x * $y / 1e6);
 
       # try to see if the source file is just a crop of the original
-      chomp(my $xy = qx{identify -format '%[EXIF:PixelXDimension]x%[EXIF:PixelYDimension]' '$file'});
-      my ($ox, $oy) = ($xy =~ /^(\d+)x(\d+)$/);
-      my $omp = (defined($ox) && defined($oy)? $ox * $oy / 1e6: 0);
+      my $ox = $fdata->{props}{'exif:PixelXDimension'} // 0;
+      my $oy = $fdata->{props}{'exif:PixelYDimension'} // 0;
+      my $omp = ($ox * $oy / 1e6);
 
       if($mp >= $omp && $mp > $amp && abs($x / $y) >= $panort) {
 	$keep = 1;
@@ -249,7 +263,7 @@ if(!$ofile || $slim)
     if(!$keep)
     {
       unlink($file);
-      delete($fdata->{'file'});
+      delete($fdata->{file});
     }
   }
 }
@@ -257,12 +271,23 @@ if(!$ofile || $slim)
 # only attempt to remove the directory (if empty)
 rmdir("$out/files");
 
-# output
+# generate json
 my %json;
-$json{'name'} = $name if($name);
-$json{'download'} = $fdownload if($fdownload);
-$json{'thumb'} = \@maxthumb;
-$json{'data'} = \@data;
+$json{name} = $name if($name);
+$json{download} = $fdownload if($fdownload);
+$json{blur} = \@backsize;
+$json{thumb} = \@maxthumb;
+
+foreach my $fdata(@data)
+{
+  my %data;
+  foreach('img', 'thumb', 'file', 'blur', 'date', 'stamp') {
+    if(defined($fdata->{$_})) {
+      $data{$_} = $fdata->{$_};
+    }
+  }
+  push(@{$json{data}}, \%data);
+}
 
 open(JSON, ">$out/data.json");
 print(JSON encode_json(\%json));
