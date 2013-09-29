@@ -117,6 +117,22 @@ function onMainReady()
   eimg.addClass('current');
   eimg.inject(ebuff);
 
+  // setup header
+  var dsc = [];
+  if(imgs.data[eidx].file)
+  {
+    var img = imgs.data[eidx].file[0];
+    dsc.push("<a title=\"Download image\" href=\"" + encodeURI(img) + "\"><img src=\"eye.png\"/></a>");
+    eimg.setStyle('cursor', 'zoom-in');
+    eimg.addEvent('click', function() { window.location = img; });
+  }
+  if(imgs.download)
+    dsc.push("<a title=\"Download album\" href=\"" + encodeURI(imgs.download) + "\"><img src=\"download.png\"/></a>");
+  if(imgs.data[eidx].date)
+    dsc.push("<b>Date</b>: " + imgs.data[eidx].date);
+  ehdr.set('html', dsc.join(' '));
+
+  // start animations
   var d = (first? 0: duration);
   first = false;
 
@@ -139,15 +155,6 @@ function onMainReady()
     });
   }
   fx.start('opacity', 0, 1);
-
-  var dsc = [];
-  if(imgs.data[eidx].file)
-    dsc.push("<a title=\"Download image\" href=\"" + encodeURI(imgs.data[eidx].file[0]) + "\"><img src=\"eye.png\"/></a>");
-  if(imgs.download)
-    dsc.push("<a title=\"Download album\" href=\"" + encodeURI(imgs.download) + "\"><img src=\"download.png\"/></a>");
-  if(imgs.data[eidx].date)
-    dsc.push("<b>Date</b>: " + imgs.data[eidx].date);
-  ehdr.set('html', dsc.join(' '));
 
   var y = limg.getPosition().y + elist.getScroll().y;
   y = y - elist.getSize().y / 2 + limg.getSize().y / 2;
@@ -210,6 +217,7 @@ function showNav()
 
 function flash()
 {
+  eflash.setStyle('display', 'block');
   eflash.tween('opacity', [1, 0]);
 }
 
@@ -287,8 +295,13 @@ function initGallery(data)
   tmp = new Element('div');
 
   eflash = new Element('div', { id: 'flash' });
-  eflash.setStyle('opacity', 0);
-  eflash.set('tween', { duration: duration, link: 'cancel' });
+  eflash.setStyles({ 'opacity': 0, 'display': 'none' });
+  eflash.set('tween',
+  {
+    duration: duration,
+    link: 'cancel',
+    onComplete: function() { eflash.setStyle('display', 'none'); }
+  });
   eflash.inject(tmp);
 
   eleft = new Element('a', { id: 'left' });
