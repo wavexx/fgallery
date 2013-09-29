@@ -116,6 +116,7 @@ img
 #gallery #content #right div
 {
   position: absolute;
+  cursor: pointer;
   top: 0;
   left: 0;
   bottom: 0;
