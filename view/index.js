@@ -140,9 +140,12 @@ function onMainReady()
   if(oimg)
   {
     oimg.removeClass('current');
-    var fx = new Fx.Tween(oimg, { duration: d });
+    var fx = oimg.get('tween');
+    fx.cancel();
+    fx.duration = d;
+    fx.removeEvents('complete');
     fx.addEvent('complete', function(x) { x.destroy(); });
-    fx.start('opacity', 1, 0);
+    fx.start('opacity', 0);
     oimg = undefined;
   }
 
@@ -155,7 +158,8 @@ function onMainReady()
       detectSlowness(now);
     });
   }
-  fx.start('opacity', 0, 1);
+  eimg.set('tween', fx);
+  fx.start('opacity', 1);
 
   var y = limg.getPosition().y + elist.getScroll().y;
   y = y - elist.getSize().y / 2 + limg.getSize().y / 2;
@@ -249,7 +253,10 @@ function load(i)
   if(i == eidx) return;
 
   var data = imgs.data[i];
-  var assets = Asset.images([data.img[0], data.blur], { onComplete: onMainReady });
+  var assets = Asset.images([data.img[0], data.blur],
+  {
+    onComplete: function() { if(i == eidx) onMainReady(); }
+  });
 
   if(!oimg) oimg = eimg;
   eimg = assets[0];
