@@ -99,8 +99,7 @@ If you are not using a Linux distribution you have to install ImageMagick and
 exiftran from the source manually. The additional perl modules can be installed
 using ``cpan``::
 
-  cpan -i JSON::PP
-  ...
+  cpan -i JSON::PP Date::Parse
 
 
 Authors and Copyright
