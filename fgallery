@@ -18,7 +18,7 @@ use Date::Parse qw{str2time};
 use File::Glob qw{:globally :nocase};
 
 # defaults
-my $mode = '0644';
+my $mode = 0644;
 my $slim = 0;
 my $ofile = 0;
 my $orient = 1;
@@ -200,14 +200,14 @@ for my $file(glob("$dir/*.{" . join(",", @exts) . "}"))
   {
     # lossy path
     sys('convert', @flags, @imflags, '-quality', $maxq, $file, $fout);
-    sys('chmod', $mode, $fout);
+    chmod($mode, $fout);
     sys('touch', '-r', $file, $fout);
   }
   else
   {
     # lossless path
     sys('cp', '-p', $file, $fout);
-    sys('chmod', $mode, $fout);
+    chmod($mode, $fout);
     sys("$exiftrancmd $fout 2>/dev/null") if($orient);
   }
 
