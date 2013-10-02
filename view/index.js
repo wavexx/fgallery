@@ -124,8 +124,9 @@ function onMainReady()
   {
     var img = imgs.data[eidx].file[0];
     dsc.push("<a title=\"Download image\" href=\"" + encodeURI(img) + "\"><img src=\"eye.png\"/></a>");
-    eimg.setStyle('cursor', 'zoom-in');
     eimg.addEvent('click', function() { window.location = img; });
+    eimg.setStyle('cursor', 'pointer'); // fallback
+    eimg.setStyle('cursor', 'zoom-in');
   }
   if(imgs.download)
     dsc.push("<a title=\"Download album\" href=\"" + encodeURI(imgs.download) + "\"><img src=\"download.png\"/></a>");
