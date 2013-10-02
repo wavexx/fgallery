@@ -138,6 +138,23 @@ if(!-d $dir) {
   fatal("output directory \"$out\" does not exist (should be a template copy)");
 }
 
+# check tools
+if(system("identify 2>&1 >/dev/null") || system("convert 2>&1 >/dev/null")) {
+  fatal("cannot run \"identify\" or \"convert\" (check if ImageMagick is installed)");
+}
+if(system("zip -h 2>&1 >/dev/null")) {
+  fatal("cannot run \"zip\" (check if zip is installed)");
+}
+
+my $exiftrancmd;
+if(!system("exiftran -h 2>&1 >/dev/null")) {
+  $exiftrancmd = "exiftran -aip";
+} elsif(!system("exifautotran 2>&1 >/dev/null")) {
+  $exiftrancmd = "exifautotran";
+} else {
+  fatal("cannot execute exiftran or exifautotran for lossless JPEG autorotation");
+}
+
 # derived arguments
 my $backblur = int(($minthumb[0] + $minthumb[1]) / 2 * 0.1);
 my @backsize = (500, 500);
@@ -191,7 +208,7 @@ for my $file(glob("$dir/*.{" . join(",", @exts) . "}"))
     # lossless path
     sys('cp', '-p', $file, $fout);
     sys('chmod', $mode, $fout);
-    sys("exiftran -aip $fout 2>/dev/null") if($orient);
+    sys("$exiftrancmd $fout 2>/dev/null") if($orient);
   }
 
   # avoid conversion to string

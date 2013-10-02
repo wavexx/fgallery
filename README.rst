@@ -84,7 +84,8 @@ Frontend/viewer: none (static html/js/css)
 Backend:
 
 * ImageMagick (http://www.imagemagick.org)
-* exiftran (part of ``fbida``: http://www.kraxel.org/blog/linux/fbida/)
+* Either ``exiftran`` (part of ``fbida``: http://www.kraxel.org/blog/linux/fbida/), or
+  ``exifautotran`` (part of ``libjpeg-progs``: http://libjpeg.sourceforge.net/).
 * zip
 * perl, with the following additional modules:
 
