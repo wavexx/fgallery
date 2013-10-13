@@ -244,7 +244,7 @@ for my $file(glob("$dir/*.{" . join(",", @exts) . "}"))
   $fdata{file} = [$ffile, [map { int } @sfile]];
   $fdata{blur} = $fblur;
 
-  unless(my $idate = $props{'exif:DateTimeOriginal'})
+  unless(my $idate = $props{'exif:DateTimeOriginal'} || $props{'exif:DateTime'})
   {
     # no date available, cheat by using the previous timestamp
     $fdata{stamp} = $ostamp = $ostamp + 1;
