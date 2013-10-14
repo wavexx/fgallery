@@ -167,22 +167,23 @@ function resizeMainImg(img)
 {
   var contsize = econt.getSize();
   var imgrt = img.width / img.height;
+  var pad = padding * 2;
   if(imgrt > (contsize.x / contsize.y))
   {
-    img.width = contsize.x - padding * 2;
+    img.width = Math.max(imgs.thumb.max[0] + pad, contsize.x - pad);
     img.height = img.width / imgrt;
   }
   else
   {
-    img.height = contsize.y - padding * 2;
+    img.height = Math.max(imgs.thumb.max[1] + pad, contsize.y - pad);
     img.width = img.height * imgrt;
   }
 
   img.setStyles(
   {
-    position: 'absolute',
-    top: (contsize.y - img.height) / 2,
-    left: (contsize.x - img.width) / 2
+    'position': 'absolute',
+    'top': contsize.y / 2 - img.height / 2,
+    'left': contsize.x / 2 - img.width / 2
   });
 }
 
