@@ -44,34 +44,123 @@ var eleft;	// go left
 var eright;	// go right
 var oimg;	// old image
 var eimg;	// new image
-var limg;	// current thumbnail
+var cthumb;	// current thumbnail
 var eidx;	// current index
 var tthr;	// throbber timeout
 var imgs;	// image list
 var first;	// first image
 var idle;	// idle timer
 var eidle;	// idle overlay
+var clayout;	// current layout
 
 function resize()
 {
   var msize = emain.measure(function(){ return this.getSize(); });
-  if(Browser.ie && Browser.version < 8) msize = window.getSize();
-  elist.setStyles(
-  {
-    width: imgs.thumb[0] + padding,
-    height: msize.y - padding,
-    padding: padding / 2
-  });
+  if(Browser.ie && Browser.version < 8) msize = window.getSize(); // IE<8
 
-  var epos = elist.measure(function(){ return this.getPosition(); });
-  econt.setStyles(
+  var rt = (imgs.thumb.min[0] / imgs.thumb.min[1]);
+  var maxw = msize.x - imgs.thumb.min[0] - padding;
+  var maxh = msize.y * rt - imgs.thumb.min[1] - padding;
+  var layout = (maxw >= maxh? 'horizontal': 'vertical');
+  relayout(msize, layout);
+  if(layout != clayout)
   {
-    width: epos.x,
-    height: msize.y
-  });
+    onLayoutChanged(layout);
+    if(cthumb) centerThumb(0);
+    clayout = layout;
+  }
 
   if(oimg) resizeMainImg(oimg);
   if(eimg) resizeMainImg(eimg);
+}
+
+function onLayoutChanged(layout)
+{
+  // refit the thumbnails, cropping edges
+  imgs.data.each(function(x, i)
+  {
+    var maxw, maxh;
+
+    if(layout == 'horizontal')
+    {
+      maxw = imgs.thumb.min[0];
+      maxh = Math.round(maxw * (x.thumb[1][1] / x.thumb[1][0]));
+      maxh = Math.max(maxh, imgs.thumb.min[1]);
+      maxh = Math.min(maxh, imgs.thumb.max[1]);
+    }
+    else
+    {
+      maxh = imgs.thumb.min[1];
+      maxw = Math.round(maxh * (x.thumb[1][0] / x.thumb[1][1]));
+      maxw = Math.max(maxw, imgs.thumb.min[0]);
+      maxw = Math.min(maxw, imgs.thumb.max[0]);
+    }
+
+    x.eimg.setStyles(
+    {
+      'width': maxw,
+      'height': maxh
+    });
+
+    // identify cropping type
+    var irt = x.img[1][0] / x.img[1][1];
+    var rd = maxw / maxh - irt;
+    x.ethumb.removeClass('pano-w');
+    x.ethumb.removeClass('pano-h');
+    if(Math.abs(rd) >= 0.5)
+      x.ethumb.addClass(x.img[1][0] > x.img[1][1]? 'pano-w': 'pano-h');
+  });
+}
+
+function relayout(msize, layout)
+{
+  // resize main container/thumbnail list
+  if(layout == 'horizontal')
+  {
+    elist.setStyles(
+    {
+      'top': 0,
+      'left': 'auto',
+      'right': 0,
+      'bottom': 'auto',
+      'width': imgs.thumb.min[0] + padding,
+      'height': msize.y - padding,
+      'padding': padding / 2,
+      'overflow-y': 'scroll',
+      'overflow-x': 'hidden',
+      'white-space': 'normal'
+    });
+
+    var epos = elist.measure(function(){ return this.getPosition(); });
+    econt.setStyles(
+    {
+      'width': epos.x,
+      'height': msize.y
+    });
+  }
+  else
+  {
+    elist.setStyles(
+    {
+      'top': 'auto',
+      'left': 0,
+      'right': 'auto',
+      'bottom': 0,
+      'width': msize.x - padding,
+      'height': imgs.thumb.min[1] + padding,
+      'padding': padding / 2,
+      'overflow-y': 'hidden',
+      'overflow-x': 'scroll',
+      'white-space': 'nowrap'
+    });
+
+    var epos = elist.measure(function(){ return this.getPosition(); });
+    econt.setStyles(
+    {
+      width: msize.x,
+      height: epos.y
+    });
+  }
 }
 
 function resizeMainImg(img)
@@ -85,8 +174,8 @@ function resizeMainImg(img)
   }
   else
   {
-    img.set('height', contsize.y - padding * 2);
-    img.set('width', img.height * imgrt);
+    img.height = contsize.y - padding * 2;
+    img.width = img.height * imgrt;
   }
 
   img.setStyles(
@@ -109,6 +198,20 @@ function detectSlowness(start)
   var delta = end - start;
   if(delta > duration * 2)
     duration = 0;
+}
+
+function centerThumb(duration)
+{
+  var thumbPos = cthumb.getPosition();
+  var thumbSize = cthumb.getSize();
+  var listSize = elist.getSize();
+  var listScroll = elist.getScroll();
+
+  var x = thumbPos.x + listScroll.x - listSize.x / 2 + thumbSize.x / 2;
+  var y = thumbPos.y + listScroll.y - listSize.y / 2 + thumbSize.y / 2;
+
+  if(fscr) fscr.cancel();
+  fscr = new Fx.Scroll(elist, { duration: duration }).start(x, y);
 }
 
 function onMainReady()
@@ -162,11 +265,6 @@ function onMainReady()
   eimg.set('tween', fx);
   fx.start('opacity', 1);
 
-  var y = limg.getPosition().y + elist.getScroll().y;
-  y = y - elist.getSize().y / 2 + limg.getSize().y / 2;
-  if(fscr) fscr.cancel();
-  fscr = new Fx.Scroll(elist, { duration: d }).start(0, y);
-
   var rp = Math.floor(Math.random() * 100);
   emain.setStyle('background-image', 'url(noise.png), url(' + encodeURI(imgs.data[eidx].blur) + ')');
   emain.setStyle('background-position', rp + 'px ' + rp + 'px, 0 0');
@@ -174,6 +272,7 @@ function onMainReady()
   clearTimeout(tthr);
   idle.start();
   showHdr();
+  centerThumb(d);
 
   // prefetch next image
   if(prefetch && eidx != imgs.data.length - 1)
@@ -263,9 +362,9 @@ function load(i)
   eimg = assets[0];
   eidx = i;
 
-  if(limg) limg.removeClass('current');
-  limg = imgs.data[eidx].limg;
-  limg.addClass('current');
+  if(cthumb) cthumb.removeClass('current');
+  cthumb = imgs.data[eidx].ethumb;
+  cthumb.addClass('current');
 
   clearTimeout(tthr);
   tthr = showThrobber.delay(thrdelay);
@@ -334,21 +433,23 @@ function initGallery(data)
   imgs.data.each(function(x, i)
   {
     var ethumb = new Element('div', { 'class': 'thumb' });
-    ethumb.setStyle('margin-bottom', padding / 2);
-    x.limg = ethumb;
-
-    // identify picture type
-    var tr = x.thumb[1][0] / x.thumb[1][1];
-    var ir = x.img[1][0] / x.img[1][1];
-    var rd = tr - ir;
-    if(Math.abs(rd) >= 0.5)
-      ethumb.addClass(rd < 0? 'pano-w': 'pano-h');
+    ethumb.setStyles(
+    {
+      'margin-bottom': padding / 2,
+      'margin-right': padding / 2
+    });
+    x.ethumb = ethumb;
 
     var a = new Element('a');
     a.href = "#" + i;
 
-    var img = new Element('img');
-    img.src = x.thumb[0];
+    var img = new Element('div', { 'class': 'img' });
+    x.eimg = img;
+    img.setStyles(
+    {
+      'background-image': 'url(' + x.thumb[0] + ')',
+      'background-position': 'center'
+    });
     img.inject(a);
 
     var ovr = new Element('div', { 'class': 'ovr' });

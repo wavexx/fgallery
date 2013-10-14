@@ -169,13 +169,8 @@ img
 #gallery #list
 {
   position: absolute;
-  right: 0;
-  top: 0;
   background: #333; /* IE<9 */
   background: rgba(255, 255, 255, 0.1);
-  overflow-y: scroll;
-  overflow-x: hidden;
-  text-align: center;
 
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
   -moz-box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
@@ -218,12 +213,6 @@ img
 #gallery #list .thumb.current a:focus
 {
   border: 2px solid #f00;
-}
-
-#gallery #list .thumb img
-{
-  display: block;
-  padding: 0px;
 }
 
 /* Thumbnail styles */

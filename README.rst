@@ -16,6 +16,7 @@ any modern browser.
 - Multi-camera friendly: automatically sorts pictures by time: just throw your
   (and your friends) photos and movies in a directory. The resulting gallery
   shows the pictures in seamless shooting order.
+- Adapts to the current screen layout automatically.
 - Includes original (raw) pictures in a zip file for downloading.
 - Panoramas can be seen full-size by default.
 
@@ -46,23 +47,30 @@ and then open http://localhost:8000 with a browser.
 Usage notes
 -----------
 
-The images as shown by the viewer are scaled/compressed to reduce viewing lag.
-They are also stripped of any EXIF tag. However, the pictures in the generated
-zip album are preserved *unchanged* (only lossless auto-rotation is applied so
-that they can be opened with a browser directly). All unprocessed images can
-also be included to be viewed individually in the gallery by using the ``-i``
-flag. By specifying a ``--quality 100`` flag, "fgallery" tries to apply
-lossless conversions also on the image previews, but beware about the size of
-the resulting gallery.
+The images as shown by the viewer are scaled/compressed using the specified
+quality to reduce viewing lag. They are also stripped of any EXIF tag. However,
+the pictures in the generated zip album are preserved *unchanged* (only
+lossless auto-rotation is applied so that they can be opened with a browser
+directly). All unprocessed images can also be included to be viewed
+individually in the gallery by using the ``-i`` flag, but beware about the
+resulting size of the gallery.
 
-The sizes of the thumbnails and the main image preview can be customized on the
-command line with the appropriate flags. There are two settings for the
-thumbnail sizes: minimum (150x112) and maximum (150x200). They are used for
-landscape and portrait photos respectively. Images having a different aspect
-ratio (like panoramas) are cut and centered instead of being scaled-to-fit, so
-that the thumbnail shows the central subject of the image instead of a thin,
-unwatchable strip. When this happens, the viewer shows a sign on the thumbnail
-along the cut edges (this effect can be seen in the demo gallery).
+The sizes of the thumbnails and the main image can be customized on the command
+line with the appropriate flags. Two settings are available for the thumbnail
+sizes: minimum (150x112) and maximum (267x200). Thumbnails will always be as
+big as the minimum size, but they can be enlarged up to the specified maximum
+depending on the screen orientation. The default settings are tuned for a
+mostly-landscape gallery, but they can be changed as needed.
+
+To favor portrait photos, invert the width/height::
+
+  ./fgallery --min-thumb 112x150 --max-thumb 200x267 ...
+
+Images having a different aspect ratio (like panoramas) are cut and centered
+instead of being scaled-to-fit, so that the thumbnail shows the central subject
+of the image instead of a thin, unwatchable strip. When this happens, the
+viewer shows a sign on the thumbnail along the cut edges (this effect can be
+seen in the demo gallery).
 
 Panoramas are automatically detected and the original image is included in
 full-size by default, as often the image preview alone doesn't give it justice.

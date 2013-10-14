@@ -26,7 +26,7 @@ my $timesort = 1;
 my @exts = ("jpg", "png");
 my $ext = "jpg";
 my @minthumb = (150, 112);
-my @maxthumb = (150, 200);
+my @maxthumb = (267, 200);
 my @maxfull = (1600, 1200);
 my $maxq = 100;
 my $imgq = 90;
@@ -157,7 +157,7 @@ if(!system("exiftran -h 2>&1 >/dev/null")) {
 
 # derived arguments
 my $backblur = int(($minthumb[0] + $minthumb[1]) / 2 * 0.1);
-my @backsize = (500, 500);
+my @backsize = (int($minthumb[0] * 4), int($minthumb[1] * 3));
 
 # cleanup target paths
 for my $path("$out/thumbs", "$out/blurs", "$out/imgs", "$out/files")
@@ -212,6 +212,7 @@ for my $file(glob("$dir/*.{" . join(",", @exts) . "}"))
   }
 
   # avoid conversion to string
+  my @minthumb = @minthumb;
   my @maxthumb = @maxthumb;
   my @backsize = @backsize;
 
@@ -309,7 +310,7 @@ my %json;
 $json{name} = $name if($name);
 $json{download} = $fdownload if($fdownload);
 $json{blur} = \@backsize;
-$json{thumb} = \@maxthumb;
+$json{thumb} = { min => \@minthumb, max => \@maxthumb };
 
 foreach my $fdata(@data)
 {
