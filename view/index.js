@@ -7,6 +7,7 @@ var duration = 500;
 var thrdelay = 1500;
 var hidedelay = 3000;
 var prefetch = 1;
+var minupscale = 640 * 480;
 
 Element.Events.hashchange =
 {
@@ -166,8 +167,12 @@ function relayout(msize, layout)
 function resizeMainImg(img)
 {
   var contsize = econt.getSize();
-  var imgrt = img.width / img.height;
+  var data = imgs.data[img.idx].img;
+  var width = data[1][0];
+  var height = data[1][1];
+  var imgrt = width / height;
   var pad = padding * 2;
+
   if(imgrt > (contsize.x / contsize.y))
   {
     img.width = Math.max(imgs.thumb.max[0] + pad, contsize.x - pad);
@@ -177,6 +182,11 @@ function resizeMainImg(img)
   {
     img.height = Math.max(imgs.thumb.max[1] + pad, contsize.y - pad);
     img.width = img.height * imgrt;
+  }
+  if(width * height <= minupscale && img.width > width)
+  {
+    img.width = width;
+    img.height = height;
   }
 
   img.setStyles(
@@ -361,7 +371,7 @@ function load(i)
 
   if(!oimg) oimg = eimg;
   eimg = assets[0];
-  eidx = i;
+  eimg.idx = eidx = i;
 
   if(cthumb) cthumb.removeClass('current');
   cthumb = imgs.data[eidx].ethumb;
