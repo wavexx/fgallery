@@ -225,7 +225,7 @@ for my $file(glob("$dir/*.{" . join(",", @exts) . "}"))
 		   '-print', '%w\n%h',
 		   $file, "$out/$fthumb");
   my @simg = sys('convert', @flags, @imflags,
-		 '-geometry', "$maxfull[0]x$maxfull[1]",
+		 '-geometry', "$maxfull[0]x$maxfull[1]>",
 		 '-print', '%w\n%h',
 		 $file, "$out/$fimg");
   sys('convert', @imflags, '-quality', '90',
