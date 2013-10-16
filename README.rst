@@ -147,3 +147,5 @@ TODO
 - Handle videos too
 - Add an "overview" mode, which shows a screenful of thumbnails.
 - Allow to hide the thumbnails entirely.
+- Improve EXIF/header display.
+- When cutting thumbnails, try to center on faces (if any).
