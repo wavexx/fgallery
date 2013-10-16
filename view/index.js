@@ -247,6 +247,7 @@ function onMainReady()
   if(imgs.data[eidx].date)
     dsc.push("<b>Date</b>: " + imgs.data[eidx].date);
   ehdr.set('html', dsc.join(' '));
+  ehdr.setStyle('display', (dsc.length? 'block': 'none'));
 
   // start animations
   var d = (first? 0: duration);
@@ -299,6 +300,7 @@ function showThrobber()
   img.src = "throbber.gif";
   ehdr.empty();
   img.inject(ehdr);
+  ehdr.setStyle('display', 'block');
   idle.stop();
   showHdr();
 }
