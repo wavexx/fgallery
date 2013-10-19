@@ -34,6 +34,7 @@ my @imflags = ();
 my $fullpano = 1;
 my $nodown = 0;
 my $panort = 2.;
+my $facedet = 0;
 
 
 # support functions
@@ -98,6 +99,7 @@ sub print_help()
   -t			do not time-sort
   -p			do not automatically include full-sized panoramas
   -d			do not generate a full album download
+  -f			improve thumbnail cutting by performing face detection
   --min-thumb WxH	minimum thumbnail size ($minthumb[0]x$minthumb[1])
   --max-thumb WxH	maximum thumbnail size ($maxthumb[0]x$maxthumb[1])
   --max-full WxH	maximum full image size ($maxfull[0]x$maxfull[1])
@@ -117,6 +119,7 @@ my ($ret, @ARGS) = GetOptions('help|h' => \$help,
 	   't' => sub { $timesort = 0; },
 	   'p' => sub { $fullpano = 0; },
 	   'd' => sub { $nodown = 1; },
+	   'f' => sub { $facedet = 1; },
 	   'min-thumb=s' => sub { @minthumb = parse_wh(@_); },
 	   'max-thumb=s' => sub { @maxthumb = parse_wh(@_); },
 	   'max-full=s' => sub { @maxfull = parse_wh(@_); },
@@ -144,6 +147,9 @@ if(system("identify 2>&1 >/dev/null") || system("convert 2>&1 >/dev/null")) {
 }
 if(system("zip -h 2>&1 >/dev/null")) {
   fatal("cannot run \"zip\" (check if zip is installed)");
+}
+if(system("facedetect -h 2>&1 >/dev/null")) {
+  fatal("cannot run \"facedetect\" (see http://www.thregr.org/~wavexx/hacks/facedetect/)");
 }
 
 my $exiftrancmd;
@@ -216,22 +222,40 @@ for my $file(glob("$dir/*.{" . join(",", @exts) . "}"))
   my @maxthumb = @maxthumb;
   my @backsize = @backsize;
 
-  # generate images
+  # generate main image
   my @sfile = ($props{width}, $props{height});
-  my @sthumb = sys('convert', @flags, @imflags,
-		   $file, '-gamma', '0.454545',
-		   '-thumbnail', "$minthumb[0]x$minthumb[1]^",
-		   '-gravity', 'center',
-		   '-crop', "$maxthumb[0]x$maxthumb[1]+0x0",
-		   '-print', '%w\n%h',
-		   '-gamma', '2.2', "$out/$fthumb");
   my @simg = sys('convert', @flags, @imflags,
 		   $file, '-gamma', '0.454545',
 		 '-geometry', "$maxfull[0]x$maxfull[1]>",
 		 '-print', '%w\n%h',
 		 '-gamma', '2.2', "$out/$fimg");
+
+  # face detection
+  my @center;
+  if($facedet)
+  {
+    my @faces = sys("facedetect", "--best", "--center", "$out/$fimg");
+    if(@faces)
+    {
+      # TODO: thumbnail crop region and centering is required!
+      # Here we just cheat by avoiding thumbnail cropping when centering is required
+      @maxthumb = @maxfull;
+      @center = split(" ", $faces[0]);
+    }
+  }
+
+  # thumbnail
+  my @sthumb = sys('convert', @flags, @imflags,
+		   $file, '-gamma', '0.454545',
+		   '-thumbnail', "$minthumb[0]x$minthumb[1]^",
+		   '-gravity', 'Center',
+		   '-crop', "$maxthumb[0]x$maxthumb[1]+0x0",
+		   '-print', '%w\n%h',
+		   '-gamma', '2.2', "$out/$fthumb");
+
+  # blur
   sys('convert', @imflags, '-quality', '90',
-      '-virtual-pixel',  'Mirror',
+      '-virtual-pixel', 'Mirror',
       '-gaussian-blur', "0x$backblur",
       '-scale', "$backsize[0]x$backsize[1]",
       "$out/$fthumb", "$out/$fblur");
@@ -246,6 +270,7 @@ for my $file(glob("$dir/*.{" . join(",", @exts) . "}"))
   $fdata{thumb} = [$fthumb, [map { int } @sthumb]];
   $fdata{file} = [$ffile, [map { int } @sfile]];
   $fdata{blur} = $fblur;
+  $fdata{center} = [map { int } @center] if(@center);
 
   unless(my $idate = $props{'exif:DateTimeOriginal'} || $props{'exif:DateTime'})
   {
@@ -317,7 +342,7 @@ $json{thumb} = { min => \@minthumb, max => \@maxthumb };
 foreach my $fdata(@data)
 {
   my %data;
-  foreach('img', 'thumb', 'file', 'blur', 'date', 'stamp') {
+  foreach('img', 'thumb', 'file', 'blur', 'date', 'stamp', 'center') {
     if(defined($fdata->{$_})) {
       $data{$_} = $fdata->{$_};
     }
