@@ -8,6 +8,7 @@ var thrdelay = 1500;
 var hidedelay = 3000;
 var prefetch = 1;
 var minupscale = 640 * 480;
+var cutrt = 0.2;
 
 Element.Events.hashchange =
 {
@@ -103,13 +104,37 @@ function onLayoutChanged(layout)
       'height': maxh
     });
 
-    // identify cropping type
-    var irt = x.img[1][0] / x.img[1][1];
-    var rd = maxw / maxh - irt;
-    x.ethumb.removeClass('pano-w');
-    x.ethumb.removeClass('pano-h');
-    if(Math.abs(rd) >= 0.5)
-      x.ethumb.addClass(x.img[1][0] > x.img[1][1]? 'pano-w': 'pano-h');
+    // identify type/cropping center
+    var classes = ['cut-left', 'cut-right', 'cut-top', 'cut-bottom'];
+    classes.each(function(c) { x.ethumb.removeClass(c); });
+
+    var cx, cy;
+    if(!x.center)
+    {
+      cx = 0.5;
+      cy = 0.5;
+    }
+    else
+    {
+      cx = x.center[0] / x.img[1][0];
+      cy = x.center[1] / x.img[1][1];
+    }
+
+    var dx = maxw - x.thumb[1][0];
+    cx = Math.floor(x.thumb[1][0] / 2 - cx * x.thumb[1][0] + dx / 2);
+    cx = Math.max(Math.min(0, cx), dx);
+
+    var dy = maxh - x.thumb[1][1];
+    cy = Math.floor(x.thumb[1][1] / 2 - cy * x.thumb[1][1] + dy / 2);
+    cy = Math.max(Math.min(0, cy), dy);
+
+    x.eimg.setStyle('background-position', cx + 'px ' + cy + 'px');
+
+    if(-cx > x.thumb[1][0] * cutrt) x.ethumb.addClass('cut-left');
+    if(cx - dx > x.thumb[1][0] * cutrt) x.ethumb.addClass('cut-right');
+
+    if(-cy > x.thumb[1][1] * cutrt) x.ethumb.addClass('cut-top');
+    if(cy - dy > x.thumb[1][1] * cutrt) x.ethumb.addClass('cut-bottom');
   });
 }
 
@@ -458,11 +483,7 @@ function initGallery(data)
 
     var img = new Element('div', { 'class': 'img' });
     x.eimg = img;
-    img.setStyles(
-    {
-      'background-image': 'url(' + x.thumb[0] + ')',
-      'background-position': 'center'
-    });
+    img.setStyle('background-image', 'url(' + x.thumb[0] + ')');
     img.inject(a);
 
     var ovr = new Element('div', { 'class': 'ovr' });

@@ -216,32 +216,46 @@ img
 }
 
 /* Thumbnail styles */
-#gallery #list .thumb.pano-w .ovr
+#gallery #list .thumb .ovr
 {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
+}
+
+#gallery #list .thumb.cut-left .ovr
+{
+  background: url(cut-left.png) top left repeat-y;
+}
+
+#gallery #list .thumb.cut-right .ovr
+{
+  background: url(cut-right.png) repeat-y top right;
+}
+
+#gallery #list .thumb.cut-left.cut-right .ovr
+{
   background: url(cut-left.png) top left repeat-y, url(cut-right.png) repeat-y top right;
 }
 
-#gallery #list .thumb.pano-h .ovr
+#gallery #list .thumb.cut-top .ovr
 {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  background: url(cut-left.png) top left repeat-x;
+}
+
+#gallery #list .thumb.cut-bottom .ovr
+{
+  background: url(cut-right.png) repeat-x bottom left;
+}
+
+#gallery #list .thumb.cut-top.cut-bottom .ovr
+{
   background: url(cut-left.png) top left repeat-x, url(cut-right.png) repeat-x bottom left;
 }
 
 #gallery #list .thumb.movie .ovr
 {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
   background: url(cut-mov.png) top left repeat-y, url(cut-mov.png) top right repeat-y;
 }
