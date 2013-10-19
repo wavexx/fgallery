@@ -219,15 +219,17 @@ for my $file(glob("$dir/*.{" . join(",", @exts) . "}"))
   # generate images
   my @sfile = ($props{width}, $props{height});
   my @sthumb = sys('convert', @flags, @imflags,
+		   $file, '-gamma', '0.454545',
 		   '-thumbnail', "$minthumb[0]x$minthumb[1]^",
 		   '-gravity', 'center',
 		   '-crop', "$maxthumb[0]x$maxthumb[1]+0x0",
 		   '-print', '%w\n%h',
-		   $file, "$out/$fthumb");
+		   '-gamma', '2.2', "$out/$fthumb");
   my @simg = sys('convert', @flags, @imflags,
+		   $file, '-gamma', '0.454545',
 		 '-geometry', "$maxfull[0]x$maxfull[1]>",
 		 '-print', '%w\n%h',
-		 $file, "$out/$fimg");
+		 '-gamma', '2.2', "$out/$fimg");
   sys('convert', @imflags, '-quality', '90',
       '-virtual-pixel',  'Mirror',
       '-gaussian-blur', "0x$backblur",
