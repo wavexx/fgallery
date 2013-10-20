@@ -302,17 +302,6 @@ if($timesort) {
   @data = sort { ($a->{stamp} // 0) <=> ($b->{stamp} // 0); } @data;
 }
 
-# optimize all images
-if($jpegoptim)
-{
-  for my $fdata(@data)
-  {
-    for my $file($fdata->{img}[0], $fdata->{thumb}[0], $fdata->{blur}) {
-      sys('jpegoptim', '-q', "$out/$file");
-    }
-  }
-}
-
 # generate zip file
 my $fdownload = undef;
 if(!$nodown && !$slim)
