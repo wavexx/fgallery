@@ -194,10 +194,10 @@ my @files = glob("$dir/*.{" . join(",", @exts) . "}");
 for my $i(0 .. $#files)
 {
   my $file = $files[$i];
-  my $pc = sprintf("%3.0f", ($i + 1) / @files * 100);
+  my $pc = sprintf("%2.0f", $i / @files * 100);
   my ($base, undef, $suffix) = fileparse(Encode::decode($locale, $file), qr/\.[^.]*$/);
   $suffix = lc(substr($suffix, 1));
-  print("$pc%: $base.$suffix ...\n");
+  print("$pc% $base.$suffix ...\n");
   my %props = get_props($file);
 
   # sanitize file name
@@ -366,4 +366,4 @@ open(JSON, ">$out/data.json");
 print(JSON encode_json(\%json));
 close(JSON);
 
-print("completed\n");
+print("100% completed\n");
