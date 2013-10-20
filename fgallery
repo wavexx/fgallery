@@ -206,22 +206,23 @@ for my $file(glob("$dir/*.{" . join(",", @exts) . "}"))
 
   my $fbase = "$root.$ext";
   my $ffile = "files/$root.$suffix";
+  my $fout = "$out/$ffile";
   my $fimg = "imgs/$fbase";
   my $fthumb = "thumbs/$fbase";
   my $fblur = "blurs/$fbase";
 
   # copy source file and apply lossless transforms
-  sys('cp', '-p', $file, "$out/$ffile");
+  sys('cp', '-p', $file, $fout);
   if($orient && $props{format} eq "JPEG") {
-    sys("$exiftrancmd $out/$ffile 2>/dev/null");
+    sys("$exiftrancmd $fout 2>/dev/null");
   }
   if($jpegoptim && $props{format} eq "JPEG") {
-    sys('jpegoptim', '-q', "$out/$ffile");
+    sys('jpegoptim', '-q', $fout);
   } elsif($pngoptim && $props{format} eq "PNG") {
-    sys('pngcrush', '-q', "$out/$ffile");
+    sys('pngcrush', '-q', $fout);
   }
-  chmod($mode, "$out/$ffile");
-  sys('touch', '-r', $file, "$out/$ffile");
+  chmod($mode, $fout);
+  sys('touch', '-r', $file, $fout);
 
   # avoid conversion to string
   my @minthumb = @minthumb;
@@ -230,7 +231,7 @@ for my $file(glob("$dir/*.{" . join(",", @exts) . "}"))
 
   # generate main image
   my @sfile = ($props{width}, $props{height});
-  my @simg = sys('convert', $file,
+  my @simg = sys('convert', $fout,
 		 '-gamma', '0.454545',
 		 '-geometry', "$maxfull[0]x$maxfull[1]>",
 		 '-print', '%w\n%h',
@@ -252,7 +253,7 @@ for my $file(glob("$dir/*.{" . join(",", @exts) . "}"))
   }
 
   # thumbnail
-  my @sthumb = sys('convert', $file,
+  my @sthumb = sys('convert', $fout,
 		   '-gamma', '0.454545',
 		   '-thumbnail', "$minthumb[0]x$minthumb[1]^",
 		   '-gravity', 'Center',
@@ -372,3 +373,5 @@ foreach my $fdata(@data)
 open(JSON, ">$out/data.json");
 print(JSON encode_json(\%json));
 close(JSON);
+
+print("completed\n");
