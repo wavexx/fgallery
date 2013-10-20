@@ -34,6 +34,8 @@ my $fullpano = 1;
 my $nodown = 0;
 my $panort = 2.;
 my $facedet = 0;
+my $jpegoptim = 1;
+my $pngoptim = 1;
 my $verbose = 0;
 
 
@@ -148,20 +150,26 @@ if(!-d $dir) {
 }
 
 # check tools
-if(system("identify 2>&1 >/dev/null") || system("convert 2>&1 >/dev/null")) {
+if(system("identify >/dev/null 2>&1") || system("convert >/dev/null 2>&1")) {
   fatal("cannot run \"identify\" or \"convert\" (check if ImageMagick is installed)");
 }
-if(system("zip -h 2>&1 >/dev/null")) {
+if(system("zip -h >/dev/null 2>&1")) {
   fatal("cannot run \"zip\" (check if zip is installed)");
+}
+if(system("jpegoptim -V >/dev/null 2>&1")) {
+  $jpegoptim = 0;
+}
+if(system("pngcrush -h >/dev/null 2>&1")) {
+  $pngoptim = 0;
 }
 if($facedet && system("facedetect -h >/dev/null 2>&1")) {
   fatal("cannot run \"facedetect\" (see http://www.thregr.org/~wavexx/hacks/facedetect/)");
 }
 
 my $exiftrancmd;
-if(!system("exiftran -h 2>&1 >/dev/null")) {
+if(!system("exiftran -h >/dev/null 2>&1")) {
   $exiftrancmd = "exiftran -aip";
-} elsif(!system("exifautotran 2>&1 >/dev/null")) {
+} elsif(!system("exifautotran >/dev/null 2>&1")) {
   $exiftrancmd = "exifautotran";
 } else {
   fatal("cannot execute exiftran or exifautotran for lossless JPEG autorotation");
@@ -206,6 +214,11 @@ for my $file(glob("$dir/*.{" . join(",", @exts) . "}"))
   sys('cp', '-p', $file, "$out/$ffile");
   if($orient && $props{format} eq "JPEG") {
     sys("$exiftrancmd $out/$ffile 2>/dev/null");
+  }
+  if($jpegoptim && $props{format} eq "JPEG") {
+    sys('jpegoptim', '-q', "$out/$ffile");
+  } elsif($pngoptim && $props{format} eq "PNG") {
+    sys('pngcrush', '-q', "$out/$ffile");
   }
   chmod($mode, "$out/$ffile");
   sys('touch', '-r', $file, "$out/$ffile");
@@ -283,6 +296,17 @@ for my $file(glob("$dir/*.{" . join(",", @exts) . "}"))
 
 if($timesort) {
   @data = sort { ($a->{stamp} // 0) <=> ($b->{stamp} // 0); } @data;
+}
+
+# optimize all images
+if($jpegoptim)
+{
+  for my $fdata(@data)
+  {
+    for my $file($fdata->{img}[0], $fdata->{thumb}[0], $fdata->{blur}) {
+      sys('jpegoptim', '-q', "$out/$file");
+    }
+  }
 }
 
 # generate zip file

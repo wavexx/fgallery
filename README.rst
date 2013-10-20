@@ -6,7 +6,7 @@ stylish, minimalist look. "fgallery" shows your photos, and nothing else.
 
 You can see an example gallery at the following address:
 
-  http://www.thregr.org/~wavexx/software/fgallery/demo/
+http://www.thregr.org/~wavexx/software/fgallery/demo/
 
 There is no server-side processing, only static generation. The resulting
 gallery can be uploaded anywhere without additional requirements and works with
@@ -49,11 +49,14 @@ Usage notes
 
 The images as shown by the viewer are scaled/compressed using the specified
 quality to reduce viewing lag. They are also stripped of any EXIF tag. However,
-the pictures in the generated zip album are preserved *unchanged* (only
-lossless auto-rotation is applied so that they can be opened with a browser
-directly). All unprocessed images can also be included to be viewed
-individually in the gallery by using the ``-i`` flag, but beware about the
-resulting size of the gallery.
+the pictures in the generated zip album are preserved *unchanged*.
+
+Lossless auto-rotation is applied so that images can be opened with a browser
+directly. JPEG and PNG files are also re-optimized (again, losslessy) before
+being archived to furthermore save space.
+
+All unprocessed images can also be included to be viewed individually in the
+gallery by using the ``-i`` flag.
 
 The sizes of the thumbnails and the main image can be customized on the command
 line with the appropriate flags. Two settings are available for the thumbnail
@@ -100,9 +103,17 @@ Backend:
   - JSON::PP (libjson-perl and optionally libjson-xs-perl)
   - Date::Parse (libtimedate-perl)
 
+* jpegoptim (optional)
+* pngcrush (optional)
+
 On Debian/Ubuntu, you can install all the required dependencies with::
 
-  sudo apt-get install imagemagick exiftran zip libjson-perl libjson-xs-perl libtimedate-perl
+  sudo apt-get install imagemagick exiftran zip libjson-perl libtimedate-perl
+
+To save more space in the generated galleries, we recommend installing also the
+optional dependencies::
+
+  sudo apt-get install jpegoptim pngcrush
 
 If you are not using a Linux distribution you have to install ImageMagick and
 exiftran from the source manually. The additional perl modules can be installed
