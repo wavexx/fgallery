@@ -261,7 +261,7 @@ for my $i(0 .. $#files)
   {
     if(my @faces = sys("facedetect", "--best", "--center", "$out/$fimg"))
     {
-      my @tmp = map { int } split(" ", $faces[0]);
+      my @tmp = split(" ", $faces[0]);
       @center = ($tmp[0] / $simg[0], $tmp[1] / $simg[1]);
     }
   }
