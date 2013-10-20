@@ -551,7 +551,8 @@ function init()
   // preload some resources
   Asset.images(['noise.png', 'left.png', 'right.png',
 		'eye.png', 'download.png', 'throbber.gif',
-		'cut-left.png', 'cut-right.png', 'cut-mov.png']);
+		'cut-left.png', 'cut-right.png', 'cut-top.png',
+		'cut-mov.png']);
 }
 
 window.addEvent('domready', init);
