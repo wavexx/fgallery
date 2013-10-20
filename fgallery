@@ -35,6 +35,7 @@ my $fullpano = 1;
 my $nodown = 0;
 my $panort = 2.;
 my $facedet = 0;
+my $verbose = 0;
 
 
 # support functions
@@ -48,6 +49,10 @@ sub fatal
 sub sys
 {
   my @cmd = @_;
+
+  if($verbose) {
+    print(STDERR "+ " . join(" ", @cmd) . "\n")
+  }
 
   my $fd;
   unless(open($fd, '-|', @cmd)) {
@@ -93,6 +98,7 @@ sub print_help()
   print(STDERR qq{Usage: $0 [options] input-dir output-dir [album name]
 
   -h, --help		this help
+  -v			verbose (show commands as being executed)
   -s			slim output (no original files and downloads)
   -i			include individual originals
   -o			do not auto-orient
@@ -113,6 +119,7 @@ my $help = 0;
 my $locale = encoding::_get_locale_encoding();
 
 my ($ret, @ARGS) = GetOptions('help|h' => \$help,
+	   'v' => sub { $verbose = 1; },
 	   's' => sub { $slim = 1; },
 	   'i' => sub { $ofile = 1; },
 	   'o' => sub { $orient = 0; },
