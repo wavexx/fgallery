@@ -71,6 +71,20 @@ sub sys
 }
 
 
+sub min
+{
+  my ($a, $b) = @_;
+  return ($a < $b? $a: $b);
+}
+
+
+sub clamp
+{
+  my ($a, $b, $v) = @_;
+  return ($v < $a? $a: $v > $b? $b: $v);
+}
+
+
 sub get_props
 {
   my $file = shift;
@@ -241,29 +255,41 @@ for my $i(0 .. $#files)
 		 '-gamma', '2.2',
 		 '-quality', $imgq, "$out/$fimg");
 
-  # face detection
-  my @center;
+  # face/center detection
+  my @center = (0.5, 0.5);
   if($facedet)
   {
-    my @faces = sys("facedetect", "--best", "--center", "$out/$fimg");
-    if(@faces)
+    if(my @faces = sys("facedetect", "--best", "--center", "$out/$fimg"))
     {
-      # TODO: thumbnail crop region and centering is required!
-      # Here we just cheat by avoiding thumbnail cropping when centering is required
-      @maxthumb = @maxfull;
-      @center = split(" ", $faces[0]);
+      my @tmp = map { int } split(" ", $faces[0]);
+      @center = ($tmp[0] / $simg[0], $tmp[1] / $simg[1]);
     }
   }
 
-  # thumbnail
-  my @sthumb = sys('convert', $fout,
-		   '-gamma', '0.454545',
-		   '-thumbnail', "$minthumb[0]x$minthumb[1]^",
-		   '-gravity', 'Center',
-		   '-crop', "$maxthumb[0]x$maxthumb[1]+0x0",
-		   '-print', '%w\n%h',
-		   '-gamma', '2.2',
-		   '-quality', $imgq, "$out/$fthumb");
+  # thumbnail size
+  my $thumbrt;
+  if($sfile[0] / $sfile[1] < $minthumb[0] / $minthumb[1]) {
+    $thumbrt = $minthumb[0] / $sfile[0];
+  } else {
+    $thumbrt = $minthumb[1] / $sfile[1];
+  }
+  my @sthumb = (int($sfile[0] * $thumbrt), int($sfile[1] * $thumbrt));
+  my @mthumb = (min($maxthumb[0], $sthumb[0]), min($maxthumb[1], $sthumb[1]));
+
+  # cropping window
+  my $dx = $sthumb[0] - $mthumb[0];
+  my $cx = clamp(0, $dx, int($center[0] * $sthumb[0] - $sthumb[0] / 2 + $dx / 2));
+  my $dy = $sthumb[1] - $mthumb[1];
+  my $cy = clamp(0, $dy, int($center[1] * $sthumb[1] - $sthumb[1] / 2 + $dy / 2));
+
+  sys('convert', $fout,
+      '-gamma', '0.454545',
+      '-resize', "$sthumb[0]x$sthumb[1]!",
+      '-gravity', 'NorthWest',
+      '-crop', "$mthumb[0]x$mthumb[1]+$cx+$cy",
+      '-print', '%w\n%h',
+      '-gamma', '2.2',
+      '-quality', $imgq, "$out/$fthumb");
 
   # blur
   sys('convert', "$out/$fthumb",
@@ -279,10 +305,22 @@ for my $i(0 .. $#files)
   my %fdata;
   $fdata{props} = \%props;
   $fdata{img} = [$fimg, [map { int } @simg]];
-  $fdata{thumb} = [$fthumb, [map { int } @sthumb]];
   $fdata{file} = [$ffile, [map { int } @sfile]];
   $fdata{blur} = $fblur;
-  $fdata{center} = [map { int } @center] if(@center);
+
+  # do not store duplicate information
+  my @tdata = ($fthumb, [map { int } @mthumb]);
+  if($sthumb[0] != $mthumb[0] || $sthumb[1] != $mthumb[1]) {
+    push(@tdata, [map { int } @sthumb], [map { int } $cx, $cy]);
+  }
+  $fdata{thumb} = \@tdata;
+
+  # truncate some floats
+  $center[0] = int($center[0] * 1000);
+  $center[1] = int($center[1] * 1000);
+  if(abs($center[0] - 500) > 1 || abs($center[0] - 500) > 1) {
+    $fdata{center} = \@center;
+  }
 
   unless(my $idate = $props{'exif:DateTimeOriginal'} || $props{'exif:DateTime'})
   {
