@@ -155,7 +155,7 @@ if(system("identify 2>&1 >/dev/null") || system("convert 2>&1 >/dev/null")) {
 if(system("zip -h 2>&1 >/dev/null")) {
   fatal("cannot run \"zip\" (check if zip is installed)");
 }
-if(system("facedetect -h 2>&1 >/dev/null")) {
+if($facedet && system("facedetect -h >/dev/null 2>&1")) {
   fatal("cannot run \"facedetect\" (see http://www.thregr.org/~wavexx/hacks/facedetect/)");
 }
 
