@@ -30,7 +30,6 @@ my @maxthumb = (267, 200);
 my @maxfull = (1600, 1200);
 my $maxq = 100;
 my $imgq = 90;
-my @imflags = ();
 my $fullpano = 1;
 my $nodown = 0;
 my $panort = 2.;
@@ -185,44 +184,31 @@ my $ostamp = 0;
 my $amp = 0;
 for my $file(glob("$dir/*.{" . join(",", @exts) . "}"))
 {
-  my $base = fileparse(Encode::decode($locale, $file), qr/\.[^.]*$/);
-  print(STDERR "$base ...\n");
+  my ($base, undef, $suffix) = fileparse(Encode::decode($locale, $file), qr/\.[^.]*$/);
+  $suffix = substr($suffix, 1);
+  print("$base.$suffix ...\n");
   my %props = get_props($file);
 
   # sanitize file name
   $base =~ s/[^\w]/_/gu;
-  my $fbase = "$base.$ext";
-  my $ffile = "files/$fbase";
-  my $fout = "$out/$ffile";
-  for(my $c = 0; -f $fout; ++$c)
-  {
-    $fbase = "${base}_$c.$ext";
-    $ffile = "files/$fbase";
-    $fout = "$out/$ffile";
+  my $root = $base;
+  for(my $c = 0; -f "$out/imgs/$root.$ext"; ++$c) {
+    $root = "${base}_$c";
   }
 
+  my $fbase = "$root.$ext";
+  my $ffile = "files/$root.$suffix";
   my $fimg = "imgs/$fbase";
   my $fthumb = "thumbs/$fbase";
   my $fblur = "blurs/$fbase";
 
-  my @flags = ();
-  push(@flags, "-auto-orient") if($orient);
-  push(@flags, '-quality', $imgq);
-
-  if($maxq != 100 || $props{format} ne "JPEG")
-  {
-    # lossy path
-    sys('convert', @flags, @imflags, '-quality', $maxq, $file, $fout);
-    chmod($mode, $fout);
-    sys('touch', '-r', $file, $fout);
+  # copy source file and apply lossless transforms
+  sys('cp', '-p', $file, "$out/$ffile");
+  if($orient && $props{format} eq "JPEG") {
+    sys("$exiftrancmd $out/$ffile 2>/dev/null");
   }
-  else
-  {
-    # lossless path
-    sys('cp', '-p', $file, $fout);
-    chmod($mode, $fout);
-    sys("$exiftrancmd $fout 2>/dev/null") if($orient);
-  }
+  chmod($mode, "$out/$ffile");
+  sys('touch', '-r', $file, "$out/$ffile");
 
   # avoid conversion to string
   my @minthumb = @minthumb;
@@ -231,11 +217,12 @@ for my $file(glob("$dir/*.{" . join(",", @exts) . "}"))
 
   # generate main image
   my @sfile = ($props{width}, $props{height});
-  my @simg = sys('convert', @flags, @imflags,
-		   $file, '-gamma', '0.454545',
+  my @simg = sys('convert', $file,
+		 '-gamma', '0.454545',
 		 '-geometry', "$maxfull[0]x$maxfull[1]>",
 		 '-print', '%w\n%h',
-		 '-gamma', '2.2', "$out/$fimg");
+		 '-gamma', '2.2',
+		 '-quality', $imgq, "$out/$fimg");
 
   # face detection
   my @center;
@@ -252,20 +239,21 @@ for my $file(glob("$dir/*.{" . join(",", @exts) . "}"))
   }
 
   # thumbnail
-  my @sthumb = sys('convert', @flags, @imflags,
-		   $file, '-gamma', '0.454545',
+  my @sthumb = sys('convert', $file,
+		   '-gamma', '0.454545',
 		   '-thumbnail', "$minthumb[0]x$minthumb[1]^",
 		   '-gravity', 'Center',
 		   '-crop', "$maxthumb[0]x$maxthumb[1]+0x0",
 		   '-print', '%w\n%h',
-		   '-gamma', '2.2', "$out/$fthumb");
+		   '-gamma', '2.2',
+		   '-quality', $imgq, "$out/$fthumb");
 
   # blur
-  sys('convert', @imflags, '-quality', '90',
+  sys('convert', "$out/$fthumb",
       '-virtual-pixel', 'Mirror',
       '-gaussian-blur', "0x$backblur",
       '-scale', "$backsize[0]x$backsize[1]",
-      "$out/$fthumb", "$out/$fblur");
+      '-quality', '90', "$out/$fblur");
 
   # rolling mp average
   my $mp = ($sfile[0] * $sfile[1] / 1e6);
