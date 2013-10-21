@@ -1,4 +1,4 @@
-fgallery 1.1: XX/XX/XXXX
+fgallery 1.1: 21/10/2013
 ------------------------
 
 * Degrades more gracefully on IE<10.
