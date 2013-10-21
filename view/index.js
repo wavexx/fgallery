@@ -8,7 +8,7 @@ var thrdelay = 1500;
 var hidedelay = 3000;
 var prefetch = 1;
 var minupscale = 640 * 480;
-var cutrt = 0.2;
+var cutrt = 0.15;
 
 Element.Events.hashchange =
 {
@@ -81,19 +81,23 @@ function onLayoutChanged(layout)
   // refit the thumbnails, cropping edges
   imgs.data.each(function(x, i)
   {
-    var maxw, maxh;
+    var crop = x.thumb[1];
+    var size = (x.thumb[2]? x.thumb[2]: crop);
+    var offset = (x.thumb[3]? x.thumb[3]: [0, 0]);
+    var center = (x.center? [x.center[0] / 1000, x.center[1] / 1000]: [0.5, 0.5]);
 
+    var maxw, maxh;
     if(layout == 'horizontal')
     {
       maxw = imgs.thumb.min[0];
-      maxh = Math.round(maxw * (x.thumb[1][1] / x.thumb[1][0]));
+      maxh = Math.round(maxw * (crop[1] / crop[0]));
       maxh = Math.max(maxh, imgs.thumb.min[1]);
       maxh = Math.min(maxh, imgs.thumb.max[1]);
     }
     else
     {
       maxh = imgs.thumb.min[1];
-      maxw = Math.round(maxh * (x.thumb[1][0] / x.thumb[1][1]));
+      maxw = Math.round(maxh * (crop[0] / crop[1]));
       maxw = Math.max(maxw, imgs.thumb.min[0]);
       maxw = Math.min(maxw, imgs.thumb.max[0]);
     }
@@ -104,37 +108,27 @@ function onLayoutChanged(layout)
       'height': maxh
     });
 
-    // identify type/cropping center
-    var classes = ['cut-left', 'cut-right', 'cut-top', 'cut-bottom'];
-    classes.each(function(c) { x.ethumb.removeClass(c); });
-
-    var cx, cy;
-    if(!x.center)
-    {
-      cx = 0.5;
-      cy = 0.5;
-    }
-    else
-    {
-      cx = x.center[0] / x.img[1][0];
-      cy = x.center[1] / x.img[1][1];
-    }
-
-    var dx = maxw - x.thumb[1][0];
-    cx = Math.floor(x.thumb[1][0] / 2 - cx * x.thumb[1][0] + dx / 2);
+    // center cropped thumbnail
+    var dx = maxw - crop[0];
+    var cx = size[0] * center[0] - offset[0];
+    cx = Math.floor(crop[0] / 2 - cx + dx / 2);
     cx = Math.max(Math.min(0, cx), dx);
 
-    var dy = maxh - x.thumb[1][1];
-    cy = Math.floor(x.thumb[1][1] / 2 - cy * x.thumb[1][1] + dy / 2);
+    var dy = maxh - crop[1];
+    var cy = size[1] * center[1] - offset[1];
+    cy = Math.floor(crop[1] / 2 - cy + dy / 2);
     cy = Math.max(Math.min(0, cy), dy);
 
     x.eimg.setStyle('background-position', cx + 'px ' + cy + 'px');
 
-    if(-cx > x.thumb[1][0] * cutrt) x.ethumb.addClass('cut-left');
-    if(cx - dx > x.thumb[1][0] * cutrt) x.ethumb.addClass('cut-right');
+    // border styles
+    var classes = ['cut-left', 'cut-right', 'cut-top', 'cut-bottom'];
+    classes.each(function(c) { x.ethumb.removeClass(c); });
 
-    if(-cy > x.thumb[1][1] * cutrt) x.ethumb.addClass('cut-top');
-    if(cy - dy > x.thumb[1][1] * cutrt) x.ethumb.addClass('cut-bottom');
+    if(-(cx - offset[0]) > size[0] * cutrt) x.ethumb.addClass('cut-left');
+    if((cx - offset[0] + size[0] - maxw) > size[0] * cutrt) x.ethumb.addClass('cut-right');
+    if(-(cy - offset[1]) > size[1] * cutrt) x.ethumb.addClass('cut-top');
+    if((cy - offset[1] + size[1] - maxh) > size[1] * cutrt) x.ethumb.addClass('cut-bottom');
   });
 }
 
