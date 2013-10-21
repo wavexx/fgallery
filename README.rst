@@ -1,5 +1,5 @@
 fgallery: a modern, minimalist javascript photo gallery
--------------------------------------------------------
+=======================================================
 
 "fgallery" is a static photo gallery generator with no frills that has a
 stylish, minimalist look. "fgallery" shows your photos, and nothing else.
@@ -16,7 +16,9 @@ any modern browser.
 - Multi-camera friendly: automatically sorts pictures by time: just throw your
   (and your friends) photos and movies in a directory. The resulting gallery
   shows the pictures in seamless shooting order.
-- Adapts to the current screen layout automatically.
+- Adapts to the current screen proportions, switching from horizontal/vertical
+  layout automatically.
+- Supports face detection for improved thumbnail generation.
 - Includes original (raw) pictures in a zip file for downloading.
 - Panoramas can be seen full-size by default.
 
@@ -52,31 +54,13 @@ quality to reduce viewing lag. They are also stripped of any EXIF tag. However,
 the pictures in the generated zip album are preserved *unchanged*.
 
 Lossless auto-rotation is applied so that images can be opened with a browser
-directly. JPEG and PNG files are also re-optimized (again, losslessy) before
-being archived to furthermore save space.
+directly. JPEG and PNG files are also re-optimized (losslessy) before being
+archived to furthermore save space.
 
-All unprocessed images can also be included to be viewed individually in the
-gallery by using the ``-i`` flag.
-
-The sizes of the thumbnails and the main image can be customized on the command
-line with the appropriate flags. Two settings are available for the thumbnail
-sizes: minimum (150x112) and maximum (267x200). Thumbnails will always be as
-big as the minimum size, but they can be enlarged up to the specified maximum
-depending on the screen orientation. The default settings are tuned for a
-mostly-landscape gallery, but they can be changed as needed.
-
-To favor portrait photos, invert the width/height::
-
-  ./fgallery --min-thumb 112x150 --max-thumb 200x267 ...
-
-Images having a different aspect ratio (like panoramas) are cut and centered
-instead of being scaled-to-fit, so that the thumbnail shows the central subject
-of the image instead of a thin, unwatchable strip. When this happens, the
-viewer shows a sign on the thumbnail along the cut edges (this effect can be
-seen in the demo gallery).
-
-Panoramas are automatically detected and the original image is included in
-full-size by default, as often the image preview alone doesn't give it justice.
+All images can be included to be viewed individually at full resolution the
+gallery by using the ``-i`` flag. Panoramas are automatically detected and the
+original image is included in full-size by default, as often the image preview
+alone doesn't give it justice.
 
 For best results when shooting with multiple cameras (or friends), synchronize
 the camera clocks before starting to take pictures. Just pick one camera's time
@@ -87,6 +71,43 @@ Never use the ``-s`` or ``-d`` flags. Let your friends and viewers download the
 raw album at full resolution, not the downscaled crap. Don't make me angry.
 
 
+Tuning thumbnail generation
+---------------------------
+
+The sizes of the thumbnails and the main image can be customized on the command
+line with the appropriate flags. Two settings are available for the thumbnail
+sizes: minimum (150x112) and maximum (267x200). Thumbnails will always be as
+big as the minimum size, but they can be enlarged up to the specified maximum
+depending on the screen orientation. The default settings are tuned for a
+mostly-landscape gallery, but they can be changed as needed.
+
+Images having a different aspect ratio (like panoramas) are cut and centered
+instead of being scaled-to-fit, so that the thumbnail shows the central subject
+of the image instead of a thin, unwatchable strip. When this happens, the
+viewer shows a sign on the thumbnail along the cut edges (this effect can be
+seen in the demo gallery).
+
+
+Portraits and face detection
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+To simply favor photos shot in portrait format, invert the width/height of the
+thumbnail sizes::
+
+  ./fgallery --min-thumb 112x150 --max-thumb 200x267 ...
+
+This will force the thumbnails to always fit vertically, at the expense of a
+higher horizontal thumbnail strip.
+
+If your photos are mixed and can contain people, faces or portraits, you can
+enable face detection by using the ``-f`` flag and installing `facedetect
+<http://www.thregr.org/~wavexx/hacks/facedetect/>`_.
+
+Face detection will ensure that the thumbnails, especially when cut, will be
+centered on the face of the subject. If face detection is enabled, there's
+generally no need to increase the thumbnail size.
+
+
 Dependencies
 ------------
 
@@ -95,16 +116,22 @@ Frontend/viewer: none (static html/js/css)
 Backend:
 
 * ImageMagick (http://www.imagemagick.org)
-* Either ``exiftran`` (part of ``fbida``: http://www.kraxel.org/blog/linux/fbida/), or
-  ``exifautotran`` (part of ``libjpeg-progs``: http://libjpeg.sourceforge.net/).
+* Either:
+
+  - ``exiftran`` (part of ``fbida``: http://www.kraxel.org/blog/linux/fbida/), or
+  - ``exifautotran`` (part of ``libjpeg-progs``: http://libjpeg.sourceforge.net/).
+
 * zip
 * perl, with the following additional modules:
 
   - JSON::PP (libjson-perl and optionally libjson-xs-perl)
   - Date::Parse (libtimedate-perl)
 
-* jpegoptim (optional)
-* pngcrush (optional)
+The following is optional, but used when installed:
+
+* jpegoptim (http://www.kokkonen.net/tjko/projects.html)
+* pngcrush (http://pmt.sourceforge.net/pngcrush/)
+* facedetect (http://www.thregr.org/~wavexx/hacks/facedetect/)
 
 On Debian/Ubuntu, you can install all the required dependencies with::
 
@@ -115,11 +142,14 @@ optional dependencies::
 
   sudo apt-get install jpegoptim pngcrush
 
-If you are not using a Linux distribution you have to install ImageMagick and
-exiftran from the source manually. The additional perl modules can be installed
-using ``cpan``::
+For face detection support, simply follow the `facedetect installation
+instructions <http://www.thregr.org/~wavexx/hacks/facedetect/#dependencies>`_.
 
-  cpan -i JSON::PP Date::Parse
+On a Mac, we recommend installing the dependencies using `MacPorts
+<http://www.macports.org/>`_. After installing MacPorts, type::
+
+  sudo port install imagemagick exiftran jpegoptim pngcrush
+  sudo cpan -i JSON::PP Date::Parse
 
 
 Authors and Copyright
@@ -128,7 +158,7 @@ Authors and Copyright
 "fgallery" can be found at http://www.thregr.org/~wavexx/software/fgallery/
 
 "fgallery" is distributed under GPL2 (see COPYING) WITHOUT ANY WARRANTY.
-Copyright(c) 2011-2013 by wave++ "Yuri D'Elia" <wavexx@thregr.org>
+Copyright(c) 2011-2013 by wave++ "Yuri D'Elia" <wavexx@thregr.org>.
 fgallery's GIT repository is publicly accessible at::
 
   git://src.thregr.org/fgallery
@@ -159,4 +189,3 @@ TODO
 - Add an "overview" mode, which shows a screenful of thumbnails.
 - Allow to hide the thumbnails entirely.
 - Improve EXIF/header display.
-- When cutting thumbnails, try to center on faces (if any).
