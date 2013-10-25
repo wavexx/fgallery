@@ -511,6 +511,12 @@ function initGallery(data)
     }
   });
 
+  new MooSwipe(econt,
+  {
+    onSwipeleft: next,
+    onSwiperight: prev
+  });
+
   // idle overlay
   eidle = new Element('div', { id: 'idle' });
   eidle.inject(emain);
