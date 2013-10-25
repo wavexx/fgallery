@@ -142,10 +142,9 @@ function relayout(msize, layout)
       'top': 0,
       'left': 'auto',
       'right': 0,
-      'bottom': 'auto',
-      'width': imgs.thumb.min[0] + padding,
-      'height': msize.y - padding,
-      'padding': padding / 2,
+      'bottom': 0,
+      'width': Math.ceil(imgs.thumb.min[0] + padding * 1.5),
+      'height': 'auto',
       'overflow-y': 'scroll',
       'overflow-x': 'hidden',
       'white-space': 'normal'
@@ -164,11 +163,10 @@ function relayout(msize, layout)
     {
       'top': 'auto',
       'left': 0,
-      'right': 'auto',
+      'right': 0,
       'bottom': 0,
-      'width': msize.x - padding,
-      'height': imgs.thumb.min[1] + padding,
-      'padding': padding / 2,
+      'width': 'auto',
+      'height': Math.ceil(imgs.thumb.min[1] + padding * 1.5),
       'overflow-y': 'hidden',
       'overflow-x': 'scroll',
       'white-space': 'nowrap'
@@ -460,6 +458,11 @@ function initGallery(data)
   tmp.inject(econt);
 
   elist = new Element('div', { id: 'list' });
+  elist.setStyles(
+  {
+    'padding-top': padding / 2,
+    'padding-left': padding / 2
+  });
   elist.inject(emain);
 
   imgs.data.each(function(x, i)
