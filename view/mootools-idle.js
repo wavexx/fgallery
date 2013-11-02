@@ -35,7 +35,7 @@ IdleTimer = new Class({
 		onTimeoutChanged: function(){},
 		*/
 		timeout: 60000,
-		events: ['mousemove', 'keydown', 'mousewheel', 'mousedown']
+		events: ['mousemove', 'keydown', 'mousewheel', 'mousedown', 'touchstart', 'touchmove']
 	},
 	
 	initialize: function(element, options) {
