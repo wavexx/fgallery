@@ -22,12 +22,15 @@ var MooSwipe = MooSwipe || new Class({
 	options: {
 		//onSwipeleft: $empty,
 		//onSwiperight: $empty,
-		tolerance: 30,
+		//onSwipeup: $empty,
+		//onSwipedown: $empty,
+		tolerance: 50,
 		preventDefaults: true
 	},
 	
 	element: null,
 	startX: null,
+	startY: null,
 	isMoving: false,
 	
 	initialize: function(el, options) {
@@ -39,6 +42,7 @@ var MooSwipe = MooSwipe || new Class({
 	cancelTouch: function() {
 		this.element.removeListener('touchmove', this.onTouchMove);
 		this.startX = null;
+		this.startY = null;
 		this.isMoving = false;
 	},
 	
@@ -46,9 +50,13 @@ var MooSwipe = MooSwipe || new Class({
 		this.options.preventDefaults && e.preventDefault();
 		if (this.isMoving) {
 			var dx = this.startX - e.touches[0].pageX;
+			var dy = this.startY - e.touches[0].pageY;
 			if (Math.abs(dx) >= this.options.tolerance) {
 				this.cancelTouch();
 				this.fireEvent(dx > 0 ? 'swipeleft' : 'swiperight');
+			} else if (Math.abs(dy) >= this.options.tolerance) {
+				this.cancelTouch();
+				this.fireEvent(dy > 0 ? 'swipedown' : 'swipeup');
 			}
 		}
 	},
@@ -56,6 +64,7 @@ var MooSwipe = MooSwipe || new Class({
 	onTouchStart: function(e) {
 		if (e.touches.length == 1) {
 			this.startX = e.touches[0].pageX;
+			this.startY = e.touches[0].pageY;
 			this.isMoving = true;
 			this.element.addListener('touchmove', this.onTouchMove.bind(this));
 		}

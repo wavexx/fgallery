@@ -514,7 +514,9 @@ function initGallery(data)
   new MooSwipe(econt,
   {
     onSwipeleft: next,
-    onSwiperight: prev
+    onSwipedown: next,
+    onSwiperight: prev,
+    onSwipeup: prev
   });
 
   // idle overlay
