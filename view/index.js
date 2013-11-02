@@ -52,7 +52,6 @@ var tthr;	// throbber timeout
 var imgs;	// image list
 var first;	// first image
 var idle;	// idle timer
-var eidle;	// idle overlay
 var clayout;	// current layout
 
 function resize()
@@ -330,7 +329,7 @@ function hideHdr()
 
 function hideNav()
 {
-  eidle.setStyle('display', 'block');
+  emain.setStyle('cursor', 'none');
   eleft.tween('opacity', [1, 0], { link: 'ignore' });
   eright.tween('opacity', [1, 0], { link: 'ignore' });
 }
@@ -343,7 +342,7 @@ function showHdr()
 
 function showNav()
 {
-  eidle.setStyle('display', 'none');
+  emain.setStyle('cursor');
   eleft.get('tween').cancel();
   eleft.fade('show');
   eright.get('tween').cancel();
@@ -518,10 +517,6 @@ function initGallery(data)
     onSwiperight: prev,
     onSwipeup: prev
   });
-
-  // idle overlay
-  eidle = new Element('div', { id: 'idle' });
-  eidle.inject(emain);
 
   // first image
   first = true;
