@@ -323,7 +323,7 @@ function showThrobber()
 
 function hideHdr()
 {
-  if(idle.started)
+  if(idle.started && ehdr.getStyle('opacity') != 0)
     ehdr.tween('opacity', [1, 0], { link: 'ignore' });
 }
 
