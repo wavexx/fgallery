@@ -11,6 +11,7 @@ require Encode;
 require encoding;
 
 use Getopt::Long;
+use POSIX qw{ceil};
 use File::Basename qw{fileparse};
 use JSON::PP qw{encode_json};
 use File::Path qw{make_path remove_tree};
@@ -273,7 +274,7 @@ for my $i(0 .. $#files)
   } else {
     $thumbrt = $minthumb[1] / $sfile[1];
   }
-  my @sthumb = (int($sfile[0] * $thumbrt), int($sfile[1] * $thumbrt));
+  my @sthumb = (ceil($sfile[0] * $thumbrt), ceil($sfile[1] * $thumbrt));
   my @mthumb = (min($maxthumb[0], $sthumb[0]), min($maxthumb[1], $sthumb[1]));
 
   # cropping window
