@@ -329,7 +329,7 @@ function hideHdr()
 
 function hideNav()
 {
-  emain.setStyle('cursor', 'none');
+  emain.addClass('no-cursor');
   eleft.tween('opacity', [1, 0], { link: 'ignore' });
   eright.tween('opacity', [1, 0], { link: 'ignore' });
 }
@@ -342,7 +342,7 @@ function showHdr()
 
 function showNav()
 {
-  emain.setStyle('cursor');
+  emain.removeClass('no-cursor');
   eleft.get('tween').cancel();
   eleft.fade('show');
   eright.get('tween').cancel();

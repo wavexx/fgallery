@@ -39,6 +39,11 @@ img
   background: #111;
 }
 
+#gallery.no-cursor *
+{
+  cursor: none !important;
+}
+
 #gallery a, #gallery a:active, #gallery a:focus
 {
   outline: none;
