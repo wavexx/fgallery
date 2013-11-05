@@ -498,6 +498,18 @@ function initGallery(data)
     }
   });
 
+  econt.addEvent('mousewheel', function(ev)
+  {
+    if(ev.alt || ev.control || ev.meta || ev.shift)
+      return;
+
+    ev.stop();
+    if(ev.wheel > 0)
+      prev();
+    else
+      next();
+  });
+
   new MooSwipe(econt,
   {
     onSwipeleft: next,
