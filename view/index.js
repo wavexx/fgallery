@@ -63,12 +63,30 @@ function resize()
   var maxw = msize.x - imgs.thumb.min[0] - padding;
   var maxh = msize.y * rt - imgs.thumb.min[1] - padding;
   var layout = (maxw >= maxh? 'horizontal': 'vertical');
-  relayout(msize, layout);
   if(layout != clayout)
   {
     onLayoutChanged(layout);
     if(cthumb) centerThumb(0);
     clayout = layout;
+  }
+
+  // resize main container
+  var epos = elist.measure(function(){ return this.getPosition(); });
+  if(layout == 'horizontal')
+  {
+    econt.setStyles(
+    {
+      'width': epos.x,
+      'height': msize.y
+    });
+  }
+  else
+  {
+    econt.setStyles(
+    {
+      width: msize.x,
+      height: epos.y
+    });
   }
 
   if(oimg) resizeMainImg(oimg);
@@ -129,11 +147,8 @@ function onLayoutChanged(layout)
     if(-(cy - offset[1]) > size[1] * cutrt) x.ethumb.addClass('cut-top');
     if((cy - offset[1] + size[1] - maxh) > size[1] * cutrt) x.ethumb.addClass('cut-bottom');
   });
-}
 
-function relayout(msize, layout)
-{
-  // resize main container/thumbnail list
+  // resize thumbnail list
   if(layout == 'horizontal')
   {
     elist.setStyles(
@@ -142,18 +157,9 @@ function relayout(msize, layout)
       'left': 'auto',
       'right': 0,
       'bottom': 0,
-      'width': Math.ceil(imgs.thumb.min[0] + padding * 1.5),
-      'height': 'auto',
       'overflow-y': 'scroll',
       'overflow-x': 'hidden',
-      'white-space': 'normal'
-    });
-
-    var epos = elist.measure(function(){ return this.getPosition(); });
-    econt.setStyles(
-    {
-      'width': epos.x,
-      'height': msize.y
+      'white-space': 'pre-line'
     });
   }
   else
@@ -164,18 +170,9 @@ function relayout(msize, layout)
       'left': 0,
       'right': 0,
       'bottom': 0,
-      'width': 'auto',
-      'height': Math.ceil(imgs.thumb.min[1] + padding * 1.5),
       'overflow-y': 'hidden',
       'overflow-x': 'scroll',
       'white-space': 'nowrap'
-    });
-
-    var epos = elist.measure(function(){ return this.getPosition(); });
-    econt.setStyles(
-    {
-      width: msize.x,
-      height: epos.y
     });
   }
 }
@@ -487,6 +484,7 @@ function initGallery(data)
 
     a.inject(ethumb);
     ethumb.inject(elist);
+    elist.appendText("\n");
   });
 
   // events
