@@ -454,21 +454,11 @@ function initGallery(data)
   tmp.inject(econt);
 
   elist = new Element('div', { id: 'list' });
-  elist.setStyles(
-  {
-    'padding-top': padding / 2,
-    'padding-left': padding / 2
-  });
   elist.inject(emain);
 
   imgs.data.each(function(x, i)
   {
     var ethumb = new Element('div', { 'class': 'thumb' });
-    ethumb.setStyles(
-    {
-      'margin-bottom': padding / 2,
-      'margin-right': padding / 2
-    });
     x.ethumb = ethumb;
 
     var a = new Element('a');
@@ -525,8 +515,8 @@ function initGallery(data)
   emain.setStyles(
   {
     'display': 'block',
-    'min-width': padding * 2,
-    'min-height': padding * 2,
+    'min-width': imgs.thumb.min[0] + padding * 2,
+    'min-height': imgs.thumb.min[1] + padding * 2,
     'background-repeat': 'repeat, no-repeat',
     'background-size': 'auto, 100% 100%'
   });
