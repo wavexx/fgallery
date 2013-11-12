@@ -95,6 +95,9 @@ function resize()
 
 function onLayoutChanged(layout)
 {
+  // scaling ratio, based on device DPI
+  var sr = 1. / window.devicePixelRatio;
+
   // refit the thumbnails, cropping edges
   imgs.data.each(function(x, i)
   {
@@ -121,22 +124,23 @@ function onLayoutChanged(layout)
 
     x.eimg.setStyles(
     {
-      'width': maxw,
-      'height': maxh
+      'width': Math.round(maxw * sr),
+      'height': Math.round(maxh * sr),
+      'background-size': Math.round(size[0] * sr) + "px " + Math.round(size[1] * sr) + "px"
     });
 
     // center cropped thumbnail
     var dx = maxw - crop[0];
     var cx = size[0] * center[0] - offset[0];
-    cx = Math.floor(crop[0] / 2 - cx + dx / 2);
+    cx = Math.round(crop[0] / 2 - cx + dx / 2);
     cx = Math.max(Math.min(0, cx), dx);
 
     var dy = maxh - crop[1];
     var cy = size[1] * center[1] - offset[1];
-    cy = Math.floor(crop[1] / 2 - cy + dy / 2);
+    cy = Math.round(crop[1] / 2 - cy + dy / 2);
     cy = Math.max(Math.min(0, cy), dy);
 
-    x.eimg.setStyle('background-position', cx + 'px ' + cy + 'px');
+    x.eimg.setStyle('background-position', Math.round(cx * sr) + 'px ' + Math.round(cy * sr) + 'px');
 
     // border styles
     var classes = ['cut-left', 'cut-right', 'cut-top', 'cut-bottom'];
@@ -545,6 +549,9 @@ function initGallery(data)
 
 function init()
 {
+  if(!"devicePixelRatio" in window)
+    window.devicePixelRatio = 1;
+
   // read the data
   new Request.JSON({ url: datafile, onSuccess: initGallery }).get();
 
