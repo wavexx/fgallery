@@ -69,9 +69,9 @@ img
 /* Main image */
 #gallery #content img.current
 {
-  box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
-  -moz-box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
-  -webkit-box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 0 2.5rem rgba(0, 0, 0, 0.5);
+  -moz-box-shadow: 0 0 2.5rem rgba(0, 0, 0, 0.5);
+  -webkit-box-shadow: 0 0 2.5rem rgba(0, 0, 0, 0.5);
 }
 
 /* Header */
@@ -165,12 +165,12 @@ img
   position: absolute;
   background: #333; /* IE<9 */
   background: rgba(255, 255, 255, 0.1);
-  padding-top: 11px;
-  padding-left: 11px;
+  padding-top: 0.5rem;
+  padding-left: 0.5rem;
 
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-  -moz-box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-  -webkit-box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 0 1rem rgba(0, 0, 0, 0.5);
+  -moz-box-shadow: 0 0 1rem rgba(0, 0, 0, 0.5);
+  -webkit-box-shadow: 0 0 1rem rgba(0, 0, 0, 0.5);
 }
 
 #gallery #list:focus
@@ -182,12 +182,12 @@ img
 #gallery #list .thumb
 {
   display: inline-block;
-  margin-bottom: 11px;
-  margin-right: 11px;
+  margin-bottom: 0.5rem;
+  margin-right: 0.5rem;
 
-  box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.5);
-  -moz-box-shadow: 5px 5px rgba(0, 0, 0, 0.5);
-  -webkit-box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.5);
+  box-shadow: 0.25rem 0.25rem 0.25rem rgba(0, 0, 0, 0.5);
+  -moz-box-shadow: 0.25rem 0.25rem 0.25rem rgba(0, 0, 0, 0.5);
+  -webkit-box-shadow: 0.25rem 0.25rem 0.25rem rgba(0, 0, 0, 0.5);
 }
 
 #gallery #list .thumb a
