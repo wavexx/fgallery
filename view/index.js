@@ -56,9 +56,7 @@ var clayout;	// current layout
 
 function resize()
 {
-  var msize = emain.measure(function(){ return this.getSize(); });
-  if(Browser.ie && Browser.version < 8) msize = window.getSize(); // IE<8
-
+  var msize = emain.getSize();
   var rt = (imgs.thumb.min[0] / imgs.thumb.min[1]);
   var maxw = msize.x - imgs.thumb.min[0] - padding;
   var maxh = msize.y * rt - imgs.thumb.min[1] - padding;
@@ -71,7 +69,7 @@ function resize()
   }
 
   // resize main container
-  var epos = elist.measure(function(){ return this.getPosition(); });
+  var epos = elist.getPosition();
   if(layout == 'horizontal')
   {
     econt.setStyles(
@@ -95,6 +93,8 @@ function resize()
 
 function onLayoutChanged(layout)
 {
+  elist.setStyle('display', 'none');
+
   // scaling ratio, based on device DPI
   var sr = 1. / window.devicePixelRatio;
 
@@ -179,6 +179,8 @@ function onLayoutChanged(layout)
       'white-space': 'nowrap'
     });
   }
+
+  elist.setStyle('display', 'block');
 }
 
 function resizeMainImg(img)
@@ -267,7 +269,7 @@ function onMainReady()
   ehdr.setStyle('display', (dsc.length? 'block': 'none'));
 
   // start animations
-  var d = (first? 0: duration);
+  var d = (first !== false? 0: duration);
   first = false;
 
   if(oimg)
@@ -420,6 +422,7 @@ function initGallery(data)
 {
   imgs = data;
   emain = $('gallery');
+  emain.setStyle('display', 'none');
 
   econt = new Element('div', { id: 'content' });
   econt.inject(emain);
@@ -470,7 +473,6 @@ function initGallery(data)
 
     var img = new Element('div', { 'class': 'img' });
     x.eimg = img;
-    img.setStyle('background-image', 'url(' + x.thumb[0] + ')');
     img.inject(a);
 
     var ovr = new Element('div', { 'class': 'ovr' });
@@ -481,13 +483,22 @@ function initGallery(data)
     elist.appendText("\n");
   });
 
-  // events
+  emain.setStyles(
+  {
+    'display': 'block',
+    'visibility': 'hidden',
+    'min-width': imgs.thumb.min[0] + padding * 2,
+    'min-height': imgs.thumb.min[1] + padding * 2,
+    'background-repeat': 'repeat, no-repeat',
+    'background-size': 'auto, 100% 100%'
+  });
+
+  // events and navigation shortcuts
   eleft.addEvent('click', prev);
   eright.addEvent('click', next);
   window.addEvent('resize', resize);
   window.addEvent('hashchange', change);
 
-  // navigation shortcuts
   window.addEvent('keydown', function(ev)
   {
     if(ev.key == 'up' || ev.key == 'left')
@@ -522,21 +533,6 @@ function initGallery(data)
     onSwipeup: prev
   });
 
-  // first image
-  first = true;
-  resize();
-  load(getLocationIndex());
-  if(imgs.name) document.title = imgs.name;
-
-  emain.setStyles(
-  {
-    'display': 'block',
-    'min-width': imgs.thumb.min[0] + padding * 2,
-    'min-height': imgs.thumb.min[1] + padding * 2,
-    'background-repeat': 'repeat, no-repeat',
-    'background-size': 'auto, 100% 100%'
-  });
-
   // setup an idle callback for mouse movement only
   var idleTmp = new IdleTimer(window, { timeout: hidedelay, events: ['mousemove', 'mousedown', 'mousewheel'] }).start();
   idleTmp.addEvent('idle', hideNav);
@@ -545,6 +541,29 @@ function initGallery(data)
   // general idle callback
   idle = new IdleTimer(window, { timeout: hidedelay }).start();
   idle.addEvent('idle', hideHdr);
+
+  // prepare first image
+  first = getLocationIndex();
+  resize();
+  load(first);
+  centerThumb(0);
+  if(imgs.name) document.title = imgs.name;
+
+  // load thumbnails in distance order
+  for(var i = 0; i != imgs.data.length; ++i)
+  {
+    var d = (i / 2 >> 0);
+    var k = first + (i % 2? d + 1: -d);
+    if(k < 0)
+      k = imgs.data.length + k;
+    else if(k >= imgs.data.length)
+      k = k - imgs.data.length;
+
+    var x = imgs.data[k];
+    x.eimg.setStyle('background-image', 'url(' + x.thumb[0] + ')');
+  };
+
+  emain.setStyle('visibility', 'visible');
 }
 
 function init()
@@ -556,10 +575,11 @@ function init()
   new Request.JSON({ url: datafile, onSuccess: initGallery }).get();
 
   // preload some resources
-  Asset.images(['noise.png', 'left.png', 'right.png',
-		'eye.png', 'download.png', 'throbber.gif',
-		'cut-left.png', 'cut-right.png', 'cut-top.png',
-		'cut-mov.png']);
+  Asset.images(['throbber.gif', 'noise.png',
+		'left.png', 'right.png',
+		'eye.png', 'download.png',
+		'cut-left.png', 'cut-right.png',
+		'cut-top.png', 'cut-mov.png']);
 }
 
 window.addEvent('domready', init);
