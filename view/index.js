@@ -47,6 +47,7 @@ var eright;	// go right
 var oimg;	// old image
 var eimg;	// new image
 var cthumb;	// current thumbnail
+var mthumb;	// missing thumbnails
 var eidx;	// current index
 var tthr;	// throbber timeout
 var imgs;	// image list
@@ -268,10 +269,16 @@ function onMainReady()
   ehdr.set('html', dsc.join(' '));
   ehdr.setStyle('display', (dsc.length? 'block': 'none'));
 
-  // start animations
-  var d = (first !== false? 0: duration);
-  first = false;
+  // complete thumbnails
+  var d = duration;
+  if(first !== false)
+  {
+    first = false;
+    loadAllThumbs();
+    d = 0;
+  }
 
+  // start animations
   if(oimg)
   {
     oimg.removeClass('current');
@@ -418,6 +425,34 @@ function change()
   load(getLocationIndex());
 }
 
+function loadThumb(i)
+{
+  var x = imgs.data[i];
+  x.eimg.setStyle('background-image', 'url(' + x.thumb[0] + ')');
+}
+
+function loadAllThumbs()
+{
+  mthumbs.each(loadThumb);
+  mthumbs = []
+}
+
+function loadNextThumb()
+{
+  if(mthumbs.length)
+  {
+    var i = mthumbs.shift();
+    Asset.image(imgs.data[i].thumb[0],
+    {
+      onLoad: function()
+      {
+	loadThumb(i);
+	loadNextThumb();
+      }
+    });
+  }
+}
+
 function initGallery(data)
 {
   imgs = data;
@@ -549,19 +584,26 @@ function initGallery(data)
   centerThumb(0);
   if(imgs.name) document.title = imgs.name;
 
-  // load thumbnails in distance order
-  for(var i = 0; i != imgs.data.length; ++i)
+  // setup thumbnail loading sequence
+  mthumbs = []
+  if(first < 5)
   {
+    // optimize common initial case (viewing from the beginning)
+    for(var i = 0; i != imgs.data.length; ++i)
+      mthumbs.push(i);
+  }
+  else for(var i = 0; i != imgs.data.length; ++i)
+  {
+    // distance from current
     var d = (i / 2 >> 0);
     var k = first + (i % 2? d + 1: -d);
     if(k < 0)
       k = imgs.data.length + k;
     else if(k >= imgs.data.length)
       k = k - imgs.data.length;
-
-    var x = imgs.data[k];
-    x.eimg.setStyle('background-image', 'url(' + x.thumb[0] + ')');
-  };
+    mthumbs.push(k);
+  }
+  loadNextThumb();
 
   emain.setStyle('visibility', 'visible');
 }
