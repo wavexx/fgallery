@@ -1,11 +1,7 @@
 /* General reset */
-html
+html, body
 {
   overflow: hidden; /* IE<9 */
-}
-
-body
-{
   padding: 0;
   margin: 0;
   border: 0;
