@@ -198,21 +198,23 @@ function onLayoutChanged(layout, sr)
 
 function resizeMainImg(img)
 {
-  var contsize = econt.getSize();
+  var contSize = econt.getSize();
+  var listSize = elist.getSize();
+  var thumbWidth = (clayout == 'horizontal'? listSize.x: listSize.y);
   var data = imgs.data[img.idx].img;
   var width = data[1][0];
   var height = data[1][1];
   var imgrt = width / height;
   var pad = padding * 2;
 
-  if(imgrt > (contsize.x / contsize.y))
+  if(imgrt > (contSize.x / contSize.y))
   {
-    img.width = Math.max(imgs.thumb.max[0] + pad, contsize.x - pad);
+    img.width = Math.max(thumbWidth + pad, contSize.x - pad);
     img.height = img.width / imgrt;
   }
   else
   {
-    img.height = Math.max(imgs.thumb.max[1] + pad, contsize.y - pad);
+    img.height = Math.max(thumbWidth + pad, contSize.y - pad);
     img.width = img.height * imgrt;
   }
   if(width * height <= minupscale && img.width > width)
@@ -224,8 +226,8 @@ function resizeMainImg(img)
   img.setStyles(
   {
     'position': 'absolute',
-    'top': contsize.y / 2 - img.height / 2,
-    'left': contsize.x / 2 - img.width / 2
+    'top': contSize.y / 2 - img.height / 2,
+    'left': contSize.x / 2 - img.width / 2
   });
 }
 
