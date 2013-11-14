@@ -8,6 +8,7 @@ var thrdelay = 1500;
 var hidedelay = 3000;
 var prefetch = 1;
 var minupscale = 640 * 480;
+var thumbrt = 16/9 - 5/3;
 var cutrt = 0.15;
 
 Element.Events.hashchange =
@@ -54,19 +55,33 @@ var imgs;	// image list
 var first;	// first image
 var idle;	// idle timer
 var clayout;	// current layout
+var csr;	// current scaling ratio
 
 function resize()
 {
+  // best layout
   var msize = emain.getSize();
   var rt = (imgs.thumb.min[0] / imgs.thumb.min[1]);
   var maxw = msize.x - imgs.thumb.min[0] - padding;
   var maxh = msize.y * rt - imgs.thumb.min[1] - padding;
   var layout = (maxw >= maxh? 'horizontal': 'vertical');
-  if(layout != clayout)
+
+  // calculate a good multiplier for the thumbnail size
+  var m = (layout == 'horizontal'?
+    (msize.x * window.devicePixelRatio * thumbrt) / imgs.thumb.min[0]:
+    (msize.y * window.devicePixelRatio * thumbrt) / imgs.thumb.min[1]);
+  if(m >= 1)
+    m = Math.pow(2, Math.floor(Math.log(m) / Math.LN2));
+  else
+    m = Math.pow(2, Math.ceil(Math.log(m) / Math.LN2));
+  var sr = m / window.devicePixelRatio;
+
+  if(layout != clayout || sr != csr)
   {
-    onLayoutChanged(layout);
+    onLayoutChanged(layout, sr);
     if(cthumb) centerThumb(0);
     clayout = layout;
+    csr = sr;
   }
 
   // resize main container
@@ -92,12 +107,9 @@ function resize()
   if(eimg) resizeMainImg(eimg);
 }
 
-function onLayoutChanged(layout)
+function onLayoutChanged(layout, sr)
 {
   elist.setStyle('display', 'none');
-
-  // scaling ratio, based on device DPI
-  var sr = 1. / window.devicePixelRatio;
 
   // refit the thumbnails, cropping edges
   imgs.data.each(function(x, i)
