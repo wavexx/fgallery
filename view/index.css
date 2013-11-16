@@ -91,6 +91,7 @@ img
 #gallery #content #header img
 {
   vertical-align: middle;
+  height: 1em;
 }
 
 #gallery #content #header a
