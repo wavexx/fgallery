@@ -94,6 +94,11 @@ img
   height: 1em;
 }
 
+#gallery #content #header #throbber
+{
+  height: 100%;
+}
+
 #gallery #content #header a
 {
   text-decoration: none;

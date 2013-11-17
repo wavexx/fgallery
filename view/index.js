@@ -336,7 +336,7 @@ function onMainReady()
 
 function showThrobber()
 {
-  var img = new Element('img');
+  var img = new Element('img', { id: 'throbber'});
   img.src = "throbber.gif";
   ehdr.empty();
   img.inject(ehdr);
