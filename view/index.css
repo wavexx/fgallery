@@ -156,9 +156,17 @@ img
   display: block;
   margin: auto;
   top: 0;
-  left: 0;
   bottom: 0;
-  right: 0;
+}
+
+#gallery #content #left img
+{
+  left: 25%;
+}
+
+#gallery #content #right img
+{
+  right: 25%;
 }
 
 /* Thumbnail list */
