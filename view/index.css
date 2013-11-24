@@ -111,22 +111,24 @@ img
 }
 
 /* Navigation arrows */
-#gallery #content #left
+#gallery #content #left,
+#gallery #content #right
 {
   position: absolute;
-  left: 0;
   width: 5%;
+  min-width: 2.5rem;
   top: 0;
-  height: 100%;
+  bottom: 0;
+}
+
+#gallery #content #left
+{
+  left: 0;
 }
 
 #gallery #content #right
 {
-  position: absolute;
   right: 0;
-  width: 5%;
-  top: 0;
-  height: 100%;
 }
 
 #gallery #content #left div,
