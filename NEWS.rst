@@ -1,3 +1,12 @@
+fgallery 1.2: 30/11/2013
+------------------------
+
+* Faster loading of large galleries.
+* Automatic thumbnail scaling on small screens.
+* Improved support for mobile browsers.
+* Swiping support.
+
+
 fgallery 1.1: 21/10/2013
 ------------------------
 

@@ -16,9 +16,10 @@ any modern browser.
 - Multi-camera friendly: automatically sorts pictures by time: just throw your
   (and your friends) photos and movies in a directory. The resulting gallery
   shows the pictures in seamless shooting order.
-- Adapts to the current screen proportions, switching from horizontal/vertical
-  layout automatically.
-- Supports face detection for improved thumbnail generation.
+- Adapts to the current screen size and proportions, switching from
+  horizontal/vertical layout and scaling thumbnails automatically.
+- Supports face detection for improved thumbnail centering.
+- Loads fast! Especially over slow connections.
 - Includes original (raw) pictures in a zip file for downloading.
 - Panoramas can be seen full-size by default.
 
