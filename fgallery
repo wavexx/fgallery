@@ -188,12 +188,15 @@ if($facedet && system("facedetect -h >/dev/null 2>&1")) {
 }
 
 my $exiftrancmd;
-if(!system("exiftran -h >/dev/null 2>&1")) {
-  $exiftrancmd = "exiftran -aip";
-} elsif(!system("exifautotran >/dev/null 2>&1")) {
-  $exiftrancmd = "exifautotran";
-} else {
-  fatal("cannot execute exiftran or exifautotran for lossless JPEG autorotation");
+if($orient)
+{
+  if(!system("exiftran -h >/dev/null 2>&1")) {
+    $exiftrancmd = "exiftran -aip";
+  } elsif(!system("exifautotran >/dev/null 2>&1")) {
+    $exiftrancmd = "exifautotran";
+  } else {
+    fatal("cannot execute exiftran or exifautotran for lossless JPEG autorotation");
+  }
 }
 
 # derived arguments
