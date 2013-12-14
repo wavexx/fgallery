@@ -246,8 +246,10 @@ for my $i(0 .. $#files)
   }
   if($jpegoptim && $props{format} eq "JPEG") {
     sys('jpegoptim', '-q', $fout);
-  } elsif($pngoptim && $props{format} eq "PNG") {
-    sys('pngcrush', '-q', $fout);
+  } elsif($pngoptim && $props{format} eq "PNG")
+  {
+    sys('pngcrush', '-q', $fout, "$fout.tmp");
+    rename("$fout.tmp", "$fout");
   }
   chmod($mode, $fout);
   sys('touch', '-r', $file, $fout);
