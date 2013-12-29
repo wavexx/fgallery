@@ -382,23 +382,28 @@ function flash()
 function prev()
 {
   if(eidx != 0)
-    window.location.hash = "#" + (eidx - 1);
+    switchTo(eidx - 1);
   else
   {
     flash();
-    window.location.hash = "#" + (imgs.data.length - 1);
+    switchTo(imgs.data.length - 1);
   }
 }
 
 function next()
 {
   if(eidx != imgs.data.length - 1)
-    window.location.hash = "#" + (eidx + 1);
+    switchTo(eidx + 1);
   else
   {
     flash();
-    window.location.hash = "#0";
+    switchTo(0);
   }
+}
+
+function switchTo(i)
+{
+  window.location.replace("#" + i);
 }
 
 function load(i)
@@ -518,6 +523,7 @@ function initGallery(data)
     x.ethumb = ethumb;
 
     var a = new Element('a');
+    a.addEvent('click', function() { switchTo(i); })
     a.href = "#" + i;
 
     var img = new Element('div', { 'class': 'img' });

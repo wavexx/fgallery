@@ -2,7 +2,8 @@ fgallery 1.3:
 ------------------------
 
 * Fixed incorrect thumbnail stretch for certain image ratios.
-* Fixed incorrect usage of `pngcrush`, resulting in stray output files.
+* Fixed incorrect usage of ``pngcrush``, resulting in stray output files.
+* Improved browser behavior of the `back` button.
 * Minor/cosmetic improvements.
 
 
