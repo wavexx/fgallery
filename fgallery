@@ -200,6 +200,12 @@ if($orient)
   }
 }
 
+# list available files
+my @files = glob("$dir/*.{" . join(",", @exts) . "}");
+if(!@files) {
+  fatal("no available files inside \"$dir\"");
+}
+
 # derived arguments
 my $backblur = int(($minthumb[0] + $minthumb[1]) / 2 * 0.1);
 my @backsize = (int($minthumb[0] * 4), int($minthumb[1] * 3));
@@ -215,7 +221,6 @@ for my $path("$out/thumbs", "$out/blurs", "$out/imgs", "$out/files")
 my @data;
 my $ostamp = 0;
 my $amp = 0;
-my @files = glob("$dir/*.{" . join(",", @exts) . "}");
 for my $i(0 .. $#files)
 {
   my $file = $files[$i];
