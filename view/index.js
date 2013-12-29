@@ -139,7 +139,7 @@ function onLayoutChanged(layout, sr)
     {
       'width': Math.round(maxw * sr),
       'height': Math.round(maxh * sr),
-      'background-size': Math.round(size[0] * sr) + "px " + Math.round(size[1] * sr) + "px"
+      'background-size': Math.round(crop[0] * sr) + "px " + Math.round(crop[1] * sr) + "px"
     });
 
     // center cropped thumbnail
