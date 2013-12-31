@@ -29,7 +29,6 @@ my $ext = "jpg";
 my @minthumb = (150, 112);
 my @maxthumb = (267, 200);
 my @maxfull = (1600, 1200);
-my $maxq = 100;
 my $imgq = 90;
 my $fullpano = 1;
 my $nodown = 0;
