@@ -274,24 +274,17 @@ for my $path("$out/thumbs", "$out/blurs", "$out/imgs", "$out/files")
   make_path($path);
 }
 
-# 1st pass: extract/prepare input file data
-if(defined($workers))
-{
-  # set IM-level threading
+# disable IM thread-level parallelism when threading ourselves
+if(defined($workers)) {
   $ENV{MAGICK_THREAD_LIMIT} = $workers;
 }
 
-my @aprops;
-my $amp = 0;
-
-my $ostamp = 0;
-for my $i(0 .. $#files)
+# 1st pass: extract/prepare input file data
+sub analyze_file
 {
-  my $file = $files[$i];
-  my $pc = sprintf("%2.0f", $i / @files * 100);
+  my $file = shift;
   my ($base, undef, $suffix) = fileparse(Encode::decode($locale, $file), qr/\.[^.]*$/);
   $suffix = lc(substr($suffix, 1));
-  print("$pc% $base.$suffix ...\n");
   my %props = get_props($file);
 
   # sanitize file name
@@ -312,24 +305,33 @@ for my $i(0 .. $#files)
   $props{root} = $root;
   $props{suffix} = $suffix;
 
+  return \%props;
+}
+
+my @aprops = par_map(\&analyze_file, @files);
+
+# gather some statistics
+my $amp = 0;
+my $ostamp = 0;
+foreach my $props(@aprops)
+{
   # file timestamp
-  unless(my $idate = $props{'exif:DateTimeOriginal'} || $props{'exif:DateTime'})
+  unless(my $idate = $props->{'exif:DateTimeOriginal'} || $props->{'exif:DateTime'})
   {
     # no date available, cheat by using the previous timestamp
-    $props{stamp} = $ostamp = $ostamp + 1;
+    $props->{stamp} = $ostamp = $ostamp + 1;
   }
   else
   {
-    $props{date} = $idate;
-    $props{stamp} = $ostamp = str2time($idate);
+    $props->{date} = $idate;
+    $props->{stamp} = $ostamp = str2time($idate);
   }
 
-  # rolling mp average
-  $props{mp} = ($props{width} * $props{height} / 1e6);
-  $amp += ($props{mp} - $amp) / ($i + 1);
-
-  push(@aprops, \%props);
+  # mp average
+  $props->{mp} = ($props->{width} * $props->{height} / 1e6);
+  $amp += $props->{mp};
 }
+$amp /= @files;
 
 # 2nd pass: produce output files
 sub process_img
@@ -338,9 +340,6 @@ sub process_img
   my $root = $props{root};
   my $suffix = $props{suffix};
   my $file = $props{file};
-
-  # TODO: progress
-  print(STDERR "!!% $file\n");
 
   # derived file names
   my $fbase = "$root.$ext";
@@ -425,6 +424,7 @@ sub process_img
 
   my %fdata;
   $fdata{props} = \%props;
+  $fdata{date} = $props{date};
   $fdata{img} = [$fimg, [map { int } @simg]];
   $fdata{file} = [$ffile, [map { int } @sfile]];
   $fdata{blur} = $fblur;
@@ -443,24 +443,7 @@ sub process_img
     $fdata{center} = \@center;
   }
 
-  unless(my $idate = $props{'exif:DateTimeOriginal'} || $props{'exif:DateTime'})
-  {
-    # no date available, cheat by using the previous timestamp
-    $fdata{stamp} = $ostamp = $ostamp + 1;
-  }
-  else
-  {
-    $fdata{date} = $idate;
-    $fdata{stamp} = $ostamp = str2time($idate);
-  }
-
   return \%fdata;
-}
-
-if(defined($workers))
-{
-  # disable IM-level threading
-  $ENV{MAGICK_THREAD_LIMIT} = 1;
 }
 
 my @adata = par_map(\&process_img, @aprops);
