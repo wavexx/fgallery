@@ -1,4 +1,4 @@
-fgallery 1.3:
+fgallery 1.3: ??/??/2014
 ------------------------
 
 * Fixed incorrect thumbnail stretch for certain image ratios.

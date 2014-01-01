@@ -1,5 +1,5 @@
 // fgallery: a modern, minimalist javascript photo gallery
-// Copyright(c) 2003-2013 by wave++ "Yuri D'Elia" <wavexx@thregr.org>
+// Copyright(c) 2003-2014 by wave++ "Yuri D'Elia" <wavexx@thregr.org>
 // Distributed under GPL2 (see COPYING) WITHOUT ANY WARRANTY.
 var datafile = 'data.json';
 var padding = 22;
