@@ -81,26 +81,24 @@ sub sys
 sub dispatch
 {
   my ($fun, @seq) = @_;
-
   my $workers = $workers || 1;
+
   my $queue = Thread::Queue->new();
+  for my $v(@seq) {
+    $queue->enqueue($v);
+  }
 
   my @threads;
   foreach my $n(1 .. $workers)
   {
     my $thr = threads->create(sub
     {
-      while(defined(my $v = $queue->dequeue())) {
+      while(defined(my $v = $queue->dequeue_nb())) {
 	&$fun($v);
       }
     });
     push(@threads, $thr);
   }
-
-  for my $v(@seq) {
-    $queue->enqueue($v);
-  }
-  $queue->end();
 
   foreach my $thr(@threads) {
     $thr->join();
