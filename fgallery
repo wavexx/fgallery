@@ -274,7 +274,7 @@ for my $path("$out/thumbs", "$out/blurs", "$out/imgs", "$out/files")
 
 # disable IM thread-level parallelism when threading ourselves
 if(defined($workers)) {
-  $ENV{MAGICK_THREAD_LIMIT} = $workers;
+  $ENV{MAGICK_THREAD_LIMIT} = 1;
 }
 
 # 1st pass: extract/prepare input file data
