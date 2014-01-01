@@ -2,14 +2,20 @@
 # fgallery: a modern, minimalist javascript photo gallery
 # Copyright(c) 2003-2013 by wave++ "Yuri D'Elia" <wavexx@thregr.org>
 # Distributed under GPL2 (see COPYING) WITHOUT ANY WARRANTY.
+use v5.14;
 use strict;
 use warnings;
-use v5.14;
 
 use locale;
 use utf8;
 require Encode;
 require encoding;
+
+use threads;
+use threads::shared;
+use Thread::Queue;
+use Storable qw{freeze thaw};
+use Fcntl;
 
 use Getopt::Long qw{:config bundling};
 use File::Basename qw{fileparse};
@@ -37,6 +43,7 @@ my $facedet = 0;
 my $jpegoptim = 1;
 my $pngoptim = 1;
 my $verbose = 0;
+my $workers = undef;
 
 
 # support functions
@@ -68,6 +75,55 @@ sub sys
   }
 
   return split("\n", $out);
+}
+
+
+sub dispatch
+{
+  my ($fun, @seq) = @_;
+
+  my $workers = $workers || 1;
+  my $queue = Thread::Queue->new();
+
+  my @threads;
+  foreach my $n(1 .. $workers)
+  {
+    my $thr = threads->create(sub
+    {
+      while(defined(my $v = $queue->dequeue())) {
+	&$fun($v);
+      }
+    });
+    push(@threads, $thr);
+  }
+
+  for my $v(@seq) {
+    $queue->enqueue($v);
+  }
+  $queue->end();
+
+  foreach my $thr(@threads) {
+    $thr->join();
+  }
+}
+
+
+sub par_map
+{
+  my ($fun, @seq) = @_;
+
+  my $n = @seq;
+  my @idx = 0 .. $n - 1;
+  my @res :shared = (undef) x $n;
+
+  dispatch(sub
+  {
+    my $i = shift;
+    $res[$i] = freeze(&$fun($seq[$i]));
+  },
+  @idx);
+
+  return map { thaw $_ } @res;
 }
 
 
@@ -132,6 +188,7 @@ sub print_help()
   --max-thumb WxH	maximum thumbnail size ($maxthumb[0]x$maxthumb[1])
   --max-full WxH	maximum full image size ($maxfull[0]x$maxfull[1])
   --quality Q		preview image quality (0-100, currently: $imgq)
+  -j N	                set process-level parallelism
 });
 }
 
@@ -152,7 +209,8 @@ my ($ret, @ARGS) = GetOptions('help|h' => \$help,
 	   'min-thumb=s' => sub { @minthumb = parse_wh(@_); },
 	   'max-thumb=s' => sub { @maxthumb = parse_wh(@_); },
 	   'max-full=s' => sub { @maxfull = parse_wh(@_); },
-	   'quality=i' => sub { $imgq = $_[1]; });
+	   'quality=i' => sub { $imgq = $_[1]; },
+	   'j=i' => sub { $workers = $_[1] });
 
 if(@ARGV < 2 || @ARGV > 3 || $help || !$ret)
 {
@@ -216,10 +274,17 @@ for my $path("$out/thumbs", "$out/blurs", "$out/imgs", "$out/files")
   make_path($path);
 }
 
-# processing
-my @data;
-my $ostamp = 0;
+# 1st pass: extract/prepare input file data
+if(defined($workers))
+{
+  # set IM-level threading
+  $ENV{MAGICK_THREAD_LIMIT} = $workers;
+}
+
+my @aprops;
 my $amp = 0;
+
+my $ostamp = 0;
 for my $i(0 .. $#files)
 {
   my $file = $files[$i];
@@ -232,10 +297,52 @@ for my $i(0 .. $#files)
   # sanitize file name
   $base =~ s/[^\w]/_/gu;
   my $root = $base;
-  for(my $c = 0; -f "$out/imgs/$root.$ext"; ++$c) {
+  for(my $c = 0;; ++$c)
+  {
+    my $tmp = "$out/imgs/$root.$ext";
+    if(sysopen(my $fd, $tmp, O_WRONLY|O_CREAT|O_EXCL, $mode))
+    {
+      close($fd);
+      last;
+    }
     $root = "${base}_$c";
   }
 
+  $props{file} = $file;
+  $props{root} = $root;
+  $props{suffix} = $suffix;
+
+  # file timestamp
+  unless(my $idate = $props{'exif:DateTimeOriginal'} || $props{'exif:DateTime'})
+  {
+    # no date available, cheat by using the previous timestamp
+    $props{stamp} = $ostamp = $ostamp + 1;
+  }
+  else
+  {
+    $props{date} = $idate;
+    $props{stamp} = $ostamp = str2time($idate);
+  }
+
+  # rolling mp average
+  $props{mp} = ($props{width} * $props{height} / 1e6);
+  $amp += ($props{mp} - $amp) / ($i + 1);
+
+  push(@aprops, \%props);
+}
+
+# 2nd pass: produce output files
+sub process_img
+{
+  my %props = %{shift()};
+  my $root = $props{root};
+  my $suffix = $props{suffix};
+  my $file = $props{file};
+
+  # TODO: progress
+  print(STDERR "!!% $file\n");
+
+  # derived file names
   my $fbase = "$root.$ext";
   my $ffile = "files/$root.$suffix";
   my $fout = "$out/$ffile";
@@ -316,10 +423,6 @@ for my $i(0 .. $#files)
       '-scale', "$backsize[0]x$backsize[1]",
       '-quality', '90', "$out/$fblur");
 
-  # rolling mp average
-  my $mp = ($sfile[0] * $sfile[1] / 1e6);
-  $amp += ($mp - $amp) / (@data + 1);
-
   my %fdata;
   $fdata{props} = \%props;
   $fdata{img} = [$fimg, [map { int } @simg]];
@@ -351,11 +454,20 @@ for my $i(0 .. $#files)
     $fdata{stamp} = $ostamp = str2time($idate);
   }
 
-  push(@data, \%fdata);
+  return \%fdata;
 }
 
+if(defined($workers))
+{
+  # disable IM-level threading
+  $ENV{MAGICK_THREAD_LIMIT} = 1;
+}
+
+my @adata = par_map(\&process_img, @aprops);
+
+# time sorting
 if($timesort) {
-  @data = sort { ($a->{stamp} // 0) <=> ($b->{stamp} // 0); } @data;
+  @adata = sort { ($a->{stamp} // 0) <=> ($b->{stamp} // 0); } @adata;
 }
 
 # generate zip file
@@ -363,13 +475,13 @@ my $fdownload = undef;
 if(!$nodown && !$slim)
 {
   $fdownload = "files/album.zip";
-  sys('zip', '-q9j', "$out/$fdownload", map { "$out/$_->{'file'}[0]" } @data);
+  sys('zip', '-q9j', "$out/$fdownload", map { "$out/$_->{'file'}[0]" } @adata);
 }
 
 # remove unnecessary raw files
 if(!$ofile || $slim)
 {
-  for my $fdata(@data)
+  for my $fdata(@adata)
   {
     my $file = "$out/$fdata->{'file'}[0]";
     my $keep = !$slim && $ofile;
@@ -407,7 +519,7 @@ $json{download} = $fdownload if($fdownload);
 $json{blur} = \@backsize;
 $json{thumb} = { min => \@minthumb, max => \@maxthumb };
 
-foreach my $fdata(@data)
+foreach my $fdata(@adata)
 {
   my %data;
   foreach('img', 'thumb', 'file', 'blur', 'date', 'stamp', 'center') {
