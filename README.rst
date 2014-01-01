@@ -126,7 +126,6 @@ Backend:
 * perl, with the following additional modules:
 
   - JSON::PP (libjson-perl and optionally libjson-xs-perl)
-  - Date::Parse (libtimedate-perl)
 
 The following is optional, but used when installed:
 
@@ -150,7 +149,7 @@ On a Mac, we recommend installing the dependencies using `MacPorts
 <http://www.macports.org/>`_. After installing MacPorts, type::
 
   sudo port install imagemagick exiftran jpegoptim pngcrush
-  sudo cpan -i JSON::PP Date::Parse
+  sudo cpan -i JSON::PP
 
 
 Authors and Copyright

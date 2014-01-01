@@ -21,8 +21,8 @@ use Getopt::Long qw{:config bundling};
 use File::Basename qw{fileparse};
 use JSON::PP qw{encode_json};
 use File::Path qw{make_path remove_tree};
-use Date::Parse qw{str2time};
 use File::Glob qw{:globally :nocase};
+use Time::Piece;
 
 # defaults
 my $mode = 0644;
@@ -323,8 +323,9 @@ foreach my $props(@aprops)
   }
   else
   {
-    $props->{date} = $idate;
-    $props->{stamp} = $ostamp = str2time($idate);
+    my $t = Time::Piece->strptime($idate, "%Y:%m:%d %H:%M:%S");
+    $props->{date} = $t->strftime("%Y-%m-%d %H:%M");
+    $props->{stamp} = $ostamp = $t->epoch;
   }
 
   # mp average
