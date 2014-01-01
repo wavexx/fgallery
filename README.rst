@@ -123,9 +123,9 @@ Backend:
   - ``exifautotran`` (part of ``libjpeg-progs``: http://libjpeg.sourceforge.net/).
 
 * zip
-* perl, with the following additional modules:
+* perl >= 5.14, with the following additional recommended modules:
 
-  - JSON::PP (libjson-perl and optionally libjson-xs-perl)
+  - JSON::XS (``libjson-xs-perl``)
 
 The following is optional, but used when installed:
 
@@ -135,7 +135,7 @@ The following is optional, but used when installed:
 
 On Debian/Ubuntu, you can install all the required dependencies with::
 
-  sudo apt-get install imagemagick exiftran zip libjson-perl libtimedate-perl
+  sudo apt-get install imagemagick exiftran zip libjson-xs-perl
 
 To save more space in the generated galleries, we recommend installing also the
 optional dependencies::
@@ -149,7 +149,7 @@ On a Mac, we recommend installing the dependencies using `MacPorts
 <http://www.macports.org/>`_. After installing MacPorts, type::
 
   sudo port install imagemagick exiftran jpegoptim pngcrush
-  sudo cpan -i JSON::PP
+  sudo cpan -i JSON::XS
 
 
 Authors and Copyright

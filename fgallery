@@ -19,9 +19,9 @@ use Fcntl;
 
 use Getopt::Long qw{:config bundling};
 use File::Basename qw{fileparse};
-use JSON::PP qw{encode_json};
 use File::Path qw{make_path remove_tree};
 use File::Glob qw{:globally :nocase};
+use JSON qw{encode_json};
 use Time::Piece;
 
 # defaults
