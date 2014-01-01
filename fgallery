@@ -272,9 +272,11 @@ for my $path("$out/thumbs", "$out/blurs", "$out/imgs", "$out/files")
   make_path($path);
 }
 
-# disable IM thread-level parallelism when threading ourselves
-if(defined($workers)) {
+# disable sub-process parallelism when threading ourselves
+if(defined($workers))
+{
   $ENV{MAGICK_THREAD_LIMIT} = 1;
+  $ENV{OMP_NUM_THREADS} = 1;
 }
 
 # 1st pass: extract/prepare input file data
