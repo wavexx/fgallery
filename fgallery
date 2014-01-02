@@ -522,14 +522,22 @@ my $fdownload = undef;
 if(!$nodown && !$slim)
 {
   print("generating archive...\n");
+
   $fdownload = "files/album.zip";
   my @files = map { "$out/$_->{'file'}[0]" } @adata;
+
   if(!$p7zip) {
     sys('zip', '-q9j', "$out/$fdownload", @files);
   } else
   {
-    my $mt = $workers // "on";
-    sys('7za', '-tzip', "-mmt=$mt", 'a', '--', "$out/$fdownload", @files);
+    # make paths explictly absolute/relative to strip file path info with 7za
+    my $dot = substr($out, 0, 1);
+    if($dot ne '/' && $dot ne '.') {
+      @files = map { "./$_" } @files;
+    }
+
+    my @mt = defined($workers)? ("-mmt=$workers"): ();
+    sys('7za', '-tzip', @mt, 'a', '--', "$out/$fdownload", @files);
   }
 }
 
