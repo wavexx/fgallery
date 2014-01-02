@@ -5,7 +5,8 @@ fgallery 1.3: ??/??/2014
 * Fixed incorrect thumbnail stretch for certain image ratios.
 * Fixed incorrect usage of ``pngcrush``, resulting in stray output files.
 * Perl dependency on ``Date::Parse`` removed.
-* Gallery generation speedup with multi-core support.
+* Gallery generation speedup thanks to multi-core support.
+* Can use ``p7zip`` when installed for faster compression.
 * Minor/cosmetic improvements.
 
 

@@ -132,6 +132,7 @@ The following is optional, but used when installed:
 * jpegoptim (http://www.kokkonen.net/tjko/projects.html)
 * pngcrush (http://pmt.sourceforge.net/pngcrush/)
 * facedetect (http://www.thregr.org/~wavexx/hacks/facedetect/)
+* p7zip (http://www.7-zip.org/)
 
 On Debian/Ubuntu, you can install all the required dependencies with::
 
@@ -144,6 +145,11 @@ optional dependencies::
 
 For face detection support, simply follow the `facedetect installation
 instructions <http://www.thregr.org/~wavexx/hacks/facedetect/#dependencies>`_.
+
+For performance reasons, we recommend installing also ``p7zip`` which is
+considerably faster during compression thanks to multi-threading support::
+
+  sudo apt-get install p7zip
 
 On a Mac, we recommend installing the dependencies using `MacPorts
 <http://www.macports.org/>`_. After installing MacPorts, type::

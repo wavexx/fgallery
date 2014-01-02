@@ -42,6 +42,7 @@ my $panort = 2.;
 my $facedet = 0;
 my $jpegoptim = 1;
 my $pngoptim = 1;
+my $p7zip = 1;
 my $verbose = 0;
 my $workers = undef;
 
@@ -280,8 +281,12 @@ if(!-d $dir) {
 if(system("identify >/dev/null 2>&1") || system("convert >/dev/null 2>&1")) {
   fatal("cannot run \"identify\" or \"convert\" (check if ImageMagick is installed)");
 }
-if(system("zip -h >/dev/null 2>&1")) {
-  fatal("cannot run \"zip\" (check if zip is installed)");
+if(system("7za -h >/dev/null 2>&1"))
+{
+  $p7zip = 0;
+  if(system("zip -h >/dev/null 2>&1")) {
+    fatal("cannot run \"zip\" (check if 7za or zip is installed)");
+  }
 }
 if(system("jpegoptim -V >/dev/null 2>&1")) {
   $jpegoptim = 0;
@@ -518,7 +523,14 @@ if(!$nodown && !$slim)
 {
   print("generating archive...\n");
   $fdownload = "files/album.zip";
-  sys('zip', '-q9j', "$out/$fdownload", map { "$out/$_->{'file'}[0]" } @adata);
+  my @files = map { "$out/$_->{'file'}[0]" } @adata;
+  if(!$p7zip) {
+    sys('zip', '-q9j', "$out/$fdownload", @files);
+  } else
+  {
+    my $mt = $workers // "on";
+    sys('7za', '-tzip', "-mmt=$mt", 'a', '--', "$out/$fdownload", @files);
+  }
 }
 
 # remove unnecessary raw files
