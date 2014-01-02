@@ -630,7 +630,7 @@ function initGallery(data)
 
 function init()
 {
-  if(!"devicePixelRatio" in window)
+  if(!("devicePixelRatio" in window))
     window.devicePixelRatio = 1;
 
   // read the data
