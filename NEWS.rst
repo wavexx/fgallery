@@ -1,9 +1,11 @@
 fgallery 1.3: ??/??/2014
 ------------------------
 
+* Improved browser behavior of the `back` button.
 * Fixed incorrect thumbnail stretch for certain image ratios.
 * Fixed incorrect usage of ``pngcrush``, resulting in stray output files.
-* Improved browser behavior of the `back` button.
+* Perl dependency on ``Date::Parse`` removed.
+* Gallery generation speedup with multi-core support.
 * Minor/cosmetic improvements.
 
 

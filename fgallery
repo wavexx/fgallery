@@ -156,6 +156,56 @@ sub get_props
 }
 
 
+# thread-safe progress bar
+{
+  package progress;
+
+  my $act :shared;
+  my $total :shared;
+  my $cnt :shared;
+  my $llen :shared;
+
+  sub init
+  {
+    my ($_act, $_total) = @_;
+    $act = $_act;
+    $total = $_total;
+    $cnt = 0;
+    $llen = 0;
+  }
+
+  sub pad
+  {
+    my $str = shift;
+    my $len = length($str);
+    if($len < $llen) {
+      $str .= " " x ($llen - $len);
+    }
+    $llen = $len;
+    return $str;
+  }
+
+  sub status
+  {
+    my ($msg) = @_;
+    lock($cnt);
+
+    my $pc = ($cnt++ / $total * 100);
+    my $str = sprintf("%s %2.0f%%", $act, $pc);
+    if(defined($msg)) {
+      $str .= ": " . $msg;
+    }
+    print(pad($str) . "\r");
+  }
+
+  sub done
+  {
+    my $str = sprintf("%s completed", $act);
+    print(pad($str) . "\n");
+  }
+}
+
+
 
 # options
 sub parse_wh
@@ -285,7 +335,8 @@ sub analyze_file
   my $file = shift;
   my ($base, undef, $suffix) = fileparse(Encode::decode($locale, $file), qr/\.[^.]*$/);
   $suffix = lc(substr($suffix, 1));
-  my %props = get_props($file);
+
+  progress::status("$base.$suffix");
 
   # sanitize file name
   $base =~ s/[^\w]/_/gu;
@@ -301,6 +352,7 @@ sub analyze_file
     $root = "${base}_$c";
   }
 
+  my %props = get_props($file);
   $props{file} = $file;
   $props{root} = $root;
   $props{suffix} = $suffix;
@@ -308,7 +360,9 @@ sub analyze_file
   return \%props;
 }
 
+progress::init("reading", scalar(@files));
 my @aprops = par_map(\&analyze_file, @files);
+progress::done();
 
 # gather some statistics
 my $amp = 0;
@@ -349,6 +403,8 @@ sub process_img
   my $fimg = "imgs/$fbase";
   my $fthumb = "thumbs/$fbase";
   my $fblur = "blurs/$fbase";
+
+  progress::status($fbase);
 
   # copy source file and apply lossless transforms
   sys('cp', '-p', $file, $fout);
@@ -447,7 +503,9 @@ sub process_img
   return \%fdata;
 }
 
+progress::init("processing", scalar(@aprops));
 my @adata = par_map(\&process_img, @aprops);
+progress::done();
 
 # time sorting
 if($timesort) {
@@ -458,6 +516,7 @@ if($timesort) {
 my $fdownload = undef;
 if(!$nodown && !$slim)
 {
+  print("generating archive...\n");
   $fdownload = "files/album.zip";
   sys('zip', '-q9j', "$out/$fdownload", map { "$out/$_->{'file'}[0]" } @adata);
 }
@@ -518,4 +577,4 @@ open(JSON, ">$out/data.json");
 print(JSON encode_json(\%json));
 close(JSON);
 
-print("100% completed\n");
+print("completed\n");
