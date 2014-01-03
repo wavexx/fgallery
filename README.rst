@@ -58,7 +58,7 @@ Lossless auto-rotation is applied so that images can be opened with a browser
 directly. JPEG and PNG files are also re-optimized (losslessy) before being
 archived to furthermore save space.
 
-All images can be included to be viewed individually at full resolution the
+All images can be included to be viewed individually at full resolution in the
 gallery by using the ``-i`` flag. Panoramas are automatically detected and the
 original image is included in full-size by default, as often the image preview
 alone doesn't give it justice.
