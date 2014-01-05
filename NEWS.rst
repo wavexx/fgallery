@@ -1,12 +1,13 @@
-fgallery 1.3: ??/??/2014
+fgallery 1.3: 05/01/2014
 ------------------------
 
 * Improved browser behavior of the `back` button.
 * Fixed incorrect thumbnail stretch for certain image ratios.
-* Fixed incorrect usage of ``pngcrush``, resulting in stray output files.
-* Perl dependency on ``Date::Parse`` removed.
-* Gallery generation speedup thanks to multi-core support.
+* Fixed empty thumbnail list in old browsers without ``devicePixelRatio``.
+* Fixed incorrect usage of ``pngcrush``, resulting in stray PNG output files.
+* Gallery generation speedup with parallelism/multi-core support (`-j`).
 * Can use ``p7zip`` when installed for faster compression.
+* Perl dependency on ``Date::Parse`` removed.
 * Minor/cosmetic improvements.
 
 
