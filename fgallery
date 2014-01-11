@@ -432,7 +432,13 @@ sub process_img
   my @backsize = @backsize;
 
   # generate main image
-  my @sfile = ($props{width}, $props{height});
+  my @sfile;
+  if ($props{'exif:Orientation'} > 4) {
+      @sfile = ($props{height}, $props{width});
+  } else {
+      @sfile = ($props{width}, $props{height});
+  }
+
   my @simg = sys('convert', $fout,
 		 '-gamma', '0.454545',
 		 '-geometry', "$maxfull[0]x$maxfull[1]>",
