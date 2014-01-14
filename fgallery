@@ -18,9 +18,10 @@ use Storable qw{freeze thaw};
 use Fcntl;
 
 use Getopt::Long qw{:config bundling};
-use File::Basename qw{fileparse};
+use File::Basename qw{fileparse dirname};
 use File::Path qw{make_path remove_tree};
 use File::Glob qw{:globally :nocase};
+use Cwd qw{abs_path};
 use JSON qw{encode_json};
 use Time::Piece;
 
@@ -270,11 +271,15 @@ my $dir = $ARGV[0];
 my $out = $ARGV[1];
 my $name = $ARGV[2] || undef;
 
-# check paths
+# check path
 if(!-d $dir) {
   fatal("input directory \"$dir\" does not exist");
-} elsif(!-d $out) {
-  fatal("output directory \"$out\" does not exist (should be a template copy)");
+}
+
+#Copy view to output dir if it doesn't exist
+if(!-d $out) {
+  my $scriptpath = dirname(abs_path(__FILE__));
+  sys('cp', '-r', "$scriptpath/view", $out);
 }
 
 # check tools
