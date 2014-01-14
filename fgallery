@@ -413,8 +413,12 @@ sub process_img
 
   # copy source file and apply lossless transforms
   sys('cp', '-p', $file, $fout);
-  if($orient && $props{format} eq "JPEG") {
+  if($orient && $props{format} eq "JPEG" && ($props{'exif:Orientation'} // 0))
+  {
     sys("$exiftrancmd $fout 2>/dev/null");
+    if(($props{'exif:Orientation'} // 0) > 4) {
+      ($props{width}, $props{height}) = ($props{height}, $props{width});
+    }
   }
   if($jpegoptim && $props{format} eq "JPEG") {
     sys('jpegoptim', '-q', $fout);

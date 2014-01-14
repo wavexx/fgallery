@@ -1,3 +1,9 @@
+fgallery 1.4: ??/??/2014
+------------------------
+
+* Fixed incorrect thumbnail size for rotated images.
+
+
 fgallery 1.3: 05/01/2014
 ------------------------
 
