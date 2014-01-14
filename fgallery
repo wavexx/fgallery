@@ -268,7 +268,7 @@ if(@ARGV < 2 || @ARGV > 3 || $help || !$ret)
 }
 my $dir = $ARGV[0];
 my $out = $ARGV[1];
-my $name = $ARGV[2] || undef;
+my $name = (@ARGV < 3? undef: Encode::decode($locale, $ARGV[2]));
 
 # check paths
 if(!-d $dir) {
