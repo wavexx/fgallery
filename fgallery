@@ -477,7 +477,6 @@ sub process_img
       '-resize', "$sthumb[0]x$sthumb[1]!",
       '-gravity', 'NorthWest',
       '-crop', "$mthumb[0]x$mthumb[1]+$cx+$cy",
-      '-print', '%w\n%h',
       '-gamma', '2.2',
       '-quality', $imgq, "$out/$fthumb");
 
