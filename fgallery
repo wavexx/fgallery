@@ -17,6 +17,7 @@ use Thread::Queue;
 use Storable qw{freeze thaw};
 use Fcntl;
 
+use FindBin qw{$RealBin};
 use Getopt::Long qw{:config bundling};
 use File::Basename qw{fileparse};
 use File::Path qw{make_path remove_tree};
@@ -274,7 +275,9 @@ my $name = (@ARGV < 3? undef: Encode::decode($locale, $ARGV[2]));
 if(!-d $dir) {
   fatal("input directory \"$dir\" does not exist");
 } elsif(!-d $out) {
-  fatal("output directory \"$out\" does not exist (should be a template copy)");
+  sys('cp', '-r', "$RealBin/view", $out);
+} elsif(!-f "$out/index.html") {
+  fatal("output directory already exists, but doesn't look like a template copy");
 }
 
 # check tools
