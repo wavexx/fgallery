@@ -1,8 +1,9 @@
-fgallery 1.4: ??/??/2014
+fgallery 1.4: 28/01/2014
 ------------------------
 
-* Fixed incorrect thumbnail size for rotated images.
-* Minor/cosmetic improvements.
+* Manual copying of the template directory is no longer required.
+* Fixed incorrect thumbnail size for rotated JPGs.
+* Fixed encoding of the album name.
 
 
 fgallery 1.3: 05/01/2014

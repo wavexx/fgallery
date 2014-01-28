@@ -154,6 +154,16 @@ On a Mac, we recommend installing the dependencies using `MacPorts
   sudo cpan -i JSON::XS
 
 
+Installation
+------------
+
+Installation is currently optional. If needed, copy the extracted directory to
+a directory of your liking and link `fgallery` appropriately::
+
+  sudo cp -r fgallery-X.Y /usr/local/share/fgallery
+  sudo ln -s /usr/local/share/fgallery/fgallery /usr/local/bin
+
+
 Authors and Copyright
 ---------------------
 
