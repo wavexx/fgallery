@@ -1,3 +1,9 @@
+fgallery 1.5: ??/??/2014
+------------------------
+
+* Fixed crash when the input directory contains spaces.
+
+
 fgallery 1.4: 28/01/2014
 ------------------------
 

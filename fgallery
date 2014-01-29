@@ -21,9 +21,10 @@ use FindBin qw{$RealBin};
 use Getopt::Long qw{:config bundling};
 use File::Basename qw{fileparse};
 use File::Path qw{make_path remove_tree};
-use File::Glob qw{:globally :nocase};
+use File::Find qw{find};
 use JSON qw{encode_json};
 use Time::Piece;
+use List::Util qw{first};
 
 # defaults
 my $mode = 0644;
@@ -314,7 +315,22 @@ if($orient)
 }
 
 # list available files
-my @files = glob("$dir/*.{" . join(",", @exts) . "}");
+my @files;
+find(
+{
+  no_chdir => 1,
+  wanted => sub
+  {
+    return if(!-f $_);
+    my $file = Encode::decode($locale, $_);
+    my (undef, undef, $suffix) = fileparse($file, qr/\.[^.]*$/);
+    $suffix = lc(substr($suffix, 1));
+    if(first { $_ eq $suffix } @exts) {
+      push(@files, $file);
+    }
+  }
+}, $dir);
+
 if(!@files) {
   fatal("no available files inside \"$dir\"");
 }
@@ -341,7 +357,7 @@ if(defined($workers))
 sub analyze_file
 {
   my $file = shift;
-  my ($base, undef, $suffix) = fileparse(Encode::decode($locale, $file), qr/\.[^.]*$/);
+  my ($base, undef, $suffix) = fileparse($file, qr/\.[^.]*$/);
   $suffix = lc(substr($suffix, 1));
 
   progress::status("$base.$suffix");
