@@ -321,8 +321,8 @@ find(
   no_chdir => 1,
   wanted => sub
   {
-    return if(!-f $_);
-    my $file = Encode::decode($locale, $_);
+    my $file = $_;
+    return if(!-f $file);
     my (undef, undef, $suffix) = fileparse($file, qr/\.[^.]*$/);
     $suffix = lc(substr($suffix, 1));
     if(first { $_ eq $suffix } @exts) {
@@ -357,7 +357,7 @@ if(defined($workers))
 sub analyze_file
 {
   my $file = shift;
-  my ($base, undef, $suffix) = fileparse($file, qr/\.[^.]*$/);
+  my ($base, undef, $suffix) = fileparse(Encode::decode($locale, $file), qr/\.[^.]*$/);
   $suffix = lc(substr($suffix, 1));
 
   progress::status("$base.$suffix");
