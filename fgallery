@@ -32,6 +32,7 @@ my $slim = 0;
 my $ofile = 0;
 my $orient = 1;
 my $timesort = 1;
+my $sortdesc = 0;
 my @exts = ("jpg", "jpeg", "png", "tif", "tiff");
 my $ext = "jpg";
 my @minthumb = (150, 112);
@@ -232,6 +233,7 @@ sub print_help()
   -i			include individual originals
   -o			do not auto-orient
   -t			do not time-sort
+  -r			reverse sort
   -p			do not automatically include full-sized panoramas
   -d			do not generate a full album download
   -f			improve thumbnail cutting by performing face detection
@@ -254,6 +256,7 @@ my ($ret, @ARGS) = GetOptions('help|h' => \$help,
 	   'i' => sub { $ofile = 1; },
 	   'o' => sub { $orient = 0; },
 	   't' => sub { $timesort = 0; },
+	   'r' => sub { $sortdesc = 1; },
 	   'p' => sub { $fullpano = 0; },
 	   'd' => sub { $nodown = 1; },
 	   'f' => sub { $facedet = 1; },
@@ -536,7 +539,11 @@ progress::done();
 
 # time sorting
 if($timesort) {
-  @adata = sort { ($a->{stamp} // 0) <=> ($b->{stamp} // 0); } @adata;
+  if($sortdesc) {
+    @adata = sort { ($b->{stamp} // 0) <=> ($a->{stamp} // 0); } @adata;
+  } else {
+    @adata = sort { ($a->{stamp} // 0) <=> ($b->{stamp} // 0); } @adata;
+  }
 }
 
 # generate zip file
