@@ -509,6 +509,7 @@ sub process_img
   my %fdata;
   $fdata{props} = \%props;
   $fdata{date} = $props{date};
+  $fdata{stamp} = $props{stamp};
   $fdata{img} = [$fimg, [map { int } @simg]];
   $fdata{file} = [$ffile, [map { int } @sfile]];
   $fdata{blur} = $fblur;
