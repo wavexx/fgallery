@@ -508,7 +508,6 @@ sub process_img
 
   my %fdata;
   $fdata{props} = \%props;
-  $fdata{date} = $props{date};
   $fdata{img} = [$fimg, [map { int } @simg]];
   $fdata{file} = [$ffile, [map { int } @sfile]];
   $fdata{blur} = $fblur;
@@ -536,7 +535,7 @@ progress::done();
 
 # time sorting
 if($timesort) {
-  @adata = sort { ($a->{stamp} // 0) <=> ($b->{stamp} // 0); } @adata;
+  @adata = sort { $a->{props}{stamp} <=> $b->{props}{stamp}; } @adata;
 }
 
 # generate zip file
@@ -607,9 +606,14 @@ $json{thumb} = { min => \@minthumb, max => \@maxthumb };
 foreach my $fdata(@adata)
 {
   my %data;
-  foreach('img', 'thumb', 'file', 'blur', 'date', 'stamp', 'center') {
+  foreach('img', 'thumb', 'file', 'blur', 'center') {
     if(defined($fdata->{$_})) {
       $data{$_} = $fdata->{$_};
+    }
+  }
+  foreach('date', 'stamp') {
+    if(defined($fdata->{props}{$_})) {
+      $data{$_} = $fdata->{props}{$_};
     }
   }
   push(@{$json{data}}, \%data);
