@@ -1,9 +1,10 @@
-fgallery 1.5: ??/??/2014
+fgallery 1.5: 03/03/2014
 ------------------------
 
+* Allow to reverse the album order (`-r`).
+* Fixed crash when reading read-only images.
 * Fixed crash when the input directory contains spaces.
 * Fixed time sorting.
-* Allow to reverse the album order.
 
 
 fgallery 1.4: 28/01/2014

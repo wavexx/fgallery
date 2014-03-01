@@ -434,7 +434,7 @@ sub process_img
   progress::status($fbase);
 
   # copy source file and apply lossless transforms
-  sys('cp', '-p', $file, $fout);
+  sys('cp', $file, $fout);
   if($orient && $props{format} eq "JPEG" && ($props{'exif:Orientation'} // 0))
   {
     sys("$exiftrancmd $fout 2>/dev/null");
