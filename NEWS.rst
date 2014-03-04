@@ -2,6 +2,7 @@ fgallery 1.6: ??/??/2014
 ------------------------
 
 * Do not produce warnings when reading files without suffix.
+* We now depend on the ``Image::ExifTool`` perl module to extract EXIF information.
 
 
 fgallery 1.5: 03/03/2014

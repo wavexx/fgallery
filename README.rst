@@ -119,16 +119,21 @@ Backend:
   - ``exifautotran`` (part of ``libjpeg-progs``: http://libjpeg.sourceforge.net/).
 
 * zip
-* perl >= 5.14, with the following additional recommended modules:
+* perl >= 5.14 (threading support enabled), with the following `required` modules:
+
+  - Image::ExifTool (``libimage-exiftool-perl``: http://owl.phy.queensu.ca/~phil/exiftool/)
+
+and the following additional `recommended` modules:
 
   - JSON::XS (``libjson-xs-perl``)
 
-The following is optional, but used when installed:
+Several other tools are supported, but are only used when installed.
+Therefore it's also helpful to install:
 
-* jpegoptim (http://www.kokkonen.net/tjko/projects.html)
-* pngcrush (http://pmt.sourceforge.net/pngcrush/)
-* facedetect (http://www.thregr.org/~wavexx/hacks/facedetect/)
-* p7zip (http://www.7-zip.org/)
+* jpegoptim (http://www.kokkonen.net/tjko/projects.html, for JPEG size optimization)
+* pngcrush (http://pmt.sourceforge.net/pngcrush/, for PNG size optimization)
+* facedetect (http://www.thregr.org/~wavexx/hacks/facedetect/, for face detection)
+* p7zip (http://www.7-zip.org/, for faster zip archiving)
 
 On Debian/Ubuntu, you can install all the required dependencies with::
 

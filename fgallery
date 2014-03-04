@@ -17,14 +17,16 @@ use Thread::Queue;
 use Storable qw{freeze thaw};
 use Fcntl;
 
+use File::Basename qw{fileparse};
+use File::Find qw{find};
+use File::Path qw{make_path remove_tree};
 use FindBin qw{$RealBin};
 use Getopt::Long qw{:config bundling};
-use File::Basename qw{fileparse};
-use File::Path qw{make_path remove_tree};
-use File::Find qw{find};
+use IO::Handle;
+use Image::ExifTool qw{ImageInfo};
 use JSON qw{encode_json};
-use Time::Piece;
 use List::Util;
+use Time::Piece;
 
 # defaults
 my $mode = 0644;
@@ -157,16 +159,6 @@ sub clamp
 }
 
 
-sub get_props
-{
-  my $file = shift;
-  my @cmd = ('identify', '-format',
-	     '%[*]%[exif:*]width=%w\nheight=%h\nformat=%m',
-	     $file);
-  return map { /^([^=]+)=(.*)/ } sys(@cmd);
-}
-
-
 # thread-safe progress bar
 {
   package progress;
@@ -183,6 +175,8 @@ sub get_props
     $total = $_total;
     $cnt = 0;
     $llen = 0;
+    print(pad($act . ' ...') . "\r");
+    STDOUT->flush();
   }
 
   sub pad
@@ -207,12 +201,12 @@ sub get_props
       $str .= ": " . $msg;
     }
     print(pad($str) . "\r");
+    STDOUT->flush();
   }
 
   sub done
   {
-    my $str = sprintf("%s completed", $act);
-    print(pad($str) . "\n");
+    print(pad($act . ' completed') . "\n");
   }
 }
 
@@ -387,12 +381,21 @@ sub analyze_file
     $root = "${base}_$c";
   }
 
-  my %props = get_props($file);
-  $props{file} = $file;
-  $props{root} = $root;
-  $props{suffix} = $suffix;
+  my $props = ImageInfo($file, {PrintConv => 0, Sort => 'File'});
+  $props->{file} = $file;
+  $props->{root} = $root;
+  $props->{suffix} = $suffix;
 
-  return \%props;
+  # try to fetch the original image size by iterating to the last duplicated tag
+  $props->{'OrigImageWidth'} = $props->{'ExifImageWidth'} || undef;
+  $props->{'OrigImageHeight'} = $props->{'ExifImageHeight'} || undef;
+  for(my $n = 1; exists($props->{"ExifImageWidth ($n)"}); ++$n)
+  {
+    $props->{'OrigImageWidth'} = $props->{"ExifImageWidth ($n)"};
+    $props->{'OrigImageHeight'} = $props->{"ExifImageHeight ($n)"};
+  }
+
+  return $props;
 }
 
 progress::init("reading", scalar(@files));
@@ -405,7 +408,7 @@ my $ostamp = 0;
 foreach my $props(@aprops)
 {
   # file timestamp
-  unless(my $idate = $props->{'exif:DateTimeOriginal'} || $props->{'exif:DateTime'})
+  unless(my $idate = $props->{'DateTimeOriginal'} || $props->{'DateTime'})
   {
     # no date available, cheat by using the previous timestamp
     $props->{stamp} = $ostamp = $ostamp + 1;
@@ -418,7 +421,7 @@ foreach my $props(@aprops)
   }
 
   # mp average
-  $props->{mp} = ($props->{width} * $props->{height} / 1e6);
+  $props->{mp} = ($props->{ImageWidth} * $props->{ImageHeight} / 1e6);
   $amp += $props->{mp};
 }
 $amp /= @files;
@@ -443,16 +446,16 @@ sub process_img
 
   # copy source file and apply lossless transforms
   sys('cp', $file, $fout);
-  if($orient && $props{format} eq "JPEG" && ($props{'exif:Orientation'} // 0))
+  if($orient && $props{FileType} eq "JPEG" && ($props{'Orientation'} // 0))
   {
     sys("$exiftrancmd $fout 2>/dev/null");
-    if(($props{'exif:Orientation'} // 0) > 4) {
-      ($props{width}, $props{height}) = ($props{height}, $props{width});
+    if(($props{'Orientation'} // 0) > 4) {
+      ($props{ImageWidth}, $props{ImageHeight}) = ($props{ImageHeight}, $props{ImageWidth});
     }
   }
-  if($jpegoptim && $props{format} eq "JPEG") {
+  if($jpegoptim && $props{FileType} eq "JPEG") {
     sys('jpegoptim', '-q', $fout);
-  } elsif($pngoptim && $props{format} eq "PNG")
+  } elsif($pngoptim && $props{FileType} eq "PNG")
   {
     sys('pngcrush', '-q', $fout, "$fout.tmp");
     rename("$fout.tmp", "$fout");
@@ -466,7 +469,7 @@ sub process_img
   my @backsize = @backsize;
 
   # generate main image
-  my @sfile = ($props{width}, $props{height});
+  my @sfile = ($props{ImageWidth}, $props{ImageHeight});
   my @simg = sys('convert', $fout,
 		 '-gamma', '0.454545',
 		 '-geometry', "$maxfull[0]x$maxfull[1]>",
@@ -590,8 +593,8 @@ if(!$ofile || $slim)
       my $mp = ($x * $y / 1e6);
 
       # try to see if the source file is just a crop of the original
-      my $ox = $fdata->{props}{'exif:PixelXDimension'} // 0;
-      my $oy = $fdata->{props}{'exif:PixelYDimension'} // 0;
+      my $ox = $fdata->{props}{'OrigImageWidth'} // 0;
+      my $oy = $fdata->{props}{'OrigImageHeight'} // 0;
       my $omp = ($ox * $oy / 1e6);
 
       if($mp >= $omp && $mp > $amp && abs($x / $y) >= $panort) {
