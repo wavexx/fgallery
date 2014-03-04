@@ -327,6 +327,7 @@ find(
     my $file = $_;
     return if(!-f $file);
     my (undef, undef, $suffix) = fileparse($file, qr/\.[^.]*$/);
+    return if(length($suffix) < 2);
     $suffix = lc(substr($suffix, 1));
     if(first { $_ eq $suffix } @exts) {
       push(@files, $file);

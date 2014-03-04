@@ -1,3 +1,9 @@
+fgallery 1.6: ??/??/2014
+------------------------
+
+* Do not produce warnings when reading files without suffix.
+
+
 fgallery 1.5: 03/03/2014
 ------------------------
 
