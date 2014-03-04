@@ -24,7 +24,7 @@ use File::Path qw{make_path remove_tree};
 use File::Find qw{find};
 use JSON qw{encode_json};
 use Time::Piece;
-use List::Util qw{first};
+use List::Util;
 
 # defaults
 my $mode = 0644;
@@ -79,6 +79,13 @@ sub sys
   }
 
   return split("\n", $out);
+}
+
+
+sub any(&@)
+{
+  my ($fun, @seq) = @_;
+  return (List::Util::first { &$fun() } @seq)? 1: 0;
 }
 
 
@@ -329,7 +336,7 @@ find(
     my (undef, undef, $suffix) = fileparse($file, qr/\.[^.]*$/);
     return if(length($suffix) < 2);
     $suffix = lc(substr($suffix, 1));
-    if(first { $_ eq $suffix } @exts) {
+    if(any { $_ eq $suffix } @exts) {
       push(@files, $file);
     }
   }
