@@ -137,7 +137,7 @@ Therefore it's also helpful to install:
 
 On Debian/Ubuntu, you can install all the required dependencies with::
 
-  sudo apt-get install imagemagick exiftran zip libjson-xs-perl
+  sudo apt-get install imagemagick exiftran zip libimage-exiftool-perl libjson-xs-perl
 
 To save more space in the generated galleries, we recommend installing also the
 optional dependencies::
@@ -156,7 +156,7 @@ On a Mac, we recommend installing the dependencies using `MacPorts
 <http://www.macports.org/>`_. After installing MacPorts, type::
 
   sudo port install imagemagick exiftran jpegoptim pngcrush
-  sudo cpan -i JSON::XS
+  sudo cpan -i JSON::XS Image::ExifTool
 
 
 Installation
