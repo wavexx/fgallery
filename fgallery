@@ -475,6 +475,7 @@ sub process_img
 		 '-geometry', "$maxfull[0]x$maxfull[1]>",
 		 '-print', '%w\n%h',
 		 '-gamma', '2.2',
+		 '-strip', '-profile', $fout,
 		 '-quality', $imgq, "$out/$fimg");
 
   # face/center detection
@@ -511,6 +512,7 @@ sub process_img
       '-gravity', 'NorthWest',
       '-crop', "$mthumb[0]x$mthumb[1]+$cx+$cy",
       '-gamma', '2.2',
+      '-strip', '-profile', $fout,
       '-quality', $imgq, "$out/$fthumb");
 
   # blur

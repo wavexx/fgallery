@@ -2,6 +2,7 @@ fgallery 1.6: ??/??/2014
 ------------------------
 
 * Do not produce warnings when reading files without suffix.
+* Strip EXIF metadata from image previews and thumbnails.
 * We now depend on the ``Image::ExifTool`` perl module to extract EXIF information.
 
 
