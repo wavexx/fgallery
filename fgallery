@@ -50,6 +50,7 @@ my $pngoptim = 1;
 my $p7zip = 1;
 my $verbose = 0;
 my $workers = undef;
+my $sRGB = 1;
 
 
 # support functions
@@ -238,11 +239,12 @@ sub print_help()
   -p			do not automatically include full-sized panoramas
   -d			do not generate a full album download
   -f			improve thumbnail cutting by performing face detection
-  --min-thumb WxH	minimum thumbnail size ($minthumb[0]x$minthumb[1])
-  --max-thumb WxH	maximum thumbnail size ($maxthumb[0]x$maxthumb[1])
-  --max-full WxH	maximum full image size ($maxfull[0]x$maxfull[1])
-  --quality Q		preview image quality (0-100, currently: $imgq)
   -j N	                set process-level parallelism
+  --max-full WxH	maximum full image size ($maxfull[0]x$maxfull[1])
+  --max-thumb WxH	maximum thumbnail size ($maxthumb[0]x$maxthumb[1])
+  --min-thumb WxH	minimum thumbnail size ($minthumb[0]x$minthumb[1])
+  --no-sRGB		do not remap preview/thumbnail color profiles to sRGB
+  --quality Q		preview image quality (0-100, currently: $imgq)
 });
 }
 
@@ -252,20 +254,21 @@ my $help = 0;
 my $locale = encoding::_get_locale_encoding();
 
 my ($ret, @ARGS) = GetOptions('help|h' => \$help,
-	   'v' => sub { $verbose = 1; },
-	   's' => sub { $slim = 1; },
-	   'i' => sub { $ofile = 1; },
-	   'o' => sub { $orient = 0; },
-	   't' => sub { $timesort = 0; },
-	   'r' => sub { $revsort = 1; },
-	   'p' => sub { $fullpano = 0; },
 	   'd' => sub { $nodown = 1; },
 	   'f' => sub { $facedet = 1; },
-	   'min-thumb=s' => sub { @minthumb = parse_wh(@_); },
-	   'max-thumb=s' => sub { @maxthumb = parse_wh(@_); },
+	   'i' => sub { $ofile = 1; },
+	   'j=i' => sub { $workers = $_[1] },
+	   'o' => sub { $orient = 0; },
+	   'p' => sub { $fullpano = 0; },
+	   'r' => sub { $revsort = 1; },
+	   's' => sub { $slim = 1; },
+	   't' => sub { $timesort = 0; },
+	   'v' => sub { $verbose = 1; },
 	   'max-full=s' => sub { @maxfull = parse_wh(@_); },
-	   'quality=i' => sub { $imgq = $_[1]; },
-	   'j=i' => sub { $workers = $_[1] });
+	   'max-thumb=s' => sub { @maxthumb = parse_wh(@_); },
+	   'min-thumb=s' => sub { @minthumb = parse_wh(@_); },
+	   'no-sRGB' => sub { $sRGB = 0; },
+	   'quality=i' => sub { $imgq = $_[1]; });
 
 if(@ARGV < 2 || @ARGV > 3 || $help || !$ret)
 {
@@ -304,6 +307,9 @@ if(system("pngcrush -h >/dev/null 2>&1")) {
 }
 if($facedet && system("facedetect -h >/dev/null 2>&1")) {
   fatal("cannot run \"facedetect\" (see http://www.thregr.org/~wavexx/hacks/facedetect/)");
+}
+if($sRGB && system("tificc >/dev/null 2>&1")) {
+  fatal("cannot run \"tificc\" (check if liblcms2-utils is installed)");
 }
 
 my $exiftrancmd;
@@ -438,6 +444,7 @@ sub process_img
   my $fbase = "$root.$ext";
   my $ffile = "files/$root.$suffix";
   my $fout = "$out/$ffile";
+  my $ftmp = "$out/$ffile.tmp";
   my $fimg = "imgs/$fbase";
   my $fthumb = "thumbs/$fbase";
   my $fblur = "blurs/$fbase";
@@ -457,11 +464,21 @@ sub process_img
     sys('jpegoptim', '-q', $fout);
   } elsif($pngoptim && $props{FileType} eq "PNG")
   {
-    sys('pngcrush', '-q', $fout, "$fout.tmp");
-    rename("$fout.tmp", "$fout");
+    sys('pngcrush', '-q', $fout, $ftmp);
+    rename($ftmp, $fout);
   }
   chmod($mode, $fout);
   sys('touch', '-r', $file, $fout);
+
+  # intermediate sRGB colorspace conversion
+  if(!$sRGB) {
+    link($fout, $ftmp);
+  } else
+  {
+    sys('convert', $fout, '-compress', 'LZW', "tiff:$ftmp");
+    sys('tificc', $ftmp, "$ftmp.tmp");
+    rename("$ftmp.tmp", $ftmp);
+  }
 
   # avoid conversion to string
   my @minthumb = @minthumb;
@@ -470,12 +487,12 @@ sub process_img
 
   # generate main image
   my @sfile = ($props{ImageWidth}, $props{ImageHeight});
-  my @simg = sys('convert', $fout,
+  my @simg = sys('convert', $ftmp,
 		 '-gamma', '0.454545',
 		 '-geometry', "$maxfull[0]x$maxfull[1]>",
 		 '-print', '%w\n%h',
 		 '-gamma', '2.2',
-		 '-strip', '-profile', $fout,
+		 '-strip', '-profile', $ftmp,
 		 '-quality', $imgq, "$out/$fimg");
 
   # face/center detection
@@ -506,13 +523,13 @@ sub process_img
   my $dy = $sthumb[1] - $mthumb[1];
   my $cy = clamp(0, $dy, int($center[1] * $sthumb[1] - $sthumb[1] / 2 + $dy / 2));
 
-  sys('convert', $fout,
+  sys('convert', $ftmp,
       '-gamma', '0.454545',
       '-resize', "$sthumb[0]x$sthumb[1]!",
       '-gravity', 'NorthWest',
       '-crop', "$mthumb[0]x$mthumb[1]+$cx+$cy",
       '-gamma', '2.2',
-      '-strip', '-profile', $fout,
+      '-strip', '-profile', $ftmp,
       '-quality', $imgq, "$out/$fthumb");
 
   # blur
@@ -541,6 +558,9 @@ sub process_img
   if(abs($center[0] - 500) > 1 || abs($center[0] - 500) > 1) {
     $fdata{center} = \@center;
   }
+
+  # remove temporary files
+  unlink($ftmp);
 
   return \%fdata;
 }
