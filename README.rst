@@ -133,7 +133,7 @@ Therefore it's also helpful to install:
 * jpegoptim (http://www.kokkonen.net/tjko/projects.html, for JPEG size optimization)
 * pngcrush (http://pmt.sourceforge.net/pngcrush/, for PNG size optimization)
 * facedetect (http://www.thregr.org/~wavexx/hacks/facedetect/, for face detection)
-* p7zip (http://www.7-zip.org/, for faster zip archiving)
+* p7zip (http://www.7-zip.org/, for faster and higher-compression zip archiving)
 
 On Debian/Ubuntu, you can install all the required dependencies with::
 

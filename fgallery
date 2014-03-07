@@ -160,6 +160,16 @@ sub clamp
 }
 
 
+sub strip_exif
+{
+  my $file = shift;
+  my $et = new Image::ExifTool();
+  $et->SetNewValue('*');
+  $et->SetNewValue('ICC_Profile:*', undef, Replace => 2);
+  $et->WriteInfo($file);
+}
+
+
 # thread-safe progress bar
 {
   package progress;
@@ -492,8 +502,8 @@ sub process_img
 		 '-geometry', "$maxfull[0]x$maxfull[1]>",
 		 '-print', '%w\n%h',
 		 '-gamma', '2.2',
-		 '-strip', '-profile', $ftmp,
 		 '-quality', $imgq, "$out/$fimg");
+  strip_exif("$out/$fimg");
 
   # face/center detection
   my @center = (0.5, 0.5);
@@ -529,8 +539,8 @@ sub process_img
       '-gravity', 'NorthWest',
       '-crop', "$mthumb[0]x$mthumb[1]+$cx+$cy",
       '-gamma', '2.2',
-      '-strip', '-profile', $ftmp,
       '-quality', $imgq, "$out/$fthumb");
+  strip_exif("$out/$fthumb");
 
   # blur
   sys('convert', "$out/$fthumb",
