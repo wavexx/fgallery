@@ -49,7 +49,7 @@ my $jpegoptim = 1;
 my $pngoptim = 1;
 my $p7zip = 1;
 my $verbose = 0;
-my $workers = undef;
+my $workers = 0;
 my $sRGB = 1;
 
 
@@ -218,10 +218,19 @@ sub parse_wh
 {
   my ($opt, $spec) = @_;
   my ($w, $h) = ($spec =~ /^(\d+)x(\d+)$/);
-  unless(defined($w) && defined($h)) {
+  unless(defined($w) && $w > 0 && defined($h) && $h > 0) {
     fatal("bad WxH specification in option $opt");
   }
   return (int($w), int($h));
+}
+
+sub parse_int
+{
+  my ($opt, $value, $min, $max) = @_;
+  if((defined($min) && $value < $min) || (defined($max) && $value > $max)) {
+    fatal("bad value for option $opt");
+  }
+  return int($value);
 }
 
 
@@ -257,7 +266,7 @@ my ($ret, @ARGS) = GetOptions('help|h' => \$help,
 	   'd' => sub { $nodown = 1; },
 	   'f' => sub { $facedet = 1; },
 	   'i' => sub { $ofile = 1; },
-	   'j=i' => sub { $workers = $_[1] },
+	   'j=i' => sub { $workers = parse_int($_[0], $_[1], 1, undef); },
 	   'o' => sub { $orient = 0; },
 	   'p' => sub { $fullpano = 0; },
 	   'r' => sub { $revsort = 1; },
@@ -268,7 +277,7 @@ my ($ret, @ARGS) = GetOptions('help|h' => \$help,
 	   'max-thumb=s' => sub { @maxthumb = parse_wh(@_); },
 	   'min-thumb=s' => sub { @minthumb = parse_wh(@_); },
 	   'no-sRGB' => sub { $sRGB = 0; },
-	   'quality=i' => sub { $imgq = $_[1]; });
+	   'quality=i' => sub { $imgq = parse_int($_[0], $_[1], 0, 100); });
 
 if(@ARGV < 2 || @ARGV > 3 || $help || !$ret)
 {
@@ -358,7 +367,7 @@ for my $path("$out/thumbs", "$out/blurs", "$out/imgs", "$out/files")
 }
 
 # disable sub-process parallelism when threading ourselves
-if(defined($workers))
+if($workers)
 {
   $ENV{MAGICK_THREAD_LIMIT} = 1;
   $ENV{OMP_NUM_THREADS} = 1;
@@ -596,7 +605,7 @@ if(!$nodown && !$slim)
       @files = map { "./$_" } @files;
     }
 
-    my @mt = defined($workers)? ("-mmt=$workers"): ();
+    my @mt = $workers? ("-mmt=$workers"): ();
     sys('7za', '-tzip', @mt, 'a', '--', "$out/$fdownload", @files);
   }
 }
