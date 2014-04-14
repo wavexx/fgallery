@@ -268,6 +268,8 @@ function onMainReady()
 
   // setup header
   var dsc = [];
+  if(imgs.index)
+    dsc.push("<a title=\"Back to index\" href=\"" + encodeURI(imgs.index) + "\"><img src=\"back.png\"/></a>");
   if(imgs.data[eidx].file)
   {
     var img = imgs.data[eidx].file[0];

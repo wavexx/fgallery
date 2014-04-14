@@ -51,6 +51,7 @@ my $p7zip = 1;
 my $verbose = 0;
 my $workers = 0;
 my $sRGB = 1;
+my $indexUrl = undef;
 
 
 # support functions
@@ -254,6 +255,7 @@ sub print_help()
   --min-thumb WxH	minimum thumbnail size ($minthumb[0]x$minthumb[1])
   --no-sRGB		do not remap preview/thumbnail color profiles to sRGB
   --quality Q		preview image quality (0-100, currently: $imgq)
+  --index url		specify the URL location for the index/back button
 });
 }
 
@@ -277,7 +279,8 @@ my ($ret, @ARGS) = GetOptions('help|h' => \$help,
 	   'max-thumb=s' => sub { @maxthumb = parse_wh(@_); },
 	   'min-thumb=s' => sub { @minthumb = parse_wh(@_); },
 	   'no-sRGB' => sub { $sRGB = 0; },
-	   'quality=i' => sub { $imgq = parse_int($_[0], $_[1], 0, 100); });
+	   'quality=i' => sub { $imgq = parse_int($_[0], $_[1], 0, 100); },
+	   'index=s' => sub { $indexUrl = Encode::decode($locale, $_[1]); });
 
 if(@ARGV < 2 || @ARGV > 3 || $help || !$ret)
 {
@@ -649,6 +652,7 @@ rmdir("$out/files");
 my %json;
 $json{name} = $name if($name);
 $json{download} = $fdownload if($fdownload);
+$json{index} = $indexUrl if($indexUrl);
 $json{blur} = \@backsize;
 $json{thumb} = { min => \@minthumb, max => \@maxthumb };
 
