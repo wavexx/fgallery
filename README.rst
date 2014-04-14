@@ -54,6 +54,10 @@ Lossless auto-rotation is applied so that images can be opened with a browser
 directly. JPEG and PNG files are also re-optimized (losslessy) before being
 archived to furthermore save space.
 
+Preview and thumbnail images are converted to the sRGB color-space by default,
+which provides better results on normal displays and browsers without color
+management support.
+
 All images can be included to be viewed individually at full resolution in the
 gallery by using the ``-i`` flag. Panoramas are automatically detected and the
 original image is included in full-size by default, as often the image preview
@@ -105,6 +109,40 @@ centered on the face of the subject. If face detection is enabled, there's
 generally no need to increase the thumbnail size.
 
 
+Color management
+----------------
+
+Preview and thumbnail images are converted from the built-in color profile the
+sRGB color-space by default. The resulting images will appear closer to true
+colors for normal screens and browsers without color management support,
+despite causing an effective loss of absolute color depth.
+
+This happens because sRGB has a smaller gamut than built-in profiles, as it's
+essentially targeted to be a reference color-space for consumer-grade devices.
+
+From a normal user perspective, the conversion will cause an increase in color
+saturation, overall contrast and generally a lighter appearance of dark colors
+which would otherwise be indistinguishable on the screen.
+
+Viewed from a properly calibrated wide-gamut display instead the difference is
+usually *very* subtle, with only deeply-saturated colors being "capped".
+
+As of 04/2014, Safari on Mac is, sadly, the only browser/platform that properly
+supports color management by default.
+
+Firefox has color-management support, but it's disabled by default on all
+platforms, and it has known bugs with LUT profiles (though the more common
+Matrix profiles seem to work fine).
+
+With Firefox, the installation of the following "Color Management" add-on is
+recommended:
+
+https://addons.mozilla.org/en-US/firefox/addon/color-management/
+
+When installed, in the add-on configuration, you need to enable color
+management for "All images" and restart the browser.
+
+
 Dependencies
 ------------
 
@@ -112,7 +150,8 @@ Frontend/viewer: none (static html/js/css)
 
 Backend:
 
-* ImageMagick (http://www.imagemagick.org)
+* ImageMagick (``imagemagick``, http://www.imagemagick.org)
+* LittleCMS2 utilities (``liblcms2-utils``, http://www.littlecms.com/).
 * Either:
 
   - ``exiftran`` (part of ``fbida``: http://www.kraxel.org/blog/linux/fbida/), or
@@ -122,8 +161,9 @@ Backend:
 * perl >= 5.14 (threading support enabled), with the following `required` modules:
 
   - Image::ExifTool (``libimage-exiftool-perl``: http://owl.phy.queensu.ca/~phil/exiftool/)
+  - JSON (``libjson-perl``, http://search.cpan.org/dist/JSON/lib/JSON.pm)
 
-and the following additional `recommended` modules:
+  and the following additional `recommended` modules:
 
   - JSON::XS (``libjson-xs-perl``)
 
@@ -137,7 +177,8 @@ Therefore it's also helpful to install:
 
 On Debian/Ubuntu, you can install all the required dependencies with::
 
-  sudo apt-get install imagemagick exiftran zip libimage-exiftool-perl libjson-xs-perl
+  sudo apt-get install imagemagick exiftran zip liblcms2-utils
+  sudo apt-get install libimage-exiftool-perl libjson-perl libjson-xs-perl
 
 To save more space in the generated galleries, we recommend installing also the
 optional dependencies::
@@ -155,8 +196,8 @@ considerably faster during compression thanks to multi-threading support::
 On a Mac, we recommend installing the dependencies using `MacPorts
 <http://www.macports.org/>`_. After installing MacPorts, type::
 
-  sudo port install imagemagick exiftran jpegoptim pngcrush
-  sudo cpan -i JSON::XS Image::ExifTool
+  sudo port install imagemagick lcms2 exiftran jpegoptim pngcrush
+  sudo cpan -i JSON JSON::XS Image::ExifTool
 
 
 Installation
