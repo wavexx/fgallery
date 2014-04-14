@@ -350,6 +350,7 @@ find(
     }
   }
 }, $dir);
+@files = sort(@files);
 
 if(!@files) {
   fatal("no available files inside \"$dir\"");

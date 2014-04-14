@@ -6,6 +6,7 @@ fgallery 1.6: ??/??/2014
 * We now depend on the ``Image::ExifTool`` perl module to extract EXIF information.
 * Preview/thumbnail images are now converted to sRGB colorspace by default
   (``liblcms2-utils`` required) for improved color appearance across devices.
+* Fixed mixing/sorting of images without EXIF data.
 
 
 fgallery 1.5: 03/03/2014
