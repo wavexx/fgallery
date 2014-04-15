@@ -10,6 +10,7 @@ fgallery 1.6: ??/??/2014
 * Fixed mixing/sorting of images without EXIF data.
 * A customizable URL (``--index``) can be specified on the command line to put
   a back-link in the gallery header.
+* Reduced the payload size.
 
 
 fgallery 1.5: 03/03/2014
