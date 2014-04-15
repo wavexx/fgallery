@@ -112,35 +112,41 @@ generally no need to increase the thumbnail size.
 Color management
 ----------------
 
-Preview and thumbnail images are converted from the built-in color profile the
-sRGB color-space by default. The resulting images will appear closer to true
-colors for normal screens and browsers without color management support,
-despite causing an effective loss of absolute color depth.
-
-This happens because sRGB has a smaller gamut than built-in profiles, as it's
-essentially targeted to be a reference color-space for consumer-grade devices.
-
-From a normal user perspective, the conversion will cause an increase in color
-saturation, overall contrast and generally a lighter appearance of dark colors
-which would otherwise be indistinguishable on the screen.
-
-Viewed from a properly calibrated wide-gamut display instead the difference is
-usually *very* subtle, with only deeply-saturated colors being "capped".
-
 As of 04/2014, Safari on Mac is, sadly, the only browser/platform that properly
-supports color management by default.
+supports color management by default and that can take advantage of built-in
+color profiles.
 
-Firefox has color-management support, but it's disabled by default on all
-platforms, and it has known bugs with LUT profiles (though the more common
-Matrix profiles seem to work fine).
+Due to the general lack of color management, preview and thumbnail images are
+converted from the built-in color profile the sRGB color-space by default.
 
-With Firefox, the installation of the following "Color Management" add-on is
-recommended:
+From a normal user perspective, the resulting images will appear to be closer
+to true colors. The conversion will generally cause an increase in color
+saturation, overall contrast and generally a lighter appearance of dark
+regions, which would otherwise be indistinguishable on the screen.
+
+Viewed from a properly calibrated or wide-gamut display instead the difference
+is usually *very* subtle, with only deeply-saturated colors being "capped" due
+to the effective reduction of absolute color depth.
+
+We'd like to mention that Firefox *has* color-management support, but it's
+disabled by default on all platforms, and it has known bugs with LUT profiles
+(though the more common Matrix profiles seem to work fine).
+
+The installation of the following "Color Management" add-on is recommended:
 
 https://addons.mozilla.org/en-US/firefox/addon/color-management/
 
-When installed, in the add-on configuration, you need to enable color
-management for "All images" and restart the browser.
+When installed, in the add-on configuration, you'll need to enable color
+management for "All images" (since sRGB has no ICC profile attached by
+definition) and restart the browser. Also, if you have a multi-monitor setup,
+it's advisable to manually set the "Display profile" to the external/calibrated
+screen, since FF won't automatically select the "current" color profile, and
+just default to the first available screen.
+
+If you care about color management, please complain/contribute to any of the
+existing `bug reports`_ in Firefox.
+
+.. _bug reports: https://bugzilla.mozilla.org/buglist.cgi?component=GFX%3A%20Color%20Management&product=Core&bug_status=__open__
 
 
 Dependencies
