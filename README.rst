@@ -121,8 +121,8 @@ converted from the built-in color profile the sRGB color-space by default.
 
 From a normal user perspective, the resulting images will appear to be closer
 to true colors. The conversion will generally cause an increase in color
-saturation, overall contrast and generally a lighter appearance of dark
-regions, which would otherwise be indistinguishable on the screen.
+saturation, overall contrast and a lighter appearance of dark regions, which
+would otherwise be indistinguishable on the screen.
 
 Viewed from a properly calibrated or wide-gamut display instead the difference
 is usually *very* subtle, with only deeply-saturated colors being "capped" due

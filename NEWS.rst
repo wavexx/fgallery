@@ -1,10 +1,10 @@
-fgallery 1.6: ??/??/2014
+fgallery 1.6: 17/04/2014
 ------------------------
 
 * Do not produce warnings when reading files without suffix.
 * Strip EXIF metadata from image previews and thumbnails.
-* We now depend on the ``Image::ExifTool`` perl module to extract EXIF
-  information.
+* We now require the ``Image::ExifTool`` perl module to extract EXIF
+  information (``libimage-exiftool-perl``).
 * Preview/thumbnail images are now converted to sRGB colorspace by default
   (``liblcms2-utils`` required) for improved color appearance across devices.
 * Fixed mixing/sorting of images without EXIF data.
