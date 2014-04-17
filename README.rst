@@ -189,15 +189,10 @@ On Debian/Ubuntu, you can install all the required dependencies with::
 To save more space in the generated galleries, we recommend installing also the
 optional dependencies::
 
-  sudo apt-get install jpegoptim pngcrush
+  sudo apt-get install jpegoptim pngcrush p7zip
 
 For face detection support, simply follow the `facedetect installation
 instructions <http://www.thregr.org/~wavexx/hacks/facedetect/#dependencies>`_.
-
-For performance reasons, we recommend installing also ``p7zip`` which is
-considerably faster during compression thanks to multi-threading support::
-
-  sudo apt-get install p7zip
 
 On a Mac, we recommend installing the dependencies using `MacPorts
 <http://www.macports.org/>`_. After installing MacPorts, type::
