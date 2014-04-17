@@ -641,7 +641,7 @@ function init()
   // preload some resources
   Asset.images(['throbber.gif', 'noise.png',
 		'left.png', 'right.png',
-		'eye.png', 'download.png',
+		'eye.png', 'download.png', 'back.png',
 		'cut-left.png', 'cut-right.png',
 		'cut-top.png', 'cut-mov.png']);
 }
