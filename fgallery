@@ -464,8 +464,11 @@ sub process_img
 
   progress::status($fbase);
 
-  # copy source file and apply lossless transforms
+  # copy source file
   sys('cp', $file, $fout);
+  chmod(0600, $fout);
+
+  # apply lossless transforms
   if($orient && $props{FileType} eq "JPEG" && ($props{'Orientation'} // 0))
   {
     sys("$exiftrancmd $fout 2>/dev/null");
@@ -480,6 +483,8 @@ sub process_img
     sys('pngcrush', '-q', $fout, $ftmp);
     rename($ftmp, $fout);
   }
+
+  # final file mode
   chmod($mode, $fout);
   sys('touch', '-r', $file, $fout);
 
