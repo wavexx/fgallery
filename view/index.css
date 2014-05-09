@@ -195,7 +195,6 @@ img
 #gallery #list
 {
   position: absolute;
-  background: #333; /* IE<9 */
   background: rgba(255, 255, 255, 0.1);
   padding-top: 0.5em;
   padding-left: 0.5em;
