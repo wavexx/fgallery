@@ -37,6 +37,8 @@ Element.Events.hashchange =
 
 // some state variables
 var emain;	// main object
+var eback;	// background
+var enoise;	// additive noise
 var eflash;	// flashing object
 var ehdr;	// header
 var elist;	// thumbnail list
@@ -320,8 +322,8 @@ function onMainReady()
   fx.start('opacity', 1);
 
   var rp = Math.floor(Math.random() * 100);
-  emain.setStyle('background-image', 'url(noise.png), url(' + encodeURI(imgs.data[eidx].blur) + ')');
-  emain.setStyle('background-position', rp + 'px ' + rp + 'px, 0 0');
+  eback.src = imgs.data[eidx].blur;
+  enoise.setStyle('background-position', rp + 'px ' + rp + 'px');
 
   clearTimeout(tthr);
   idle.start();
@@ -449,7 +451,7 @@ function change()
 function loadThumb(i)
 {
   var x = imgs.data[i];
-  x.eimg.setStyle('background-image', 'url(' + x.thumb[0] + ')');
+  x.eimg.setStyle('background-image', 'url(' + encodeURI(x.thumb[0]) + ')');
 }
 
 function loadAllThumbs()
@@ -479,6 +481,12 @@ function initGallery(data)
   imgs = data;
   emain = $('gallery');
   emain.setStyle('display', 'none');
+
+  eback = new Element('img', { id: 'background' });
+  eback.inject(emain);
+
+  enoise = new Element('div', { id: 'noise' });
+  enoise.inject(emain);
 
   econt = new Element('div', { id: 'content' });
   econt.inject(emain);
@@ -536,9 +544,7 @@ function initGallery(data)
     'display': 'block',
     'visibility': 'hidden',
     'min-width': imgs.thumb.min[0] + padding * 2,
-    'min-height': imgs.thumb.min[1] + padding * 2,
-    'background-repeat': 'repeat, no-repeat',
-    'background-size': 'auto, 100% 100%'
+    'min-height': imgs.thumb.min[1] + padding * 2
   });
 
   // events and navigation shortcuts
@@ -630,7 +636,7 @@ function init()
   new Request.JSON({ url: datafile, onSuccess: initGallery }).get();
 
   // preload some resources
-  Asset.images(['throbber.gif', 'noise.png',
+  Asset.images(['throbber.gif',
 		'left.png', 'right.png',
 		'eye.png', 'download.png', 'back.png',
 		'cut-left.png', 'cut-right.png',

@@ -45,6 +45,26 @@ img
   outline: none;
 }
 
+#gallery #background
+{
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+#gallery #noise
+{
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url(noise.png);
+  background-repeat: repeat;
+}
+
 #gallery #content
 {
   position: absolute;

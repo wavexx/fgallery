@@ -2,6 +2,7 @@ fgallery 1.7: ??/??/2014
 ------------------------
 
 * Fixed crash when reading read-only images.
+* Improved support for IE8.
 
 
 fgallery 1.6: 17/04/2014
