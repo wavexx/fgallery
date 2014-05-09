@@ -486,11 +486,6 @@ function initGallery(data)
   ebuff = new Element('div');
   ebuff.inject(econt);
 
-  // avoid z-levels by div layering (due to IE7 ofkourse)
-  var tmp;
-
-  tmp = new Element('div');
-
   eflash = new Element('div', { id: 'flash' });
   eflash.setStyles({ 'opacity': 0, 'display': 'none' });
   eflash.set('tween',
@@ -499,22 +494,18 @@ function initGallery(data)
     link: 'cancel',
     onComplete: function() { eflash.setStyle('display', 'none'); }
   });
-  eflash.inject(tmp);
+  eflash.inject(econt);
 
   eleft = new Element('a', { id: 'left' });
   eleft.adopt((new Element('div')).adopt(new Element('img', { 'src': 'left.png' })));
-  eleft.inject(tmp);
+  eleft.inject(econt);
 
   eright = new Element('a', { id: 'right' });
   eright.adopt((new Element('div')).adopt(new Element('img', { 'src': 'right.png' })));
-  eright.inject(tmp);
-  tmp.inject(econt);
+  eright.inject(econt);
 
-  tmp = new Element('div');
   ehdr = new Element('div', { id: 'header' });
-  ehdr.inject(tmp);
-
-  tmp.inject(econt);
+  ehdr.inject(econt);
 
   elist = new Element('div', { id: 'list' });
   elist.inject(emain);
