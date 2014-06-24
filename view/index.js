@@ -161,10 +161,13 @@ function onLayoutChanged(layout, sr)
     var classes = ['cut-left', 'cut-right', 'cut-top', 'cut-bottom'];
     classes.each(function(c) { x.ethumb.removeClass(c); });
 
-    if(-(cx - offset[0]) > size[0] * cutrt) x.ethumb.addClass('cut-left');
-    if((cx - offset[0] + size[0] - maxw) > size[0] * cutrt) x.ethumb.addClass('cut-right');
-    if(-(cy - offset[1]) > size[1] * cutrt) x.ethumb.addClass('cut-top');
-    if((cy - offset[1] + size[1] - maxh) > size[1] * cutrt) x.ethumb.addClass('cut-bottom');
+    var wx = Math.round(size[0] * cutrt);
+    if((offset[0] - cx) > wx) x.ethumb.addClass('cut-left');
+    if((cx - offset[0] + size[0] - maxw) > wx) x.ethumb.addClass('cut-right');
+
+    var wy = Math.round(size[1] * cutrt);
+    if((offset[1] - cy) > wy) x.ethumb.addClass('cut-top');
+    if((cy - offset[1] + size[1] - maxh) > wy) x.ethumb.addClass('cut-bottom');
   });
 
   // resize thumbnail list
