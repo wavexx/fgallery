@@ -216,11 +216,14 @@ Authors and Copyright
 
 "fgallery" can be found at http://www.thregr.org/~wavexx/software/fgallery/
 
-"fgallery" is distributed under GPL2 (see COPYING) WITHOUT ANY WARRANTY.
-Copyright(c) 2011-2014 by wave++ "Yuri D'Elia" <wavexx@thregr.org>.
+| "fgallery" is distributed under GPL2 (see COPYING) WITHOUT ANY WARRANTY.
+| Copyright(c) 2011-2014 by wave++ "Yuri D'Elia" <wavexx@thregr.org>.
+
 fgallery's GIT repository is publicly accessible at::
 
   git://src.thregr.org/fgallery
+
+or at `GitHub <https://github.com/wavexx/fgallery>`_.
 
 
 Extending fgallery
