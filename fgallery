@@ -301,7 +301,8 @@ if(!-d $dir) {
 }
 
 # check tools
-if(system("identify >/dev/null 2>&1") || system("convert >/dev/null 2>&1")) {
+if(system("identify -version >/dev/null 2>&1")
+|| system("convert -version >/dev/null 2>&1")) {
   fatal("cannot run \"identify\" or \"convert\" (check if ImageMagick is installed)");
 }
 if(system("7za -h >/dev/null 2>&1"))
