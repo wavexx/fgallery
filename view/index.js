@@ -460,7 +460,7 @@ function loadThumb(i)
 function loadAllThumbs()
 {
   mthumbs.each(loadThumb);
-  mthumbs = []
+  mthumbs = [];
 }
 
 function loadNextThumb()
@@ -527,7 +527,7 @@ function initGallery(data)
     x.ethumb = ethumb;
 
     var a = new Element('a');
-    a.addEvent('click', function() { switchTo(i); })
+    a.addEvent('click', function() { switchTo(i); });
     a.href = "#" + i;
 
     var img = new Element('div', { 'class': 'img' });
@@ -591,7 +591,10 @@ function initGallery(data)
   });
 
   // setup an idle callback for mouse movement only
-  var idleTmp = new IdleTimer(window, { timeout: hidedelay, events: ['mousemove', 'mousedown', 'mousewheel'] }).start();
+  var idleTmp = new IdleTimer(window, {
+    timeout: hidedelay,
+    events: ['mousemove', 'mousedown', 'mousewheel']
+  }).start();
   idleTmp.addEvent('idle', hideNav);
   idleTmp.addEvent('active', function() { showNav(); showHdr(); });
 
@@ -607,7 +610,7 @@ function initGallery(data)
   if(imgs.name) document.title = imgs.name;
 
   // setup thumbnail loading sequence
-  mthumbs = []
+  mthumbs = [];
   if(first < 5)
   {
     // optimize common initial case (viewing from the beginning)
