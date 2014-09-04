@@ -249,7 +249,7 @@ sub print_help()
   -p			do not automatically include full-sized panoramas
   -d			do not generate a full album download
   -f			improve thumbnail cutting by performing face detection
-  -j N	                set process-level parallelism
+  -j N			set process-level parallelism
   --max-full WxH	maximum full image size ($maxfull[0]x$maxfull[1])
   --max-thumb WxH	maximum thumbnail size ($maxthumb[0]x$maxthumb[1])
   --min-thumb WxH	minimum thumbnail size ($minthumb[0]x$minthumb[1])
@@ -428,7 +428,9 @@ my $ostamp = 0;
 foreach my $props(@aprops)
 {
   # file timestamp
-  unless(my $idate = $props->{'DateTimeOriginal'} || $props->{'DateTime'})
+  my $idate = $props->{'DateTimeOriginal'} || $props->{'DateTime'};
+
+  if(!$idate || $idate eq "0000:00:00 00:00:00")
   {
     # no date available, cheat by using the previous timestamp
     $props->{stamp} = $ostamp = $ostamp + 1;
