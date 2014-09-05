@@ -12,7 +12,7 @@ There is no server-side processing, only static generation. The resulting
 gallery can be uploaded anywhere without additional requirements and works with
 any modern browser.
 
-- Automatically orients pictures without fuss and quality loss.
+- Automatically orients pictures without quality loss.
 - Multi-camera friendly: automatically sorts pictures by time: just throw your
   (and your friends) photos and movies in a directory. The resulting gallery
   shows the pictures in seamless shooting order.
@@ -33,8 +33,15 @@ Usage
 
 2) Upload "my-gallery" somewhere.
 
-If you want to test/preview the gallery locally, just open
-``my-gallery/index.html`` with a browser.
+To test/preview the gallery locally using Firefox, you can just open the file
+``my-gallery/index.html``. On other browsers you need a web server (due to AJAX
+same-origin restrictions). If you have python installed, a quick way to test
+the gallery locally is to run::
+
+  cd my-gallery
+  python -m SimpleHTTPServer 8000
+
+and then navigate to http://localhost:8000.
 
 
 Usage notes
@@ -114,7 +121,7 @@ transformation is necessary to reproduce the colors on your monitor as
 *originally* captured by the camera. `Color management`_ is an umbrella term
 for all the techniques required to perform this task.
 
-Most image-viewing software supports color management to some degree, but it's
+Most image-viewing software support color management to some degree, but it's
 rarely configured properly on most systems except Mac OSX. Notably, *all
 browsers lack color management*, with the exception of Safari, but again *only*
 on OSX.
@@ -129,7 +136,7 @@ We're writing this down because Firefox *has* built-in color-management
 support, but it's disabled by default on all platforms. It's also ranking very
 low on the list of improvements to make, with some bugs being open for years.
 In an attempt to raise awareness, please complain/contribute to any of the
-existing `bug reports`_, citing this web page if you wish.
+existing `bug reports`_, citing the `Technical details`_ on this web page.
 
 .. _Color management: http://en.wikipedia.org/wiki/Color_management
 .. _bug reports: https://bugzilla.mozilla.org/buglist.cgi?component=GFX%3A%20Color%20Management&product=Core&bug_status=__open__
@@ -158,10 +165,11 @@ request CM. The current method of enabling CM only on images with an ICC
 profile is clearly not adequate, since images without a profile should be
 assumed to be in sRGB color-space already.
 
-Because of the general lack of color management, fgallery transforms the
+Because of the general lack of color management, `fgallery` transforms the
 preview and thumbnail images from the built-in color profile to the sRGB
 color-space by default. On most devices this will result in images appearing to
-be *closer* to true colors with only minimal lack of absolute color depth.
+be *closer* to true colors with only minimal lack of absolute color depth. As
+usual, no transformation is done on the original downloadable files.
 
 
 Dependencies
@@ -224,6 +232,11 @@ a directory of your liking and link `fgallery` appropriately::
 
   sudo cp -r fgallery-X.Y /usr/local/share/fgallery
   sudo ln -s /usr/local/share/fgallery/fgallery /usr/local/bin
+
+You can also try the latest `fgallery` bundled with facedetect_ in a Docker
+container using the following ``Dockerfile`` provided by Stavros Korokithakis:
+
+https://github.com/skorokithakis/docker-fgallery
 
 
 Authors and Copyright

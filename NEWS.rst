@@ -1,8 +1,11 @@
-fgallery 1.7: ??/??/2014
+fgallery 1.7: 05/09/2014
 ------------------------
 
-* Fixed crash when reading read-only images.
 * Improved support for IE8.
+* With Firefox the gallery can now be viewed directly without an HTTP server.
+* Fixed crash when reading invalid EXIF timestamps.
+* Fixed crash when reading read-only images.
+* Fixed invalid check with newer versions of ImageMagick.
 
 
 fgallery 1.6: 17/04/2014
