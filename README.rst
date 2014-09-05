@@ -161,7 +161,7 @@ assumed to be in sRGB color-space already.
 Because of the general lack of color management, fgallery transforms the
 preview and thumbnail images from the built-in color profile to the sRGB
 color-space by default. On most devices this will result in images appearing to
-be closer to *true* colors with only minimal lack of absolute color depth.
+be *closer* to true colors with only minimal lack of absolute color depth.
 
 
 Dependencies
