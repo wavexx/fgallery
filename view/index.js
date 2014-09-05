@@ -653,8 +653,15 @@ function init()
   new Request.JSON(
   {
     url: datafile,
-    onRequest: function() { this.xhr.overrideMimeType('application/json'); },
-    isSuccess: function() { return (!this.status || (this.status >= 200 && this.status < 300)); },
+    onRequest: function()
+    {
+      if(this.xhr.overrideMimeType)
+	this.xhr.overrideMimeType('application/json');
+    },
+    isSuccess: function()
+    {
+      return (!this.status || (this.status >= 200 && this.status < 300));
+    },
     onSuccess: initGallery,
     onFailure: initFailure
   }).get();
