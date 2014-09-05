@@ -112,23 +112,27 @@ A pledge
 Since every camera is different, and every monitor is different, some color
 transformation is necessary to reproduce the colors on your monitor as
 *originally* captured by the camera. `Color management`_ is an umbrella term
-for a series of techniques to perform this task.
+for all the techniques required to perform this task.
 
 Most image-viewing software supports color management to some degree, but it's
 rarely configured properly on most systems except Mac OSX. Notably, *all
-browsers lack color management*, with the notable exception of Safari, but
-again *only* on OSX.
+browsers lack color management*, with the exception of Safari, but again *only*
+on OSX.
 
 This causes the familiar effect of looking at the same picture from your laptop
 and your tablet, and noticing that the blue of the sky is just slightly off, or
-colors look much more contrasty on one screen as opposed to the other. Often
-the image *has* the information required for a more balanced color
+that colors look much more contrasty on one screen as opposed to the other.
+Often the image *has* the information required for a more balanced color
 reproduction, but the browser is just ignoring it.
 
-We're writing this down because Firefox *has* color-management support, but
-it's disabled by default on all platforms. It's also ranking very low on the
-list of improvements to make. Please complain/contribute to any of the existing
-`bug reports`_ if you think that color reproduction is important.
+We're writing this down because Firefox *has* built-in color-management
+support, but it's disabled by default on all platforms. It's also ranking very
+low on the list of improvements to make, with some bugs being open for years.
+In an attempt to raise awareness, please complain/contribute to any of the
+existing `bug reports`_, citing this web page if you wish.
+
+.. _Color management: http://en.wikipedia.org/wiki/Color_management
+.. _bug reports: https://bugzilla.mozilla.org/buglist.cgi?component=GFX%3A%20Color%20Management&product=Core&bug_status=__open__
 
 
 Technical details
@@ -140,21 +144,24 @@ recommended:
 https://addons.mozilla.org/en-US/firefox/addon/color-management/
 
 When installed, in the add-on configuration, you'll need to enable color
-management for "All images" (since sRGB has no ICC profile attached by
-definition) and restart the browser. Also, if you have a multi-monitor setup,
-it's advisable to manually set the "Display profile" to the external/calibrated
-screen, since FF won't automatically select the "current" color profile, and
-just default to the first available screen. Firefox has also known bugs with
-LUT profiles (though the more common Matrix profiles seem to work fine).
+management for "All images" and restart the browser. Also, if you have a
+multi-monitor setup, it's advisable to manually set the "Display profile" to
+the external/calibrated screen, since FF won't automatically select the color
+profile for the current monitor, and just default to the primary. Firefox has
+also known bugs with LUT profiles, though the more common Matrix profiles seem
+to work fine.
+
+We understand that CM has a considerable impact on image rendering performance,
+but strictly speaking CM doesn't need to be enabled on all images by default.
+It would be perfectly fine to have an additional attribute on the image tag to
+request CM. The current method of enabling CM only on images with an ICC
+profile is clearly not adequate, since images without a profile should be
+assumed to be in sRGB color-space already.
 
 Because of the general lack of color management, fgallery transforms the
 preview and thumbnail images from the built-in color profile to the sRGB
 color-space by default. On most devices this will result in images appearing to
-be closer to *true* colors with only minimal lack of absolute color depth. If
-you have a professional wide-gamut display, use `--no-sRGB` to retain the
-built-in color profiles.
-
-.. _bug reports: https://bugzilla.mozilla.org/buglist.cgi?component=GFX%3A%20Color%20Management&product=Core&bug_status=__open__
+be closer to *true* colors with only minimal lack of absolute color depth.
 
 
 Dependencies
