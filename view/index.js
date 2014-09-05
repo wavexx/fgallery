@@ -633,13 +633,31 @@ function initGallery(data)
   emain.setStyle('visibility', 'visible');
 }
 
+function initFailure()
+{
+  emain = $('gallery');
+  emain.set('html', "<h2>Cannot load gallery data :'(</h2>");
+  emain.setStyles(
+  {
+    'background': 'inherit',
+    'display': 'block'
+  });
+}
+
 function init()
 {
   if(!("devicePixelRatio" in window))
     window.devicePixelRatio = 1;
 
   // read the data
-  new Request.JSON({ url: datafile, onSuccess: initGallery }).get();
+  new Request.JSON(
+  {
+    url: datafile,
+    onRequest: function() { this.xhr.overrideMimeType('application/json'); },
+    isSuccess: function() { return (!this.status || (this.status >= 200 && this.status < 300)); },
+    onSuccess: initGallery,
+    onFailure: initFailure
+  }).get();
 
   // preload some resources
   Asset.images(['throbber.gif',

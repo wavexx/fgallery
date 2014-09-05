@@ -33,14 +33,8 @@ Usage
 
 2) Upload "my-gallery" somewhere.
 
-You actually need a web server to test the gallery locally (only due to
-AJAX/browser restrictions). If you have python installed, a quick way to test
-the gallery locally is to run::
-
-  cd my-gallery
-  python -m SimpleHTTPServer 8000
-
-and then open http://localhost:8000 with a browser.
+If you want to test/preview the gallery locally, just open
+``my-gallery/index.html`` with a browser.
 
 
 Usage notes
@@ -112,27 +106,36 @@ generally no need to increase the thumbnail size.
 Color management
 ----------------
 
-As of 04/2014, Safari on Mac is, sadly, the only browser/platform that properly
-supports color management by default and that can take advantage of built-in
-color profiles.
+A pledge
+~~~~~~~~
 
-Due to the general lack of color management, preview and thumbnail images are
-converted from the built-in color profile the sRGB color-space by default.
+Since every camera is different, and every monitor is different, some color
+transformation is necessary to reproduce the colors on your monitor as
+*originally* captured by the camera. `Color management`_ is an umbrella term
+for a series of techniques to perform this task.
 
-From a normal user perspective, the resulting images will appear to be closer
-to true colors. The conversion will generally cause an increase in color
-saturation, overall contrast and a lighter appearance of dark regions, which
-would otherwise be indistinguishable on the screen.
+Most image-viewing software supports color management to some degree, but it's
+rarely configured properly on most systems except Mac OSX. Notably, *all
+browsers lack color management*, with the notable exception of Safari, but
+again *only* on OSX.
 
-Viewed from a properly calibrated or wide-gamut display instead the difference
-is usually *very* subtle, with only deeply-saturated colors being "capped" due
-to the effective reduction of absolute color depth.
+This causes the familiar effect of looking at the same picture from your laptop
+and your tablet, and noticing that the blue of the sky is just slightly off, or
+colors look much more contrasty on one screen as opposed to the other. Often
+the image *has* the information required for a more balanced color
+reproduction, but the browser is just ignoring it.
 
-We'd like to mention that Firefox *has* color-management support, but it's
-disabled by default on all platforms, and it has known bugs with LUT profiles
-(though the more common Matrix profiles seem to work fine).
+We're writing this down because Firefox *has* color-management support, but
+it's disabled by default on all platforms. It's also ranking very low on the
+list of improvements to make. Please complain/contribute to any of the existing
+`bug reports`_ if you think that color reproduction is important.
 
-The installation of the following "Color Management" add-on is recommended:
+
+Technical details
+~~~~~~~~~~~~~~~~~
+
+On Firefox, the installation of the following "Color Management" add-on is
+recommended:
 
 https://addons.mozilla.org/en-US/firefox/addon/color-management/
 
@@ -141,10 +144,15 @@ management for "All images" (since sRGB has no ICC profile attached by
 definition) and restart the browser. Also, if you have a multi-monitor setup,
 it's advisable to manually set the "Display profile" to the external/calibrated
 screen, since FF won't automatically select the "current" color profile, and
-just default to the first available screen.
+just default to the first available screen. Firefox has also known bugs with
+LUT profiles (though the more common Matrix profiles seem to work fine).
 
-If you care about color management, please complain/contribute to any of the
-existing `bug reports`_ in Firefox.
+Because of the general lack of color management, fgallery transforms the
+preview and thumbnail images from the built-in color profile to the sRGB
+color-space by default. On most devices this will result in images appearing to
+be closer to *true* colors with only minimal lack of absolute color depth. If
+you have a professional wide-gamut display, use `--no-sRGB` to retain the
+built-in color profiles.
 
 .. _bug reports: https://bugzilla.mozilla.org/buglist.cgi?component=GFX%3A%20Color%20Management&product=Core&bug_status=__open__
 
