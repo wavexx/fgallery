@@ -103,7 +103,7 @@ higher horizontal thumbnail strip.
 
 If your photos are mixed and can contain people, faces or portraits, you can
 enable face detection by using the ``-f`` flag and installing `facedetect
-<http://www.thregr.org/~wavexx/hacks/facedetect/>`_.
+<http://www.thregr.org/~wavexx/software/facedetect/>`_.
 
 Face detection will ensure that the thumbnails, especially when cut, will be
 centered on the face of the subject. If face detection is enabled, there's
@@ -201,7 +201,7 @@ Therefore it's also helpful to install:
 
 * jpegoptim (http://www.kokkonen.net/tjko/projects.html, for JPEG size optimization)
 * pngcrush (http://pmt.sourceforge.net/pngcrush/, for PNG size optimization)
-* facedetect (http://www.thregr.org/~wavexx/hacks/facedetect/, for face detection)
+* facedetect (http://www.thregr.org/~wavexx/software/facedetect/, for face detection)
 * p7zip (http://www.7-zip.org/, for faster and higher-compression zip archiving)
 
 On Debian/Ubuntu, you can install all the required dependencies with::
@@ -215,7 +215,7 @@ optional dependencies::
   sudo apt-get install jpegoptim pngcrush p7zip
 
 For face detection support, simply follow the `facedetect installation
-instructions <http://www.thregr.org/~wavexx/hacks/facedetect/#dependencies>`_.
+instructions <http://www.thregr.org/~wavexx/software/facedetect/#dependencies>`_.
 
 On a Mac, we recommend installing the dependencies using `MacPorts
 <http://www.macports.org/>`_. After installing MacPorts, type::
