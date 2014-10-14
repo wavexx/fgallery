@@ -220,7 +220,7 @@ instructions <http://www.thregr.org/~wavexx/software/facedetect/#dependencies>`_
 On a Mac, we recommend installing the dependencies using `MacPorts
 <http://www.macports.org/>`_. After installing MacPorts, type::
 
-  sudo port install imagemagick lcms2 exiftran jpegoptim pngcrush
+  sudo port install imagemagick lcms2 jpeg jpegoptim pngcrush
   sudo cpan -i JSON JSON::XS Image::ExifTool
 
 
