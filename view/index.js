@@ -1,6 +1,8 @@
 // fgallery: a modern, minimalist javascript photo gallery
 // Copyright(c) 2003-2014 by wave++ "Yuri D'Elia" <wavexx@thregr.org>
 // Distributed under GPL2 (see COPYING) WITHOUT ANY WARRANTY.
+"use strict";
+
 var datafile = 'data.json';
 var padding = 22;
 var duration = 500;
@@ -459,15 +461,15 @@ function loadThumb(i)
 
 function loadAllThumbs()
 {
-  mthumbs.each(loadThumb);
-  mthumbs = [];
+  mthumb.each(loadThumb);
+  mthumb = [];
 }
 
 function loadNextThumb()
 {
-  if(mthumbs.length)
+  if(mthumb.length)
   {
-    var i = mthumbs.shift();
+    var i = mthumb.shift();
     Asset.image(imgs.data[i].thumb[0],
     {
       onLoad: function()
@@ -610,12 +612,12 @@ function initGallery(data)
   if(imgs.name) document.title = imgs.name;
 
   // setup thumbnail loading sequence
-  mthumbs = [];
+  mthumb = [];
   if(first < 5)
   {
     // optimize common initial case (viewing from the beginning)
     for(var i = 0; i != imgs.data.length; ++i)
-      mthumbs.push(i);
+      mthumb.push(i);
   }
   else for(var i = 0; i != imgs.data.length; ++i)
   {
@@ -626,7 +628,7 @@ function initGallery(data)
       k = imgs.data.length + k;
     else if(k >= imgs.data.length)
       k = k - imgs.data.length;
-    mthumbs.push(k);
+    mthumb.push(k);
   }
   loadNextThumb();
 
