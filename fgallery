@@ -429,6 +429,7 @@ foreach my $props(@aprops)
 {
   # file timestamp
   my $idate = $props->{'DateTimeOriginal'} || $props->{'DateTime'};
+  $idate =~ s/^\s+|\s+$//g;
 
   if(!$idate || $idate eq "0000:00:00 00:00:00")
   {
