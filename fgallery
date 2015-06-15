@@ -319,7 +319,7 @@ if(system("pngcrush -h >/dev/null 2>&1")) {
   $pngoptim = 0;
 }
 if($facedet && system("facedetect -h >/dev/null 2>&1")) {
-  fatal("cannot run \"facedetect\" (see http://www.thregr.org/~wavexx/hacks/facedetect/)");
+  fatal("cannot run \"facedetect\" (see http://www.thregr.org/~wavexx/software/facedetect/)");
 }
 if($sRGB && system("tificc >/dev/null 2>&1")) {
   fatal("cannot run \"tificc\" (check if liblcms2-utils is installed)");
