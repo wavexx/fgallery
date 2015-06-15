@@ -35,6 +35,7 @@ my $ofile = 0;
 my $orient = 1;
 my $timesort = 1;
 my $revsort = 0;
+my @filetypes = ("JPEG", "PNG", "TIFF");
 my @exts = ("jpg", "jpeg", "png", "tif", "tiff");
 my $ext = "jpg";
 my @minthumb = (150, 112);
@@ -132,7 +133,8 @@ sub par_map
   dispatch(sub
   {
     my $i = shift;
-    $res[$i] = freeze(&$fun($seq[$i]));
+    my $r = &$fun($seq[$i]);
+    $res[$i] = defined($r)? freeze($r): undef;
   },
   @idx);
 
@@ -346,8 +348,8 @@ find(
   {
     my $file = $_;
     return if(!-f $file);
-    my (undef, undef, $suffix) = fileparse($file, qr/\.[^.]*$/);
-    return if(length($suffix) < 2);
+    my ($base, undef, $suffix) = fileparse($file, qr/\.[^.]*$/);
+    return if(length($suffix) < 2 || $base =~ /^\./);
     $suffix = lc(substr($suffix, 1));
     if(any { $_ eq $suffix } @exts) {
       push(@files, $file);
@@ -387,6 +389,11 @@ sub analyze_file
 
   progress::status("$base.$suffix");
 
+  my $props = ImageInfo($file, {PrintConv => 0, Sort => 'File'});
+  unless(defined($props) && any { $_ eq $props->{FileType} } @filetypes) {
+    return undef;
+  }
+
   # sanitize file name
   $base =~ s/[^\w]/_/gu;
   my $root = $base;
@@ -401,7 +408,6 @@ sub analyze_file
     $root = "${base}_$c";
   }
 
-  my $props = ImageInfo($file, {PrintConv => 0, Sort => 'File'});
   $props->{file} = $file;
   $props->{root} = $root;
   $props->{suffix} = $suffix;
@@ -421,6 +427,18 @@ sub analyze_file
 progress::init("reading", scalar(@files));
 my @aprops = par_map(\&analyze_file, @files);
 progress::done();
+
+# remove unprocessable files
+for(my $n = 0; $n < $#files;)
+{
+  if(defined($aprops[$n]))
+  {
+    ++$n;
+    next;
+  }
+  splice(@files, $n, 1);
+  splice(@aprops, $n, 1);
+}
 
 # gather some statistics
 my $amp = 0;
