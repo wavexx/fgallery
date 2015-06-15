@@ -1,3 +1,9 @@
+fgallery 1.8:
+------------------------
+
+* Ignore invalid whitespace in EXIF dates (produced by some cameras).
+
+
 fgallery 1.7: 05/09/2014
 ------------------------
 
