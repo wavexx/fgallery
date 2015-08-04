@@ -221,7 +221,7 @@ On a Mac, we recommend installing the dependencies using `MacPorts
 <http://www.macports.org/>`_. After installing MacPorts, type::
 
   sudo port install imagemagick lcms2 jpeg jpegoptim pngcrush
-  sudo cpan -i JSON JSON::XS Image::ExifTool
+  sudo port install p5-image-exiftool p5-json p5-json-xs
 
 
 Installation
