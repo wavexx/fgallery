@@ -110,6 +110,8 @@ img
 
 #gallery #content #header img
 {
+  margin-right: 0.25em;
+  margin-left: 0.25em;
   vertical-align: middle;
   height: 1em;
 }

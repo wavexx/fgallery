@@ -277,6 +277,7 @@ function onMainReady()
   var dsc = [];
   if(imgs.index)
     dsc.push("<a title=\"Back to index\" href=\"" + encodeURI(imgs.index) + "\"><img src=\"back.png\"/></a>");
+  dsc.push("<a title=\"Overview\" href=\"overview.html\"><img src=\"overview.png\"/></a>");
   if(imgs.data[eidx].file)
   {
     var img = imgs.data[eidx].file[0];
