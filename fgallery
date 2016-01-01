@@ -511,7 +511,7 @@ sub process_img
   sys('touch', '-r', $file, $fout);
 
   # intermediate sRGB colorspace conversion
-  if(!$sRGB || !defined($props{ProfileID})) {
+  if(!$sRGB || ($props{ColorSpace} // 65535) == 1 || !defined($props{ProfileID})) {
     link($fout, $ftmp);
   } else
   {
