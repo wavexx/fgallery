@@ -52,7 +52,6 @@ var eright;	// go right
 var oimg;	// old image
 var eimg;	// new image
 var cthumb;	// current thumbnail
-var mthumb;	// missing thumbnails
 var eidx;	// current index
 var tthr;	// throbber timeout
 var imgs;	// image list
@@ -109,6 +108,12 @@ function resize()
 
   if(oimg) resizeMainImg(oimg);
   if(eimg) resizeMainImg(eimg);
+}
+
+function onResize()
+{
+  resize();
+  onScroll();
 }
 
 function onLayoutChanged(layout, sr)
@@ -252,6 +257,41 @@ function detectSlowness(start)
     duration = 0;
 }
 
+function onScroll()
+{
+  var beg, end;
+  if(imgs.data.length < 2)
+  {
+    beg = 0;
+    end = 1;
+  }
+  else
+  {
+    var mins, maxs, dim;
+    if(clayout == 'horizontal')
+    {
+      mins = elist.getScrollTop();
+      maxs = mins + elist.getHeight();
+      dim = imgs.data[1].ethumb.getTop() - imgs.data[0].ethumb.getTop();
+    }
+    else
+    {
+      mins = elist.getScrollLeft();
+      maxs = mins + elist.getWidth();
+      dim = imgs.data[1].ethumb.getLeft() - imgs.data[0].ethumb.getLeft();
+    }
+    var psize = Math.max(1, Math.floor((maxs - mins) / dim / 2));
+    beg = Math.max(0, Math.floor(mins / dim) - psize);
+    end = Math.min(imgs.data.length, Math.ceil(maxs / dim) + psize);
+  }
+
+  for(var i = beg; i != end; ++i)
+  {
+    if(!imgs.data[i].thumbLoaded)
+      loadThumb(i);
+  }
+}
+
 function centerThumb(duration)
 {
   var thumbPos = cthumb.getPosition();
@@ -263,7 +303,13 @@ function centerThumb(duration)
   var y = thumbPos.y + listScroll.y - listSize.y / 2 + thumbSize.y / 2;
 
   if(fscr) fscr.cancel();
-  fscr = new Fx.Scroll(elist, { duration: duration }).start(x, y);
+  fscr = new Fx.Scroll(elist, { duration: duration });
+  fscr.addEvent('complete', function()
+  {
+    fscr = undefined;
+    onScroll();
+  });
+  fscr.start(x, y);
 }
 
 function onMainReady()
@@ -292,12 +338,11 @@ function onMainReady()
   ehdr.set('html', dsc.join(' '));
   ehdr.setStyle('display', (dsc.length? 'block': 'none'));
 
-  // complete thumbnails
+  // disable transitions for first image
   var d = duration;
   if(first !== false)
   {
     first = false;
-    loadAllThumbs();
     d = 0;
   }
 
@@ -457,28 +502,7 @@ function loadThumb(i)
 {
   var x = imgs.data[i];
   x.eimg.setStyle('background-image', 'url(' + encodeURI(x.thumb[0]) + ')');
-}
-
-function loadAllThumbs()
-{
-  mthumb.each(loadThumb);
-  mthumb = [];
-}
-
-function loadNextThumb()
-{
-  if(mthumb.length)
-  {
-    var i = mthumb.shift();
-    Asset.image(imgs.data[i].thumb[0],
-    {
-      onLoad: function()
-      {
-	loadThumb(i);
-	loadNextThumb();
-      }
-    });
-  }
+  x.thumbLoaded = true;
 }
 
 function initGallery(data)
@@ -527,6 +551,7 @@ function initGallery(data)
   {
     var ethumb = new Element('div', { 'class': 'thumb' });
     x.ethumb = ethumb;
+    x.thumbLoaded = false;
 
     var a = new Element('a');
     a.addEvent('click', function() { switchTo(i); });
@@ -553,9 +578,10 @@ function initGallery(data)
   });
 
   // events and navigation shortcuts
+  elist.addEvent('scroll', onScroll);
   eleft.addEvent('click', prev);
   eright.addEvent('click', next);
-  window.addEvent('resize', resize);
+  window.addEvent('resize', onResize);
   window.addEvent('hashchange', change);
 
   window.addEvent('keydown', function(ev)
@@ -608,29 +634,9 @@ function initGallery(data)
   first = getLocationIndex();
   resize();
   load(first);
+  loadThumb(first);
   centerThumb(0);
   if(imgs.name) document.title = imgs.name;
-
-  // setup thumbnail loading sequence
-  mthumb = [];
-  if(first < 5)
-  {
-    // optimize common initial case (viewing from the beginning)
-    for(var i = 0; i != imgs.data.length; ++i)
-      mthumb.push(i);
-  }
-  else for(var i = 0; i != imgs.data.length; ++i)
-  {
-    // distance from current
-    var d = (i / 2 >> 0);
-    var k = first + (i % 2? d + 1: -d);
-    if(k < 0)
-      k = imgs.data.length + k;
-    else if(k >= imgs.data.length)
-      k = k - imgs.data.length;
-    mthumb.push(k);
-  }
-  loadNextThumb();
 
   emain.setStyle('visibility', 'visible');
 }
