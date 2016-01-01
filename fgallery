@@ -49,6 +49,7 @@ my $facedet = 0;
 my $jpegoptim = 1;
 my $pngoptim = 1;
 my $p7zip = 1;
+my $tificc = "";
 my $verbose = 0;
 my $workers = 0;
 my $sRGB = 1;
@@ -323,8 +324,14 @@ if(system("pngcrush -h >/dev/null 2>&1")) {
 if($facedet && system("facedetect -h >/dev/null 2>&1")) {
   fatal("cannot run \"facedetect\" (see http://www.thregr.org/~wavexx/software/facedetect/)");
 }
-if($sRGB && system("tificc >/dev/null 2>&1")) {
-  fatal("cannot run \"tificc\" (check if liblcms2-utils is installed)");
+if($sRGB) {
+  if(!system("tificc >/dev/null 2>&1")) {
+    $tificc = "tificc";
+  } elsif(!system("tificc2 >/dev/null 2>&1")) {
+    $tificc = "tificc2"; # Fedora
+  } else {
+    fatal("cannot run \"tificc\" or \"tificc2\" (check if liblcms2-utils is installed)");
+  }
 }
 
 my $exiftrancmd;
@@ -516,7 +523,7 @@ sub process_img
   } else
   {
     sys('convert', $fout, '-compress', 'LZW', "tiff:$ftmp");
-    sys('tificc', '-t0', $ftmp, "$ftmp.tmp");
+    sys($tificc, '-t0', $ftmp, "$ftmp.tmp");
     rename("$ftmp.tmp", $ftmp);
   }
 
