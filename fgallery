@@ -349,7 +349,7 @@ my $name = (@ARGV < 3? undef: Encode::decode($locale, $ARGV[2]));
 if(!-d $dir) {
   fatal("input directory \"$dir\" does not exist");
 } elsif(!-d $out) {
-  sys('cp', '-r', "$RealBin/view", $out);
+  sys('cp', '-L', '-r', "$RealBin/view", $out);
 } elsif(!-f "$out/index.html") {
   fatal("output directory already exists, but doesn't look like a template copy");
 }
@@ -593,7 +593,7 @@ sub process_img
   progress::status($fbase);
 
   # copy source file
-  sys('cp', $file, $fout);
+  sys('cp', '-L', $file, $fout);
   chmod(0600, $fout);
 
   # apply lossless transforms
