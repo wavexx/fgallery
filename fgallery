@@ -736,7 +736,7 @@ if(!$nodown && !$slim)
     sys('zip', '-q9j', "$out/$fdownload", @files);
   } else
   {
-    # make paths explictly absolute/relative to strip file path info with 7za
+    # make paths explicitly absolute/relative to strip file path info with 7za
     my $dot = substr($out, 0, 1);
     if($dot ne '/' && $dot ne '.') {
       @files = map { "./$_" } @files;
