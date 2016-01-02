@@ -25,7 +25,6 @@ use Getopt::Long qw{:config bundling};
 use IO::Handle;
 use Image::ExifTool qw{ImageInfo};
 use JSON qw{encode_json};
-use List::Util;
 use Time::Piece;
 
 # defaults
@@ -87,10 +86,13 @@ sub sys
 }
 
 
-sub any(&@)
+sub isin
 {
-  my ($fun, @seq) = @_;
-  return (List::Util::first { &$fun() } @seq)? 1: 0;
+  my ($id, @arr) = @_;
+  foreach my $c(@arr) {
+    return 1 if $c eq $id;
+  }
+  return 0;
 }
 
 
@@ -360,7 +362,7 @@ find(
     my ($base, undef, $suffix) = fileparse($file, qr/\.[^.]*$/);
     return if(length($suffix) < 2 || $base =~ /^\./);
     $suffix = lc(substr($suffix, 1));
-    if(any { $_ eq $suffix } @exts) {
+    if(isin($suffix, @exts)) {
       push(@files, $file);
     }
   }
@@ -399,7 +401,7 @@ sub analyze_file
   progress::status("$base.$suffix");
 
   my $props = ImageInfo($file, {PrintConv => 0, Sort => 'File'});
-  unless(defined($props) && any { $_ eq $props->{FileType} } @filetypes) {
+  unless(defined($props) && isin($props->{FileType}, @filetypes)) {
     return undef;
   }
 
