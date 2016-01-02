@@ -52,6 +52,7 @@ my $verbose = 0;
 my $workers = 0;
 my $sRGB = 1;
 my $indexUrl = undef;
+my @capMethods = ("txt", "exif", "cmt");
 
 
 # support functions
@@ -93,6 +94,15 @@ sub isin
     return 1 if $c eq $id;
   }
   return 0;
+}
+
+
+sub slurp
+{
+  my ($fn) = @_;
+  open(my $fd, "<$fn") or fatal("cannot read $fn: $!");
+  local $/;
+  return <$fd>;
 }
 
 
@@ -238,6 +248,44 @@ sub parse_int
   return int($value);
 }
 
+sub parse_cap
+{
+  my ($opt, $value) = @_;
+  return () if $value eq "none";
+  my @capMethods = split(",", $value);
+  foreach my $m(@capMethods)
+  {
+    if(!isin($m, ("cmt", "exif", "txt"))) {
+      fatal("invalid caption extraction method: $m");
+    }
+  }
+  return @capMethods;
+}
+
+sub clean_title
+{
+  $_ = shift;
+  s/^\s+|\s+$//;
+  s/\s+/ /g;
+  return $_;
+}
+
+sub clean_desc
+{
+  $_ = shift;
+  s/^\s+|\s+$//;
+  s/[ \t]+/ /g;
+  return $_;
+}
+
+sub split_cap
+{
+  my ($title, $desc) = split("\n", shift, 2);
+  my $ret = [clean_title($title)];
+  push(@$ret, clean_desc($desc)) if($desc);
+  return $ret;
+}
+
 
 sub print_help()
 {
@@ -247,6 +295,7 @@ sub print_help()
   -v			verbose (show commands as being executed)
   -s			slim output (no original files and downloads)
   -i			include individual originals
+  -c methods		caption extraction methods (txt,exif,cmt or none)
   -o			do not auto-orient
   -t			do not time-sort
   -r			reverse album order
@@ -269,6 +318,7 @@ my $help = 0;
 my $locale = encoding::_get_locale_encoding();
 
 my ($ret, @ARGS) = GetOptions('help|h' => \$help,
+	   'c=s' => sub { @capMethods = parse_cap($_[0], $_[1]); },
 	   'd' => sub { $nodown = 1; },
 	   'f' => sub { $facedet = 1; },
 	   'i' => sub { $ofile = 1; },
@@ -395,7 +445,7 @@ if($workers)
 sub analyze_file
 {
   my $file = shift;
-  my ($base, undef, $suffix) = fileparse(Encode::decode($locale, $file), qr/\.[^.]*$/);
+  my ($base, $dir, $suffix) = fileparse(Encode::decode($locale, $file), qr/\.[^.]*$/);
   $suffix = lc(substr($suffix, 1));
 
   progress::status("$base.$suffix");
@@ -430,6 +480,39 @@ sub analyze_file
   {
     $props->{'OrigImageWidth'} = $props->{"ExifImageWidth ($n)"};
     $props->{'OrigImageHeight'} = $props->{"ExifImageHeight ($n)"};
+  }
+
+  # extract caption
+  foreach my $m(@capMethods)
+  {
+    if($m eq "cmt")
+    {
+      if($props->{'Comment'})
+      {
+	$props->{'caption'} = split_cap($props->{'Comment'});
+	last;
+      }
+    }
+    elsif($m eq "exif")
+    {
+      if($props->{'Title'})
+      {
+	$props->{'caption'} = [clean_title($props->{'Title'})];
+	if($props->{'Description'}) {
+	  push(@{$props->{'caption'}}, clean_desc($props->{'Description'}));
+	}
+	last;
+      }
+    }
+    elsif($m eq "txt")
+    {
+      my $txt = "$dir$base.txt";
+      if(-f $txt)
+      {
+	$props->{'caption'} = split_cap(slurp($txt));
+	last;
+      }
+    }
   }
 
   return $props;
@@ -702,7 +785,7 @@ foreach my $fdata(@adata)
       $data{$_} = $fdata->{$_};
     }
   }
-  foreach('date', 'stamp') {
+  foreach('date', 'stamp', 'caption') {
     if(defined($fdata->{props}{$_})) {
       $data{$_} = $fdata->{props}{$_};
     }
