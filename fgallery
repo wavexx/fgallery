@@ -52,7 +52,7 @@ my $verbose = 0;
 my $workers = 0;
 my $sRGB = 1;
 my $indexUrl = undef;
-my @capMethods = ("txt", "exif", "cmt");
+my @capMethods = ("txt", "xmp", "exif", "cmt");
 
 
 # support functions
@@ -255,7 +255,7 @@ sub parse_cap
   my @capMethods = split(",", $value);
   foreach my $m(@capMethods)
   {
-    if(!isin($m, ("cmt", "exif", "txt"))) {
+    if(!isin($m, ("txt", "xmp", "exif", "cmt"))) {
       fatal("invalid caption extraction method: $m");
     }
   }
@@ -295,7 +295,7 @@ sub print_help()
   -v			verbose (show commands as being executed)
   -s			slim output (no original files and downloads)
   -i			include individual originals
-  -c methods		caption extraction methods (txt,exif,cmt or none)
+  -c methods		caption extraction methods (txt,xmp,exif,cmt or none)
   -o			do not auto-orient
   -t			do not time-sort
   -r			reverse album order
@@ -500,6 +500,18 @@ sub analyze_file
 	$props->{'caption'} = [clean_title($props->{'Title'})];
 	if($props->{'Description'}) {
 	  push(@{$props->{'caption'}}, clean_desc($props->{'Description'}));
+	}
+	last;
+      }
+    }
+    elsif($m eq "xmp")
+    {
+      my $xmp = ImageInfo("$file.xmp", {PrintConv => 0, Sort => 'File'});
+      if(defined($xmp) && $xmp->{'Title'})
+      {
+	$props->{'caption'} = [clean_title($xmp->{'Title'})];
+	if($xmp->{'Description'}) {
+	  push(@{$props->{'caption'}}, clean_desc($xmp->{'Description'}));
 	}
 	last;
       }
