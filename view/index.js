@@ -52,6 +52,7 @@ var eright;	// go right
 var oimg;	// old image
 var eimg;	// new image
 var cthumb;	// current thumbnail
+var mthumb;	// thumbnail measurement cache
 var eidx;	// current index
 var tthr;	// throbber timeout
 var imgs;	// image list
@@ -206,6 +207,31 @@ function onLayoutChanged(layout, sr)
   }
 
   elist.setStyle('display', 'block');
+
+  // update measurement cache
+  mthumb = {'beg': [], 'end': []};
+  if(layout == 'horizontal')
+  {
+    var off = elist.getScrollTop();
+    imgs.data.each(function(x, i)
+    {
+      var top = off + x.ethumb.getTop();
+      var bottom = top + x.ethumb.getHeight();
+      mthumb.beg.push(top);
+      mthumb.end.push(bottom);
+    });
+  }
+  else
+  {
+    var off = elist.getScrollLeft();
+    imgs.data.each(function(x, i)
+    {
+      var left = off + x.ethumb.getLeft();
+      var right = left + x.ethumb.getWidth();
+      mthumb.beg.push(left);
+      mthumb.end.push(right);
+    });
+  }
 }
 
 function resizeMainImg(img)
@@ -257,6 +283,23 @@ function detectSlowness(start)
     duration = 0;
 }
 
+function lowerBound(arr, v)
+{
+  var b = 0;
+  var e = arr.length;
+  while(e - b > 1)
+  {
+    var x = b + Math.floor((e - b) / 2);
+    if(arr[x] < v)
+      b = x;
+    else if(arr[x] > v)
+      e = x;
+    else
+      return x;
+  }
+  return b;
+}
+
 function onScroll()
 {
   var beg, end;
@@ -267,22 +310,22 @@ function onScroll()
   }
   else
   {
-    var mins, maxs, dim;
+    var mins, maxs;
     if(clayout == 'horizontal')
     {
       mins = elist.getScrollTop();
       maxs = mins + elist.getHeight();
-      dim = imgs.data[1].ethumb.getTop() - imgs.data[0].ethumb.getTop();
     }
     else
     {
       mins = elist.getScrollLeft();
       maxs = mins + elist.getWidth();
-      dim = imgs.data[1].ethumb.getLeft() - imgs.data[0].ethumb.getLeft();
     }
-    var psize = Math.max(1, Math.floor((maxs - mins) / dim / 2));
-    beg = Math.max(0, Math.floor(mins / dim) - psize);
-    end = Math.min(imgs.data.length, Math.ceil(maxs / dim) + psize);
+    beg = lowerBound(mthumb.beg, mins);
+    end = lowerBound(mthumb.end, maxs) + 1;
+    var psize = Math.max(1, Math.floor((end - beg) / 2));
+    beg = Math.max(0, beg - psize);
+    end = Math.min(imgs.data.length, end + psize);
   }
 
   for(var i = beg; i != end; ++i)
