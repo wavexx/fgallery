@@ -60,6 +60,7 @@ var first;	// first image
 var idle;	// idle timer
 var clayout;	// current layout
 var csr;	// current scaling ratio
+var sdir;	// scrolling direction
 
 function resize()
 {
@@ -355,6 +356,12 @@ function centerThumb(duration)
   fscr.start(x, y);
 }
 
+function umod(i, m)
+{
+  if(i < 0) i = m + i;
+  return i % m;
+}
+
 function onMainReady()
 {
   resizeMainImg(eimg);
@@ -392,6 +399,20 @@ function onMainReady()
   // start animations
   if(oimg)
   {
+    // scrolling direction
+    var pred = umod(oimg.idx + sdir, imgs.data.length);
+    if(pred != eidx)
+    {
+      var diff = umod(eidx - oimg.idx, imgs.data.length);
+      if(diff == 1)
+	sdir = 1;
+      else if(diff == imgs.data.length - 1)
+	sdir = -1;
+      else
+	sdir = 0;
+    }
+
+    // fade old image
     oimg.removeClass('current');
     var fx = oimg.get('tween');
     fx.cancel();
@@ -424,9 +445,9 @@ function onMainReady()
   centerThumb(d);
 
   // prefetch next image
-  if(prefetch && eidx != imgs.data.length - 1)
+  if(prefetch && sdir != 0)
   {
-    var data = imgs.data[eidx + 1];
+    var data = imgs.data[umod(eidx + sdir, imgs.data.length)];
     Asset.images([data.img[0], data.blur]);
   }
 }
@@ -550,7 +571,20 @@ function loadThumb(i)
 
 function initGallery(data)
 {
+  // prepare the data
   imgs = data;
+  if(imgs.name) document.title = imgs.name;
+  imgs.captions = false;
+  for(var i = 0; i != imgs.data.length; ++i)
+  {
+    if(imgs.data[i]['caption'])
+    {
+      imgs.captions = true;
+      break;
+    }
+  }
+
+  // build the dom
   emain = $('gallery');
   emain.setStyle('display', 'none');
 
@@ -674,12 +708,12 @@ function initGallery(data)
   idle.addEvent('idle', hideHdr);
 
   // prepare first image
+  sdir = 1;
   first = getLocationIndex();
   resize();
   load(first);
   loadThumb(first);
   centerThumb(0);
-  if(imgs.name) document.title = imgs.name;
 
   emain.setStyle('visibility', 'visible');
 }
