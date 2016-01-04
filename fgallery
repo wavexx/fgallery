@@ -228,6 +228,44 @@ sub clamp
 }
 
 
+# caption utilities
+sub clean_title
+{
+  $_ = shift;
+  s/^\s+|\s+$//;
+  s/\s+/ /g;
+  return $_;
+}
+
+sub clean_desc
+{
+  $_ = shift;
+  s/^\s+|\s+$//;
+  s/[ \t]+/ /g;
+  return $_;
+}
+
+sub split_cap
+{
+  my ($title, $desc) = split("\n", shift, 2);
+  return undef if(!$title && !$desc);
+  my $ret = [clean_title($title), ($desc? clean_desc($desc): '')];
+  return $ret;
+}
+
+sub props_cap
+{
+  my ($props) = @_;
+  my $ret = ['', ''];
+  if($props->{'Title'}) {
+    $ret->[0] = clean_title($props->{'Title'});
+  }
+  if($props->{'Description'}) {
+    $ret->[1] = clean_desc($props->{'Description'});
+  }
+  return $ret;
+}
+
 
 # options
 sub parse_wh
@@ -261,30 +299,6 @@ sub parse_cap
     }
   }
   return @capmethods;
-}
-
-sub clean_title
-{
-  $_ = shift;
-  s/^\s+|\s+$//;
-  s/\s+/ /g;
-  return $_;
-}
-
-sub clean_desc
-{
-  $_ = shift;
-  s/^\s+|\s+$//;
-  s/[ \t]+/ /g;
-  return $_;
-}
-
-sub split_cap
-{
-  my ($title, $desc) = split("\n", shift, 2);
-  my $ret = [clean_title($title)];
-  push(@$ret, clean_desc($desc)) if($desc);
-  return $ret;
 }
 
 
@@ -496,24 +510,18 @@ sub analyze_file
     }
     elsif($m eq "exif")
     {
-      if($props->{'Title'})
+      if($props->{'Title'} || $props->{'Description'})
       {
-	$props->{'caption'} = [clean_title($props->{'Title'})];
-	if($props->{'Description'}) {
-	  push(@{$props->{'caption'}}, clean_desc($props->{'Description'}));
-	}
+	$props->{'caption'} = props_cap($props);
 	last;
       }
     }
     elsif($m eq "xmp")
     {
       my $xmp = ImageInfo("$file.xmp", {PrintConv => 0, Sort => 'File'});
-      if(defined($xmp) && $xmp->{'Title'})
+      if(defined($xmp) && $xmp->{'Title'} || $xmp->{'Description'})
       {
-	$props->{'caption'} = [clean_title($xmp->{'Title'})];
-	if($xmp->{'Description'}) {
-	  push(@{$props->{'caption'}}, clean_desc($xmp->{'Description'}));
-	}
+	$props->{'caption'} = props_cap($xmp);
 	last;
       }
     }
