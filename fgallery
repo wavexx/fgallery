@@ -100,9 +100,10 @@ sub isin
 sub slurp
 {
   my ($fn) = @_;
-  open(my $fd, "<$fn") or fatal("cannot read $fn: $!");
+  my $enc = encoding::_get_locale_encoding();
+  open(my $fd, "<:encoding($enc)", "$fn") or fatal("cannot read $fn: $!");
   local $/;
-  return <$fd>;
+  return <$fd> // "";
 }
 
 
@@ -805,8 +806,11 @@ foreach my $fdata(@adata)
   push(@{$json{data}}, \%data);
 }
 
-open(JSON, ">$out/data.json");
-print(JSON encode_json(\%json));
-close(JSON);
+my $fd;
+unless(open($fd, ">:raw", "$out/data.json")) {
+  fatal("cannot write data file: $!");
+}
+print($fd encode_json(\%json));
+close($fd);
 
 print("completed\n");
