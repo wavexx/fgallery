@@ -38,6 +38,7 @@ class MainWindow(QtGui.QMainWindow):
         self.image.setAlignment(QtCore.Qt.AlignCenter)
         gridLayout.addWidget(self.image, 0, 0, 1, 1)
         self.list_files = QtGui.QListWidget()
+        self.list_files.setIconSize(QtCore.QSize(64, 64))
         gridLayout.addWidget(self.list_files, 0, 1, 2, 1)
         horizontalLayout = QtGui.QHBoxLayout()
         formLayout = QtGui.QFormLayout()
@@ -71,6 +72,7 @@ class MainWindow(QtGui.QMainWindow):
 
         # initial state
         self.files = list()
+        self.missing_thumbs = list()
         self.current = 0
         self.modified = False
 
@@ -89,9 +91,23 @@ class MainWindow(QtGui.QMainWindow):
     def on_undo(self, ev):
         self.load(self.current)
 
+    def add_1thumb(self):
+        idx, path = self.missing_thumbs.pop(0)
+        icon = QtGui.QPixmap(path)
+        if not icon.isNull():
+            crow = self.list_files.currentRow()
+            icon = icon.scaled(self.list_files.iconSize(), QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)
+            item = self.list_files.takeItem(idx)
+            item.setIcon(QtGui.QIcon(icon))
+            self.list_files.insertItem(idx, item)
+            self.list_files.setCurrentRow(crow)
+        if self.missing_thumbs:
+            QtCore.QTimer().singleShot(1, self.add_1thumb)
+
     def set_files(self, files):
         self.files = list(files)
         self.list_files.clear()
+        self.missing_thumbs = list(enumerate(files))
         for path in files:
             self.list_files.addItem(os.path.basename(path))
         if len(files) < 2:
@@ -100,6 +116,7 @@ class MainWindow(QtGui.QMainWindow):
             self.btn_prev.setEnabled(False)
         else:
             self.list_files.show()
+            QtCore.QTimer().singleShot(1, self.add_1thumb)
             self.btn_next.setEnabled(True)
             self.btn_prev.setEnabled(True)
         self.load(0)
