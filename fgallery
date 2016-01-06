@@ -229,7 +229,7 @@ sub clamp
 
 
 # caption utilities
-sub clean_title
+sub cap_clean_title
 {
   $_ = shift;
   s/^\s+|\s+$//;
@@ -237,7 +237,7 @@ sub clean_title
   return $_;
 }
 
-sub clean_desc
+sub cap_clean_desc
 {
   $_ = shift;
   s/^\s+|\s+$//;
@@ -245,23 +245,23 @@ sub clean_desc
   return $_;
 }
 
-sub split_cap
+sub cap_from_str
 {
   my ($title, $desc) = split("\n", shift, 2);
   return undef if(!$title && !$desc);
-  my $ret = [clean_title($title), ($desc? clean_desc($desc): '')];
+  my $ret = [cap_clean_title($title), ($desc? cap_clean_desc($desc): '')];
   return $ret;
 }
 
-sub props_cap
+sub cap_from_props
 {
   my ($props) = @_;
   my $ret = ['', ''];
   if($props->{'Title'}) {
-    $ret->[0] = clean_title($props->{'Title'});
+    $ret->[0] = cap_clean_title($props->{'Title'});
   }
   if($props->{'Description'}) {
-    $ret->[1] = clean_desc($props->{'Description'});
+    $ret->[1] = cap_clean_desc($props->{'Description'});
   }
   return $ret;
 }
@@ -504,24 +504,7 @@ sub analyze_file
     {
       if($props->{'Comment'})
       {
-	$props->{'caption'} = split_cap($props->{'Comment'});
-	last;
-      }
-    }
-    elsif($m eq "exif")
-    {
-      if($props->{'Title'} || $props->{'Description'})
-      {
-	$props->{'caption'} = props_cap($props);
-	last;
-      }
-    }
-    elsif($m eq "xmp")
-    {
-      my $xmp = ImageInfo("$file.xmp", {PrintConv => 0, Sort => 'File'});
-      if(defined($xmp) && $xmp->{'Title'} || $xmp->{'Description'})
-      {
-	$props->{'caption'} = props_cap($xmp);
+	$props->{'caption'} = cap_from_str($props->{'Comment'});
 	last;
       }
     }
@@ -530,7 +513,24 @@ sub analyze_file
       my $txt = "$dir$base.txt";
       if(-f $txt)
       {
-	$props->{'caption'} = split_cap(slurp($txt));
+	$props->{'caption'} = cap_from_str(slurp($txt));
+	last;
+      }
+    }
+    elsif($m eq "exif")
+    {
+      if($props->{'Title'} || $props->{'Description'})
+      {
+	$props->{'caption'} = cap_from_props($props);
+	last;
+      }
+    }
+    elsif($m eq "xmp")
+    {
+      my $xmp = ImageInfo("$file.xmp", {PrintConv => 0, Sort => 'File'});
+      if(defined($xmp) && ($xmp->{'Title'} || $xmp->{'Description'}))
+      {
+	$props->{'caption'} = cap_from_props($xmp);
 	last;
       }
     }
