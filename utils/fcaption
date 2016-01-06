@@ -17,6 +17,24 @@ if sys.version_info.major < 3:
     str = unicode
 
 
+class ScaledImage(QtGui.QLabel):
+    def __init__(self):
+        super(ScaledImage, self).__init__()
+        self._pixmap = QtGui.QPixmap()
+
+    def setPixmap(self, pixmap):
+        self._pixmap = pixmap
+        if not pixmap.isNull():
+            pixmap = pixmap.scaled(self.size(), QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)
+        super(ScaledImage, self).setPixmap(pixmap)
+
+    def resizeEvent(self, ev):
+        super(ScaledImage, self).resizeEvent(ev)
+        if not self._pixmap.isNull():
+            pixmap = self._pixmap.scaled(self.size(), QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)
+            super(ScaledImage, self).setPixmap(pixmap)
+
+
 class MainWindow(QtGui.QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
@@ -28,12 +46,11 @@ class MainWindow(QtGui.QMainWindow):
         gridLayout = QtGui.QGridLayout()
         gridLayout.setMargin(6)
         widget.setLayout(gridLayout)
-        self.image = QtGui.QLabel("No image")
+        self.image = ScaledImage()
         self.image.setMinimumSize(640, 425)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(1)
         sizePolicy.setVerticalStretch(1)
-        self.pixmap = QtGui.QPixmap()
         self.image.setSizePolicy(sizePolicy)
         self.image.setAlignment(QtCore.Qt.AlignCenter)
         gridLayout.addWidget(self.image, 0, 0, 1, 1)
@@ -124,26 +141,21 @@ class MainWindow(QtGui.QMainWindow):
     def on_changed(self, *_):
         self.modified = True
 
-    def on_resize(self):
-        if self.pixmap.isNull(): return
-        pixmap = self.pixmap.scaled(self.image.size(), QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)
-        self.image.setPixmap(pixmap)
-
     def load(self, idx):
         self.current = idx
         self.list_files.setCurrentRow(idx)
 
         path = self.files[idx]
-        self.pixmap = QtGui.QPixmap(path)
-        if self.pixmap.isNull():
-            self.image.setPixmap(self.pixmap)
+        pixmap = QtGui.QPixmap(path)
+        if pixmap.isNull():
+            self.image.setPixmap(pixmap)
             self.image.setText('Cannot load {}'.format(path))
             self.edit_title.setEnabled(False)
             self.edit_desc.setEnabled(False)
             return
 
         self.image.clear()
-        self.on_resize()
+        self.image.setPixmap(pixmap)
 
         self.edit_title.clear()
         self.edit_desc.clear()
@@ -173,10 +185,6 @@ class MainWindow(QtGui.QMainWindow):
         else:
             data = title + '\n' + desc
             open(txt, 'wb').write(data.encode(ENCODING))
-
-    def resizeEvent(self, ev):
-        super(MainWindow, self).resizeEvent(ev)
-        self.on_resize()
 
     def closeEvent(self, ev):
         if self.modified: self.save()
