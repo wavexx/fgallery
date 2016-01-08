@@ -218,6 +218,7 @@ class MainWindow(QtGui.QMainWindow):
 def expand_dir(path):
     for root, dirs, files in os.walk(path):
         for tmp in files:
+            if tmp[0] == '.': continue
             tmp = os.path.join(root, tmp)
             ext = os.path.splitext(tmp)[1]
             if ext: ext = ext[1:].lower()
