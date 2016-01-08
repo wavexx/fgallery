@@ -58,7 +58,7 @@ class MainWindow(QtGui.QMainWindow):
         horizontalSplitter = QtGui.QSplitter(QtCore.Qt.Horizontal)
         verticalSplitter = QtGui.QSplitter(QtCore.Qt.Vertical)
         self.image = ScaledImage()
-        self.image.setMinimumSize(640, 425)
+        self.image.setMinimumSize(480, 319)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(1)
         sizePolicy.setVerticalStretch(1)
