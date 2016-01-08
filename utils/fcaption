@@ -5,7 +5,6 @@ from __future__ import unicode_literals, generators, print_function
 import os, sys
 import argparse
 import locale
-import glob
 
 from PyQt4 import QtCore, QtGui
 
@@ -33,6 +32,21 @@ class ScaledImage(QtGui.QLabel):
         if not self._pixmap.isNull():
             pixmap = self._pixmap.scaled(self.size(), QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)
             super(ScaledImage, self).setPixmap(pixmap)
+
+
+class BackgroundLoader(QtCore.QThread):
+    def __init__(self, path, size):
+        super(BackgroundLoader, self).__init__()
+        self.path = path
+        self.size = size
+        self.image = None
+
+    def run(self):
+        self.image = QtGui.QImage(self.path)
+        if not self.image.isNull() and self.size:
+            self.image = self.image.scaled(self.size,
+                                           QtCore.Qt.KeepAspectRatio,
+                                           QtCore.Qt.SmoothTransformation)
 
 
 class MainWindow(QtGui.QMainWindow):
@@ -113,18 +127,22 @@ class MainWindow(QtGui.QMainWindow):
     def on_undo(self, ev):
         self.load(self.current)
 
-    def add_1thumb(self):
-        idx, path = self.missing_thumbs.pop(0)
-        icon = QtGui.QPixmap(path)
+    def thumb_ready(self, thread, idx, path):
+        icon = thread.image
         if not icon.isNull():
             crow = self.list_files.currentRow()
-            icon = icon.scaled(self.list_files.iconSize(), QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)
             item = self.list_files.takeItem(idx)
-            item.setIcon(QtGui.QIcon(icon))
+            item.setIcon(QtGui.QIcon(QtGui.QPixmap(icon)))
             self.list_files.insertItem(idx, item)
             self.list_files.setCurrentRow(crow)
-        if self.missing_thumbs:
-            QtCore.QTimer().singleShot(1, self.add_1thumb)
+        self.thumb_schedule()
+
+    def thumb_schedule(self):
+        if not self.missing_thumbs: return
+        idx, path = self.missing_thumbs.pop(0)
+        thread = BackgroundLoader(path, self.list_files.iconSize())
+        thread.finished.connect(lambda: self.thumb_ready(thread, idx, path))
+        thread.start()
 
     def set_files(self, files):
         self.files = list(files)
@@ -138,7 +156,7 @@ class MainWindow(QtGui.QMainWindow):
             self.btn_prev.setEnabled(False)
         else:
             self.list_files.show()
-            QtCore.QTimer().singleShot(1, self.add_1thumb)
+            self.thumb_schedule()
             self.btn_next.setEnabled(True)
             self.btn_prev.setEnabled(True)
         self.load(0)
@@ -230,8 +248,8 @@ class Application(QtGui.QApplication):
 
         # initialize
         self.main_window = MainWindow()
-        self.main_window.show()
         self.main_window.set_files(files)
+        self.main_window.show()
 
 if __name__ == '__main__':
     app = Application(sys.argv)
