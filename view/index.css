@@ -26,6 +26,10 @@ img
   -moz-user-select: none;
   -ms-user-select: none;
 
+  -webkit-text-size-adjust: none;
+  -moz-text-size-adjust: none;
+  -ms-text-size-adjust: none;
+
   display: none;
   position: absolute;
   top: 0;
