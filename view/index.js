@@ -440,12 +440,10 @@ function setupHeader()
   }
   if(imgs.data[eidx].file)
   {
-    var el = new Element('a', { 'title': 'Download image', 'href': imgs.data[eidx].file[0] });
+    var file = imgs.data[eidx].file[0];
+    var el = new Element('a', { 'title': 'Download image', 'href': file });
     el.set('html', '<img src=\"eye.png\"/>');
     ehdr.adopt(el);
-    eimg.addEvent('click', function() { window.location = img; });
-    eimg.setStyle('cursor', 'pointer'); // fallback
-    eimg.setStyle('cursor', 'zoom-in');
   }
   if(imgs.download)
   {
@@ -474,7 +472,14 @@ function onMainReady()
   eimg.addClass('current');
   eimg.inject(ebuff);
 
-  setupHeader()
+  setupHeader();
+  if(imgs.data[eidx].file)
+  {
+    var file = imgs.data[eidx].file[0];
+    eimg.addEvent('click', function() { window.location = file; });
+    eimg.setStyle('cursor', 'pointer'); // fallback
+    eimg.setStyle('cursor', 'zoom-in');
+  }
 
   // caption
   if(!imgs.data[eidx]['caption'])
