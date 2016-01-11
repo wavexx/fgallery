@@ -140,6 +140,50 @@ img
   text-decoration: underline;
 }
 
+/* Caption */
+#caption
+{
+  background: #111; /* IE<9 */
+  background: rgba(0, 0, 0, 0.7);
+  background: linear-gradient(to left,
+			      rgba(0, 0, 0, 0.7) 60%,
+			      rgba(0, 0, 0, 0.5) 75%,
+			      rgba(0, 0, 0, 0.1) 93%,
+			      rgba(0, 0, 0, 0));
+  font-family: sans-serif;
+  text-align: right;
+  color: #fff;
+  display: none;
+  position: absolute;
+  right: 0;
+  bottom: 5%;
+  padding: 0.5em 5% 0.5em 10%;
+}
+
+#caption #title
+{
+  font-weight: bold;
+  font-size: 3em;
+}
+
+#caption #desc
+{
+  white-space: pre-wrap;
+  font-size: 1.5em;
+}
+
+@media (max-height: 60em)
+{
+  #caption #title { font-size: 5vh }
+  #caption #desc { font-size: 2.5vh }
+}
+
+@media (max-height: 30em)
+{
+  #caption #title { font-size: 1.5em }
+  #caption #desc { font-size: 1em; }
+}
+
 /* Navigation arrows */
 #gallery #content #left,
 #gallery #content #right

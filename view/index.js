@@ -12,6 +12,8 @@ var prefetch = 1;
 var minupscale = 640 * 480;
 var thumbrt = 16/9 - 5/3;
 var cutrt = 0.15;
+var capdelay = 5000;
+var rdwdelay = 500;
 
 Element.Events.hashchange =
 {
@@ -43,6 +45,9 @@ var eback;	// background
 var enoise;	// additive noise
 var eflash;	// flashing object
 var ehdr;	// header
+var ecap;	// caption
+var capst;      // caption status
+var captm;      // caption timeout
 var elist;	// thumbnail list
 var fscr;	// thumbnail list scroll fx
 var econt;	// picture container
@@ -362,6 +367,68 @@ function umod(i, m)
   return i % m;
 }
 
+function resetTimeout(id)
+{
+  if(id) clearTimeout(id)
+  return null;
+}
+
+function hideCap(nodelay)
+{
+  captm = resetTimeout(captm);
+  if(!nodelay)
+    ecap.tween('opacity', 0);
+  else
+  {
+    ecap.get('tween').cancel();
+    ecap.setStyle('display', 'none');
+  }
+}
+
+function showCap(nodelay)
+{
+  if(capst == 'never') return;
+  captm = resetTimeout(captm);
+  ecap.get('tween').cancel();
+
+  if(nodelay) ecap.fade('show');
+  else ecap.tween('opacity', 1);
+  ecap.setStyle('display', 'block');
+
+  if(capst != 'always')
+  {
+    // calculate a decent reading time
+    var cap = imgs.data[ecap.eidx]['caption'];
+    var words = cap[0].split(' ').length + cap[1].split(' ').length;
+    var delay = Math.max(capdelay, rdwdelay * words);
+    captm = hideCap.delay(delay);
+  }
+}
+
+function toggleCap()
+{
+  if(!imgs.captions) return;
+
+  // switch mode
+  if(capst == 'normal')
+    capst = 'never';
+  else if(capst == 'never')
+    capst = 'always';
+  else
+    capst = 'normal';
+
+  // update visual state
+  if(capst == 'never')
+    hideCap(true);
+  else if(ecap.eidx == eidx)
+    showCap(true);
+
+  // update indicator
+  var img = document.id('togglecap', ehdr);
+  img.src = 'cap-' + capst + '.png';
+  showHdr();
+}
+
 function setupHeader()
 {
   ehdr.empty();
@@ -386,6 +453,15 @@ function setupHeader()
     el.set('html', '<img src=\"download.png\"/>');
     ehdr.adopt(el);
   }
+  if(imgs.captions)
+  {
+    var el = new Element('a', { 'title': 'Toggle captions' });
+    el.setStyle('cursor', 'pointer');
+    el.addEvent('click', toggleCap);
+    var img = new Element('img', { 'id': 'togglecap', 'src': 'cap-' + capst + '.png' });
+    img.inject(el);
+    el.inject(ehdr);
+  }
   if(imgs.data[eidx].date)
     ehdr.adopt(new Element('span', { 'html': '<b>Date</b>: ' + imgs.data[eidx].date }));
   ehdr.setStyle('display', (ehdr.children.length? 'block': 'none'));
@@ -399,6 +475,21 @@ function onMainReady()
   eimg.inject(ebuff);
 
   setupHeader()
+
+  // caption
+  if(!imgs.data[eidx]['caption'])
+    hideCap();
+  else
+  {
+    var cap = imgs.data[eidx]['caption'];
+    ecap.eidx = eidx
+    ecap.empty();
+    if(cap[0].length)
+      ecap.adopt(new Element('div', { 'id': 'title', 'text': cap[0] }));
+    if(cap[1].length)
+      ecap.adopt(new Element('div', { 'id': 'desc', 'text': cap[1] }));
+    showCap(first);
+  }
 
   // disable transitions for first image
   var d = duration;
@@ -587,6 +678,7 @@ function initGallery(data)
   imgs = data;
   if(imgs.name) document.title = imgs.name;
   imgs.captions = false;
+  capst = 'normal';
   for(var i = 0; i != imgs.data.length; ++i)
   {
     if(imgs.data[i]['caption'])
@@ -621,6 +713,9 @@ function initGallery(data)
     onComplete: function() { eflash.setStyle('display', 'none'); }
   });
   eflash.inject(econt);
+
+  ecap = new Element('div', { id: 'caption' });
+  ecap.inject(econt);
 
   eleft = new Element('a', { id: 'left' });
   eleft.adopt((new Element('div')).adopt(new Element('img', { 'src': 'left.png' })));
@@ -687,6 +782,10 @@ function initGallery(data)
     {
       ev.stop();
       next();
+    }
+    else if(ev.key == 'c')
+    {
+      toggleCap();
     }
   });
 
@@ -770,6 +869,7 @@ function init()
   Asset.images(['throbber.gif',
 		'left.png', 'right.png',
 		'eye.png', 'download.png', 'back.png',
+		'cap-normal.png', 'cap-always.png', 'cap-never.png',
 		'cut-left.png', 'cut-right.png',
 		'cut-top.png', 'cut-mov.png']);
 }
