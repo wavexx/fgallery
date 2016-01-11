@@ -113,6 +113,11 @@ img
   padding: 0.5em;
 }
 
+#gallery #content #header > :not(:first-child)
+{
+  padding-left: 0.5em;
+}
+
 #gallery #content #header img
 {
   vertical-align: middle;

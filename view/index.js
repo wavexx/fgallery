@@ -362,6 +362,35 @@ function umod(i, m)
   return i % m;
 }
 
+function setupHeader()
+{
+  ehdr.empty();
+  if(imgs.index)
+  {
+    var el = new Element('a', { 'title': 'Back to index', 'href': imgs.index });
+    el.set('html', '<img src=\"back.png\"/>');
+    ehdr.adopt(el);
+  }
+  if(imgs.data[eidx].file)
+  {
+    var el = new Element('a', { 'title': 'Download image', 'href': imgs.data[eidx].file[0] });
+    el.set('html', '<img src=\"eye.png\"/>');
+    ehdr.adopt(el);
+    eimg.addEvent('click', function() { window.location = img; });
+    eimg.setStyle('cursor', 'pointer'); // fallback
+    eimg.setStyle('cursor', 'zoom-in');
+  }
+  if(imgs.download)
+  {
+    var el = new Element('a', { 'title': 'Download album', 'href': imgs.download });
+    el.set('html', '<img src=\"download.png\"/>');
+    ehdr.adopt(el);
+  }
+  if(imgs.data[eidx].date)
+    ehdr.adopt(new Element('span', { 'html': '<b>Date</b>: ' + imgs.data[eidx].date }));
+  ehdr.setStyle('display', (ehdr.children.length? 'block': 'none'));
+}
+
 function onMainReady()
 {
   resizeMainImg(eimg);
@@ -369,24 +398,7 @@ function onMainReady()
   eimg.addClass('current');
   eimg.inject(ebuff);
 
-  // setup header
-  var dsc = [];
-  if(imgs.index)
-    dsc.push("<a title=\"Back to index\" href=\"" + encodeURI(imgs.index) + "\"><img src=\"back.png\"/></a>");
-  if(imgs.data[eidx].file)
-  {
-    var img = imgs.data[eidx].file[0];
-    dsc.push("<a title=\"Download image\" href=\"" + encodeURI(img) + "\"><img src=\"eye.png\"/></a>");
-    eimg.addEvent('click', function() { window.location = img; });
-    eimg.setStyle('cursor', 'pointer'); // fallback
-    eimg.setStyle('cursor', 'zoom-in');
-  }
-  if(imgs.download)
-    dsc.push("<a title=\"Download album\" href=\"" + encodeURI(imgs.download) + "\"><img src=\"download.png\"/></a>");
-  if(imgs.data[eidx].date)
-    dsc.push("<b>Date</b>: " + imgs.data[eidx].date);
-  ehdr.set('html', dsc.join(' '));
-  ehdr.setStyle('display', (dsc.length? 'block': 'none'));
+  setupHeader()
 
   // disable transitions for first image
   var d = duration;
