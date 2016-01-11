@@ -102,6 +102,7 @@ img
   -moz-user-select: text;
   -ms-user-select: text;
 
+  display: none;
   position: absolute;
   top: 0;
   left: 0;

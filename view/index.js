@@ -465,15 +465,15 @@ function showThrobber()
 
 function hideHdr()
 {
-  if(idle.started && ehdr.getStyle('opacity') !== 0)
-    ehdr.tween('opacity', [1, 0], { link: 'ignore' });
+  if(idle.started)
+    ehdr.tween('opacity', 0);
 }
 
 function hideNav()
 {
   emain.addClass('no-cursor');
-  eleft.tween('opacity', [1, 0], { link: 'ignore' });
-  eright.tween('opacity', [1, 0], { link: 'ignore' });
+  eleft.tween('opacity', 0);
+  eright.tween('opacity', 0);
 }
 
 function showHdr()
@@ -494,7 +494,7 @@ function showNav()
 function flash()
 {
   eflash.setStyle('display', 'block');
-  eflash.tween('opacity', [1, 0]);
+  eflash.tween('opacity', 1, 0);
 }
 
 function prev()
@@ -612,13 +612,16 @@ function initGallery(data)
 
   eleft = new Element('a', { id: 'left' });
   eleft.adopt((new Element('div')).adopt(new Element('img', { 'src': 'left.png' })));
+  eleft.set('tween', { link: 'ignore' })
   eleft.inject(econt);
 
   eright = new Element('a', { id: 'right' });
   eright.adopt((new Element('div')).adopt(new Element('img', { 'src': 'right.png' })));
+  eright.set('tween', { link: 'ignore' })
   eright.inject(econt);
 
   ehdr = new Element('div', { id: 'header' });
+  ehdr.set('tween', { link: 'ignore' })
   ehdr.inject(econt);
 
   elist = new Element('div', { id: 'list' });
