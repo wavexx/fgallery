@@ -122,9 +122,8 @@ transformation is necessary to reproduce the colors on your monitor as
 for all the techniques required to perform this task.
 
 Most image-viewing software support color management to some degree, but it's
-rarely configured properly on most systems except Mac OSX. Notably, *all
-browsers lack color management*, with the exception of Safari, but again *only*
-on OSX.
+rarely configured properly on most systems except for Safari on Mac OSX. No
+other browser, unfortunately, supports decent color management.
 
 This causes the familiar effect of looking at the same picture from your laptop
 and your tablet, and noticing that the blue of the sky is just slightly off, or
