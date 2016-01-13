@@ -108,8 +108,8 @@ function resize()
   {
     econt.setStyles(
     {
-      width: msize.x,
-      height: epos.y
+      'width': msize.x,
+      'height': epos.y
     });
   }
 
