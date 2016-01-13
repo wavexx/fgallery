@@ -55,6 +55,11 @@ Lossless auto-rotation is applied so that images can be opened with a browser
 directly. JPEG and PNG files are also re-optimized (losslessy) before being
 archived to furthermore save space.
 
+Image captions are read from simple text files or directly from EXIF metadata.
+Captions can be controlled by the user using the "bubble" icon or by pressing
+the "c" keyboard shortcut, which cycles between normal/always hidden/always
+shown visualization modes.
+
 Preview and thumbnail images are converted to the sRGB color-space by default,
 which provides better results on normal displays and browsers without color
 management support.
@@ -108,6 +113,48 @@ enable face detection by using the ``-f`` flag and installing `facedetect
 Face detection will ensure that the thumbnails, especially when cut, will be
 centered on the face of the subject. If face detection is enabled, there's
 generally no need to increase the thumbnail size.
+
+
+Image captioning
+----------------
+
+Several sources for image captions are automatically read by fgallery. These
+can be customized though the ``-c`` flag in the command line, which consists of
+a comma-separated list of any of the following:
+
+:``txt``: Detached captions in a simple text file.
+:``xmp``: Captions read from XMP sidecar metadata.
+:``exif``: Captions read from EXIF metadata.
+:``cmp``: Captions read from JPEG or PNG's built-in "comment" data.
+
+You can disable caption extraction entirely by using ``-c none``. When multiple
+methods are provided, the first available caption source is used.
+
+The ``txt`` method reads the caption from a text file that has the same name as
+the image, but with ``txt`` extension (for example ``IMG1234.jpg`` reads from
+``IMG1234.txt``). The first line of the file (which can be empty) constitutes
+the title, with any following line becoming the description. These files can
+either be written manually, or can be edited more conveniently using the
+``utils/fcaption`` utility. ``fcaption`` accepts a list of filenames or
+directories on the command line, and provides a simple visual interface to
+quickly edit image captions in this format.
+
+``XMP`` or ``EXIF`` captions can be edited easily with many other image
+editing/previewing programs, such as Darktable_ (which writes XMP sidecar files
+by default), Geeqie_ (use Ctrl+K to bring up the metadata editor) or even
+Preview.app (⌘+I or "Get Info" for details).
+
+Both JPEG and PNG have a built-in comment field, but it's not read by default
+as it's often abused by editing software to put attribution or copyright
+information. When enabled, the comment is parsed as for ``txt`` files: the
+first line is the title, with any subsequent line becoming the description.
+
+Captions are intended to be short. Do not write long or distracting
+descriptions. Captions should *never* contain copyright information.
+*Do not abuse captions*.
+
+.. _darktable: http://www.darktable.org/
+.. _geeqie: http://geeqie.org/
 
 
 Color management
@@ -212,6 +259,11 @@ To save more space in the generated galleries, we recommend installing also the
 optional dependencies::
 
   sudo apt-get install jpegoptim pngcrush p7zip
+
+``fcaption`` is written in Python and requires PyQT4. You can install the
+required packages with::
+
+  sudo apt-get install python-qt4
 
 For face detection support, simply follow the `facedetect installation
 instructions <http://www.thregr.org/~wavexx/software/facedetect/#dependencies>`_.

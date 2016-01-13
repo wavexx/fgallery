@@ -1,8 +1,13 @@
 fgallery 1.8:
 ------------------------
 
-* Ignore invalid whitespace in EXIF dates (produced by some cameras).
-* Ignore hidden/invalid files.
+* Handle bogus whitespace in EXIF timestamps.
+* Ignore hidden/invalid files instead of failing.
+* Support ``tificc2`` as an alias to ``tificc`` (for Fedora).
+* Avoid calling ``tificc`` for images already in sRGB.
+* Load thumbnails on-demand for faster loading of large galleries.
+* Extract and visualize image captions.
+* Added ``utils/fcaption`` to edit image captions.
 
 
 fgallery 1.7: 05/09/2014
