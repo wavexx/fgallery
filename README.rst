@@ -128,7 +128,8 @@ a comma-separated list of any of the following:
 :``cmp``: Captions read from JPEG or PNG's built-in "comment" data.
 
 You can disable caption extraction entirely by using ``-c none``. When multiple
-methods are provided, the first available caption source is used.
+methods are provided, the first available caption source is used. By default,
+the method list is ``txt,xmp,exif``.
 
 The ``txt`` method reads the caption from a text file that has the same name as
 the image, but with ``txt`` extension (for example ``IMG1234.jpg`` reads from
