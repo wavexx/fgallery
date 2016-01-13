@@ -547,7 +547,7 @@ function onMainReady()
   eback.src = imgs.data[eidx].blur;
   enoise.setStyle('background-position', rp + 'px ' + rp + 'px');
 
-  clearTimeout(tthr);
+  tthr = resetTimeout(tthr);
   idle.start();
   showHdr();
   centerThumb(d);
@@ -650,7 +650,7 @@ function load(i)
   cthumb = imgs.data[eidx].ethumb;
   cthumb.addClass('current');
 
-  clearTimeout(tthr);
+  resetTimeout(tthr);
   tthr = showThrobber.delay(thrdelay);
 }
 
