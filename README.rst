@@ -125,7 +125,7 @@ a comma-separated list of any of the following:
 :``txt``: Detached captions in a simple text file.
 :``xmp``: Captions read from XMP sidecar metadata.
 :``exif``: Captions read from EXIF metadata.
-:``cmp``: Captions read from JPEG or PNG's built-in "comment" data.
+:``cmt``: Captions read from JPEG or PNG's built-in "comment" data.
 
 You can disable caption extraction entirely by using ``-c none``. When multiple
 methods are provided, the first available caption source is used. By default,
