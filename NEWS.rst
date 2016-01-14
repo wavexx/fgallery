@@ -1,4 +1,4 @@
-fgallery 1.8:
+fgallery 1.8: 14/01/2016
 ------------------------
 
 * Handle bogus whitespace in EXIF timestamps.
