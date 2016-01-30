@@ -362,8 +362,8 @@ my $out = $ARGV[1];
 my $name = (@ARGV < 3? undef: Encode::decode($locale, $ARGV[2]));
 
 # check paths
-my $absDir = rel2abs($dir);
-my $absOut = rel2abs($out);
+my $absDir = rel2abs($dir) . '/';
+my $absOut = rel2abs($out) . '/';
 
 if(!-d $dir) {
   fatal("input directory \"$dir\" does not exist");
