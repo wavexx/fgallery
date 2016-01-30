@@ -1,5 +1,5 @@
 // fgallery: a modern, minimalist javascript photo gallery
-// Copyright(c) 2003-2016 by wave++ "Yuri D'Elia" <wavexx@thregr.org>
+// Copyright(c) 2011-2016 by wave++ "Yuri D'Elia" <wavexx@thregr.org>
 // Distributed under GPLv2+ (see COPYING) WITHOUT ANY WARRANTY.
 "use strict";
 
