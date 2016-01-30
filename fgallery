@@ -20,6 +20,7 @@ use Fcntl;
 use File::Basename qw{fileparse};
 use File::Find qw{find};
 use File::Path qw{make_path remove_tree};
+use File::Spec::Functions qw{rel2abs};
 use FindBin qw{$RealBin};
 use Getopt::Long qw{:config bundling};
 use IO::Handle;
@@ -361,8 +362,15 @@ my $out = $ARGV[1];
 my $name = (@ARGV < 3? undef: Encode::decode($locale, $ARGV[2]));
 
 # check paths
+my $absDir = rel2abs($dir);
+my $absOut = rel2abs($out);
+
 if(!-d $dir) {
   fatal("input directory \"$dir\" does not exist");
+} elsif($absDir eq $absOut) {
+  fatal("input and output directory are the same");
+} elsif(substr($absOut, 0, length($absDir)) eq $absDir) {
+  fatal("output directory is a sub-directory of input, refusing to scan");
 } elsif(!-d $out) {
   sys('cp', '-L', '-r', "$RealBin/view", $out);
 } elsif(!-f "$out/index.html") {
