@@ -479,8 +479,10 @@ sub analyze_file
   }
 
   # sanitize file name
-  $base =~ s/[^\w]/_/gu;
-  my $root = $base;
+  my $sane = $base;
+  $sane =~ s/[^\w]/_/gu;
+
+  my $root = $sane;
   for(my $c = 0;; ++$c)
   {
     my $tmp = "$out/imgs/$root.$ext";
@@ -489,7 +491,7 @@ sub analyze_file
       close($fd);
       last;
     }
-    $root = "${base}_$c";
+    $root = "${sane}_$c";
   }
 
   $props->{file} = $file;
