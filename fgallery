@@ -258,11 +258,15 @@ sub cap_from_props
 {
   my ($props) = @_;
   my $ret = ['', ''];
-  if($props->{'Title'}) {
-    $ret->[0] = cap_clean_title($props->{'Title'});
+  if($props->{'Title'})
+  {
+    my $title = Encode::decode_utf8($props->{'Title'});
+    $ret->[0] = cap_clean_title($title);
   }
-  if($props->{'Description'}) {
-    $ret->[1] = cap_clean_desc($props->{'Description'});
+  if($props->{'Description'})
+  {
+    my $desc = Encode::decode_utf8($props->{'Description'});
+    $ret->[1] = cap_clean_desc($desc);
   }
   return $ret;
 }
@@ -514,7 +518,8 @@ sub analyze_file
     {
       if($props->{'Comment'})
       {
-	$props->{'caption'} = cap_from_str($props->{'Comment'});
+	my $cmt = Encode::decode_utf8($props->{'Comment'});
+	$props->{'caption'} = cap_from_str($cmt);
 	last;
       }
     }
