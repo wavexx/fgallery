@@ -453,7 +453,7 @@ function setupHeader()
   }
   if(imgs.captions)
   {
-    var el = new Element('a', { 'title': 'Toggle captions' });
+    var el = new Element('a', { 'title': 'Toggle captions (shortcut: c)' });
     el.setStyle('cursor', 'pointer');
     el.addEvent('click', toggleCap);
     var img = new Element('img', { 'id': 'togglecap', 'src': 'cap-' + capst + '.png' });
