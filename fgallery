@@ -480,7 +480,7 @@ sub analyze_file
 
   # sanitize file name
   my $sane = $base;
-  $sane =~ s/[^\w]/_/gu;
+  $sane =~ s/[^\w\-]/_/gu;
 
   my $root = $sane;
   for(my $c = 0;; ++$c)
