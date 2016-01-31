@@ -142,8 +142,7 @@ quickly edit image captions in this format.
 
 ``XMP`` or ``EXIF`` captions can be edited easily with many other image
 editing/previewing programs, such as Darktable_ (which writes XMP sidecar files
-by default), Geeqie_ (use Ctrl+K to bring up the metadata editor) or even
-Preview.app (⌘+I or "Get Info" for details).
+by default) or Geeqie_ (use Ctrl+K to bring up the metadata editor).
 
 Both JPEG and PNG have a built-in comment field, but it's not read by default
 as it's often abused by editing software to put attribution or copyright
