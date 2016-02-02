@@ -29,6 +29,7 @@ use JSON qw{encode_json};
 use Time::Piece;
 
 # constants
+our $VERSION = "1.9~";
 our $ENCODING = encoding::_get_locale_encoding() || 'UTF-8';
 
 # defaults
@@ -314,12 +315,17 @@ sub parse_cap
   return @capmethods;
 }
 
+sub print_version
+{
+  print("fgallery $VERSION\n");
+  exit(0);
+}
 
-sub print_help()
+sub print_help
 {
   print(STDERR qq{Usage: $0 [options] input-dir output-dir [album name]
-
   -h, --help		this help
+  --version		output current fgallery version
   -v			verbose (show commands as being executed)
   -s			slim output (no original files and downloads)
   -i			include individual originals
@@ -338,35 +344,34 @@ sub print_help()
   --quality Q		preview image quality (0-100, currently: $imgq)
   --index url		specify the URL location for the index/back button
 });
+  exit(shift);
 }
 
 
 # main program
-my $help = 0;
+my ($ret, @ARGS) = GetOptions(
+  'help|h' => sub { print_help(0); },
+  'version' => \&print_version,
+  'c=s' => sub { @capmethods = parse_cap($_[0], $_[1]); },
+  'd' => sub { $nodown = 1; },
+  'f' => sub { $facedet = 1; },
+  'i' => sub { $ofile = 1; },
+  'j=i' => sub { $workers = parse_int($_[0], $_[1], 1, undef); },
+  'o' => sub { $orient = 0; },
+  'p' => sub { $fullpano = 0; },
+  'r' => sub { $revsort = 1; },
+  's' => sub { $slim = 1; },
+  't' => sub { $timesort = 0; },
+  'v' => sub { $verbose = 1; },
+  'max-full=s' => sub { @maxfull = parse_wh(@_); },
+  'max-thumb=s' => sub { @maxthumb = parse_wh(@_); },
+  'min-thumb=s' => sub { @minthumb = parse_wh(@_); },
+  'no-sRGB' => sub { $sRGB = 0; },
+  'quality=i' => sub { $imgq = parse_int($_[0], $_[1], 0, 100); },
+  'index=s' => sub { $indexUrl = decode($_[1]); });
 
-my ($ret, @ARGS) = GetOptions('help|h' => \$help,
-	   'c=s' => sub { @capmethods = parse_cap($_[0], $_[1]); },
-	   'd' => sub { $nodown = 1; },
-	   'f' => sub { $facedet = 1; },
-	   'i' => sub { $ofile = 1; },
-	   'j=i' => sub { $workers = parse_int($_[0], $_[1], 1, undef); },
-	   'o' => sub { $orient = 0; },
-	   'p' => sub { $fullpano = 0; },
-	   'r' => sub { $revsort = 1; },
-	   's' => sub { $slim = 1; },
-	   't' => sub { $timesort = 0; },
-	   'v' => sub { $verbose = 1; },
-	   'max-full=s' => sub { @maxfull = parse_wh(@_); },
-	   'max-thumb=s' => sub { @maxthumb = parse_wh(@_); },
-	   'min-thumb=s' => sub { @minthumb = parse_wh(@_); },
-	   'no-sRGB' => sub { $sRGB = 0; },
-	   'quality=i' => sub { $imgq = parse_int($_[0], $_[1], 0, 100); },
-	   'index=s' => sub { $indexUrl = Encode::decode($locale, $_[1]); });
-
-if(@ARGV < 2 || @ARGV > 3 || $help || !$ret)
-{
-  print_help();
-  exit(2);
+if(@ARGV < 2 || @ARGV > 3 || !$ret) {
+  print_help(2);
 }
 my $dir = $ARGV[0];
 my $out = $ARGV[1];
@@ -814,6 +819,7 @@ rmdir("$out/files");
 
 # generate json
 my %json;
+$json{version} = $VERSION;
 $json{name} = $name if($name);
 $json{download} = $fdownload if($fdownload);
 $json{index} = $indexUrl if($indexUrl);
