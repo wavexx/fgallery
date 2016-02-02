@@ -28,6 +28,9 @@ use Image::ExifTool qw{ImageInfo};
 use JSON qw{encode_json};
 use Time::Piece;
 
+# constants
+our $ENCODING = encoding::_get_locale_encoding() || 'UTF-8';
+
 # defaults
 my $mode = 0644;
 my $slim = 0;
@@ -101,8 +104,7 @@ sub isin
 sub slurp
 {
   my ($fn) = @_;
-  my $enc = encoding::_get_locale_encoding();
-  open(my $fd, "<:encoding($enc)", "$fn") or fatal("cannot read $fn: $!");
+  open(my $fd, "<:encoding($ENCODING)", "$fn") or fatal("cannot read $fn: $!");
   local $/;
   return <$fd> // "";
 }
@@ -174,6 +176,12 @@ sub clamp
 {
   my ($a, $b, $v) = @_;
   return ($v < $a? $a: $v > $b? $b: $v);
+}
+
+
+sub decode
+{
+  return Encode::decode($ENCODING, @_);
 }
 
 
@@ -335,7 +343,6 @@ sub print_help()
 
 # main program
 my $help = 0;
-my $locale = encoding::_get_locale_encoding();
 
 my ($ret, @ARGS) = GetOptions('help|h' => \$help,
 	   'c=s' => sub { @capmethods = parse_cap($_[0], $_[1]); },
@@ -363,7 +370,7 @@ if(@ARGV < 2 || @ARGV > 3 || $help || !$ret)
 }
 my $dir = $ARGV[0];
 my $out = $ARGV[1];
-my $name = (@ARGV < 3? undef: Encode::decode($locale, $ARGV[2]));
+my $name = (@ARGV < 3? undef: decode($ARGV[2]));
 
 # check paths
 my $absDir = rel2abs($dir) . '/';
@@ -472,7 +479,7 @@ if($workers)
 sub analyze_file
 {
   my $file = shift;
-  my ($base, $dir, $suffix) = fileparse(Encode::decode($locale, $file), qr/\.[^.]*$/);
+  my ($base, $dir, $suffix) = fileparse(decode($file), qr/\.[^.]*$/);
   $suffix = lc(substr($suffix, 1));
 
   progress::status("$base.$suffix");
