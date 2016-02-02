@@ -1,3 +1,10 @@
+fgallery 1.8.1: 02/02/2016
+--------------------------
+
+* Fixed txt/xmp caption extraction for filenames with special characters.
+* Fixed unicode handling in xmp/exif captions.
+
+
 fgallery 1.8: 14/01/2016
 ------------------------
 
