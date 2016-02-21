@@ -654,7 +654,7 @@ sub process_img
 
   # intermediate sRGB colorspace conversion
   if(!$sRGB || ($props{ColorSpace} // 65535) == 1 || !defined($props{ProfileID})) {
-    link($fout, $ftmp);
+    link($fout, $ftmp) or sys('cp', '-L', $fout, $ftmp);
   } else
   {
     sys('convert', $fout, '-compress', 'LZW', "tiff:$ftmp");
