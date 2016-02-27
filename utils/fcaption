@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# fcaption: simple image caption editor
+# Copyright(c) 2015-2016 by wave++ "Yuri D'Elia" <wavexx@thregr.org>
 from __future__ import unicode_literals, generators, print_function
 
 import os, sys
@@ -232,9 +234,16 @@ class Application(QtGui.QApplication):
 
         # command-line flags
         ap = argparse.ArgumentParser(description=APP_DESC)
-        ap.add_argument('files', metavar="image", nargs='+',
+        ap.add_argument('files', metavar="image", nargs='*',
                         help='image or directory to caption')
         args = ap.parse_args(map(str, args[1:]))
+
+        # ask for a directory if no files were specified
+        if not args.files:
+            path = QtGui.QFileDialog.getExistingDirectory(
+                None, "Select an image directory")
+            if not path: sys.exit(1)
+            args.files = [str(path)]
 
         # expand directories to files
         files = []
