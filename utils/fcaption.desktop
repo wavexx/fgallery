@@ -1,0 +1,7 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=fcaption
+Comment=fgallery image caption editor
+Exec=fcaption
+Categories=Utility;
