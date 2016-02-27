@@ -1,0 +1,146 @@
+.Dd 2015-11-30
+.Dt FGALLERY 1
+.\" (C) Copyright 2015 Guus Sliepen <guus@debian.org>,
+.Sh NAME
+.Nm fgallery
+.Nd static HTML+JavaScript photo album generator
+.Sh SYNOPSIS
+.Nm
+.Op Fl hvsiotrpdf
+.Op Fl c Ar methods
+.Op Fl j Ar N
+.Op Fl -max-full Ar WxH
+.Op Fl -max-thumb Ar WxH
+.Op Fl -min-thumb Ar WxH
+.Op Fl -no-sRGB
+.Op Fl -quality Ar Q
+.Op Fl -index Ar URL
+.Ar input-dir
+.Ar output-dir
+.Op Ar album name
+.Sh DESCRIPTION
+.Nm
+is a static photo gallery generator with no frills that has a stylish, minimalist look.
+.Nm
+shows your photos, and nothing else.
+There is no server-side processing, only static generation.
+The resulting gallery can be uploaded anywhere without additional requirements and works with any modern browser.
+JavaScript is required to view the gallery.
+The gallery will feature a large area for viewing a single image, and a scrollable horizontal or vertical bar with thumbnails.
+The orientation of the thumbnail bar will be automatically chosen based on the size of the browser window.
+The user can click on arrows to go to the next or previous image or use the arrow keys on the keyboard to do the same.
+The user can also click on the thumbnails to quickly go to another image.
+Each image has a unique anchor tag, and the user can copy&paste the URL from the address bar of the browser which will point to the currently displayed image.
+Clicking on the previewed image will display the original at full resolution, unless th
+.Fl s
+option is used.
+.Pp
+.Nm
+reads in JPEG, PNG and TIFF images,
+and automatically generates preview images, backdrops and thumbnails using
+.Xr ImageMagick 1 .
+It will automatically correct the orientation of the generated images using EXIF tags in the original images,
+using either
+.Xr exiftran 1
+or
+.Xr exifautotran 1 .
+It can also optimize the generation of thumbnails by centering on faces if the
+.Fl f
+option is used and
+.Xr facedetect 1
+is installed.
+The generated images are automatically optimized using
+.Xr jpegoptim 1
+and/or
+.Xr pngcrush 1
+if these programs are installed.
+If the original images contain color profiles,
+then the generated images will be converted to the sRGB colorspace using
+.Xr tificc 1
+if that program is installed, unless the
+.Fl -no-sRGB
+option is used.
+.Pp
+.Nm
+can also add captions to images. These can either be read from the EXIF headers (using the Title, Description and optionally the Comment tags), or from an external file (using the same filename as the image but with a .txt or .xmp extension).
+The
+.Fl c
+option can be used to control which methods of caption extraction will be used.
+.Pp
+You have to manually specify the directory with the original image files and the desired output directory for the web gallery.
+Optionally, you can specify a title for the gallery.
+By default, the gallery will include a downloadable ZIP archive with the complete photo album, unless either the
+.Fl d
+or
+.Fl s
+option is used.
+After the gallery has been generated,
+you may have to change the file permissions using
+.Xr chmod 1
+to allow them to be read by others.
+.Sh OPTIONS
+.Bl -tag -width indent
+.It Fl h, -help
+Display a list of options.
+.It Fl v
+Verbose output (show commands as being executed).
+.It Fl s
+Slim output (no original files and downloads).
+.It Fl i
+Include individual originals in the generated album.
+.It Fl o
+Do not auto-orient images.
+.It Fl t
+Do not sort images on time.
+.It Fl r
+Reverse the order of the images.
+.It Fl p
+Do not automatically include full-sized panoramas.
+.It Fl d
+Do not generate a full album download.
+.It Fl f
+Improve thumbnail cutting by performing face detection.
+Requires
+.Xr facedetect 1
+to be installed.
+.It Fl c Ar methods
+Set the caption extraction method (txt, xmp, exif, cmt or none).
+Multiple methods can be specified by giving a comma-separated list.
+The default is txt,xmp,exif.
+.It Fl j Ar N
+Use
+.Ar N
+threads to process the images.
+.It Fl -max-full Ar WxH
+Set the maximum full image size to
+.Ar WxH
+pixels. The default is 1600x1200 pixels.
+.It Fl -max-thumb Ar WxH
+Set the maximum size of thumbnails to
+.Ar WxH
+pixels. The default is 267x200 pixels.
+.It Fl -min-thumb Ar WxH
+Set the minimum size of thumbnails to
+.Ar WxH
+pixels. The default is 150x112 pixels.
+.It Fl -no-sRGB
+Do not try to remap preview and thumbnail image color profiles to sRGB.
+.It Fl -quality Ar Q
+Set the JPEG quality of the preview images to
+.Ar Q .
+The default is 90.
+.It Fl -index Ar URL
+Specify the URL location for the index and back buttons.
+.El
+.Sh SEE ALSO
+.Xr ImageMagick 1 ,
+.Xr exiftran 1 ,
+.Xr exifautotran 1 ,
+.Xr jpegoptim 1 ,
+.Xr pngcrush 1 ,
+.Xr tificc 1 ,
+.Xr facedetect 1 Pq see Pa https://www.thregr.org/~wavexx/software/facedetect/ .
+.Sh AUTHORS
+.Nm
+was written by
+.An "Yuri D'Elia" Aq wavexx@thregr.org .
