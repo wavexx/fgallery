@@ -412,7 +412,7 @@ if(system("pngcrush -h >/dev/null 2>&1")) {
   $pngoptim = 0;
 }
 if($facedet && system("facedetect -h >/dev/null 2>&1")) {
-  fatal("cannot run \"facedetect\" (see http://www.thregr.org/~wavexx/software/facedetect/)");
+  fatal("cannot run \"facedetect\" (see https://www.thregr.org/~wavexx/software/facedetect/)");
 }
 
 my $tificccmd;
