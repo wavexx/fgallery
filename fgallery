@@ -388,7 +388,7 @@ if(!-d $dir) {
 } elsif(substr($absOut, 0, length($absDir)) eq $absDir) {
   fatal("output directory is a sub-directory of input, refusing to scan");
 } elsif(!-d $out) {
-  sys('cp', '-L', '-r', "$RealBin/view", $out);
+  sys('cp', '-L', '-R', "$RealBin/view", $out);
 } elsif(!-f "$out/index.html") {
   fatal("output directory already exists, but doesn't look like a template copy");
 }
