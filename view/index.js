@@ -544,8 +544,12 @@ function onMainReady()
   fx.start('opacity', 1);
 
   var rp = Math.floor(Math.random() * 100);
-  eback.src = imgs.data[eidx].blur;
-  enoise.setStyle('background-position', rp + 'px ' + rp + 'px');
+  if (imgs.data[eidx].blur) {
+      eback.src = imgs.data[eidx].blur;
+      enoise.setStyle('background-position', rp + 'px ' + rp + 'px');
+  } else {
+      eback.src = '';
+  }
 
   tthr = resetTimeout(tthr);
   idle.start();

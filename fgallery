@@ -37,6 +37,7 @@ my $mode = 0644;
 my $slim = 0;
 my $ofile = 0;
 my $orient = 1;
+my $do_blur = 1;
 my $timesort = 1;
 my $revsort = 0;
 my @filetypes = ("JPEG", "PNG", "TIFF");
@@ -343,6 +344,7 @@ sub print_help
   --no-sRGB		do not remap preview/thumbnail color profiles to sRGB
   --quality Q		preview image quality (0-100, currently: $imgq)
   --index url		specify the URL location for the index/back button
+  --noblur		dont generate blurred images
 });
   exit(shift);
 }
@@ -368,7 +370,9 @@ my ($ret, @ARGS) = GetOptions(
   'min-thumb=s' => sub { @minthumb = parse_wh(@_); },
   'no-sRGB' => sub { $sRGB = 0; },
   'quality=i' => sub { $imgq = parse_int($_[0], $_[1], 0, 100); },
-  'index=s' => sub { $indexUrl = decode($_[1]); });
+  'index=s' => sub { $indexUrl = decode($_[1]); },
+  'noblur' => sub { $do_blur = 0; },
+);
 
 if(@ARGV < 2 || @ARGV > 3 || !$ret) {
   print_help(2);
@@ -714,18 +718,22 @@ sub process_img
       '+profile', '!icc,*',
       '-quality', $imgq, "$out/$fthumb");
 
-  # blur
-  sys('convert', "$out/$fthumb",
-      '-virtual-pixel', 'Mirror',
-      '-gaussian-blur', "0x$backblur",
-      '-scale', "$backsize[0]x$backsize[1]",
-      '-quality', '90', "$out/$fblur");
+  if ($do_blur) {
+      # blur
+      sys('convert', "$out/$fthumb",
+          '-virtual-pixel', 'Mirror',
+          '-gaussian-blur', "0x$backblur",
+          '-scale', "$backsize[0]x$backsize[1]",
+          '-quality', '90', "$out/$fblur");
+  }
 
   my %fdata;
   $fdata{props} = \%props;
   $fdata{img} = [$fimg, [map { int } @simg]];
   $fdata{file} = [$ffile, [map { int } @sfile]];
-  $fdata{blur} = $fblur;
+  if ($do_blur) {
+      $fdata{blur} = $fblur;
+  }
 
   # do not store duplicate information
   my @tdata = ($fthumb, [map { int } @mthumb]);
@@ -823,7 +831,9 @@ $json{version} = $VERSION;
 $json{name} = $name if($name);
 $json{download} = $fdownload if($fdownload);
 $json{index} = $indexUrl if($indexUrl);
-$json{blur} = \@backsize;
+if ($do_blur) {
+    $json{blur} = \@backsize;
+}
 $json{thumb} = { min => \@minthumb, max => \@maxthumb };
 
 foreach my $fdata(@adata)
