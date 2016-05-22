@@ -247,7 +247,7 @@ sub decode
 sub cap_clean_title
 {
   $_ = shift;
-  s/^\s+|\s+$//;
+  s/^\s+|\s+$//g;
   s/\s+/ /g;
   return $_;
 }
@@ -255,7 +255,7 @@ sub cap_clean_title
 sub cap_clean_desc
 {
   $_ = shift;
-  s/^\s+|\s+$//;
+  s/^\s+|\s+$//g;
   s/[ \t]+/ /g;
   return $_;
 }
@@ -594,7 +594,7 @@ foreach my $props(@aprops)
 {
   # file timestamp
   my $idate = $props->{'DateTimeOriginal'} || $props->{'DateTime'} || "";
-  $idate =~ s/^\s+|\s+$//;
+  $idate =~ s/^\s+|\s+$//g;
 
   if(!$idate || $idate eq "0000:00:00 00:00:00")
   {
