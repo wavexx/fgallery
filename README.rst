@@ -236,11 +236,10 @@ Backend:
 * perl >= 5.14 (threading support enabled), with the following `required` modules:
 
   - Image::ExifTool (``libimage-exiftool-perl``: http://owl.phy.queensu.ca/~phil/exiftool/)
-  - JSON (``libjson-perl``, http://search.cpan.org/dist/JSON/lib/JSON.pm)
 
   and the following additional `recommended` modules:
 
-  - JSON::XS (``libjson-xs-perl``)
+  - Cpanel::JSON::XS (``libcpanel-json-xs-perl``)
 
 Several other tools are supported, but are only used when installed.
 Therefore it's also helpful to install:
@@ -253,7 +252,7 @@ Therefore it's also helpful to install:
 On Debian/Ubuntu, you can install all the required dependencies with::
 
   sudo apt-get install imagemagick exiftran zip liblcms2-utils
-  sudo apt-get install libimage-exiftool-perl libjson-perl libjson-xs-perl
+  sudo apt-get install libimage-exiftool-perl libcpanel-json-xs-perl
 
 To save more space in the generated galleries, we recommend installing also the
 optional dependencies::
@@ -272,7 +271,7 @@ On a Mac, we recommend installing the dependencies using `MacPorts
 <http://www.macports.org/>`_. After installing MacPorts, type::
 
   sudo port install imagemagick lcms2 jpeg jpegoptim pngcrush
-  sudo port install p5-image-exiftool p5-json p5-json-xs
+  sudo port install p5-image-exiftool p5-cpanel-json-xs
 
 
 Installation

@@ -25,8 +25,13 @@ use FindBin qw{$RealBin};
 use Getopt::Long qw{:config bundling};
 use IO::Handle;
 use Image::ExifTool qw{ImageInfo};
-use JSON qw{encode_json};
 use Time::Piece;
+
+# We require either Cpanel::JSON::XS or JSON::PP (JSON::XS does not support ithreads)
+my $JSON_cls = eval { require Cpanel::JSON::XS; "Cpanel::JSON::XS"; } //
+	       eval { require JSON::PP; "JSON::PP"; } //
+	       fatal("either Cpanel::JSON::XS or JSON::PP is required");
+$JSON_cls->import(qw{encode_json});
 
 # constants
 our $VERSION = "1.9~";
