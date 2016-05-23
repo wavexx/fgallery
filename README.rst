@@ -44,6 +44,24 @@ the gallery locally is to run::
 and then navigate to http://localhost:8000.
 
 
+Pre-built packages
+------------------
+
+Pre-built packages for `fgallery` (and `facedetect`) are available for Debian:
+
+- https://packages.debian.org/fgallery
+- https://packages.debian.org/facedetect
+
+Arch Linux:
+
+- https://aur.archlinux.org/packages/fgallery/
+
+You can also try the latest `fgallery` bundled with facedetect_ in a Docker
+container using the following ``Dockerfile`` provided by Stavros Korokithakis:
+
+- https://github.com/skorokithakis/docker-fgallery
+
+
 Usage notes
 -----------
 
@@ -282,11 +300,6 @@ a directory of your liking and link `fgallery` appropriately::
 
   sudo cp -r fgallery-X.Y /usr/local/share/fgallery
   sudo ln -s /usr/local/share/fgallery/fgallery /usr/local/bin
-
-You can also try the latest `fgallery` bundled with facedetect_ in a Docker
-container using the following ``Dockerfile`` provided by Stavros Korokithakis:
-
-https://github.com/skorokithakis/docker-fgallery
 
 
 Authors and Copyright
