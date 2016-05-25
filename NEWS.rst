@@ -1,3 +1,14 @@
+fgallery 1.8.2: 25/05/2016
+--------------------------
+
+* Allow to generate a gallery directly on filesystems without hard-links.
+* Fix generation failure on BSD systems (use a common set of "cp" arguments).
+* Handle more malformed/missing EXIF timestamps.
+* Use ``Cpanel::JSON::XS`` instead of ``JSON::XS`` (fixing errors in recent
+  unsupported combinations of Perl / JSON::XS and threads).
+* New ``fgallery`` man page provided by Guus Sliepen.
+
+
 fgallery 1.8.1: 02/02/2016
 --------------------------
 

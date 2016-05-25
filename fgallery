@@ -34,7 +34,7 @@ my $JSON_cls = eval { require Cpanel::JSON::XS; "Cpanel::JSON::XS"; } //
 $JSON_cls->import(qw{encode_json});
 
 # constants
-our $VERSION = "1.9~";
+our $VERSION = "1.8.2";
 our $ENCODING = encoding::_get_locale_encoding() || 'UTF-8';
 
 # defaults
