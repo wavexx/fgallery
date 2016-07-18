@@ -854,4 +854,43 @@ unless(open($fd, ">:raw", "$out/data.json")) {
 print($fd encode_json(\%json));
 close($fd);
 
+# provide alternative for nojavascript
+my $html = join("\n\t", map {
+  my $props = $_;
+  my $caption = $props->{'caption'} ? $props->{'caption'}[0] : "";
+  my $root = $props->{root};
+  my $fbase = "$root.$ext";
+  my $file = $props->{'file'};
+  # no alt text or title attribute with caption?
+  qq{<a href="imgs/$fbase" title="$caption">}
+  . qq{<img src="thumbs/$fbase" alt="$caption"/></a>}
+		} @aprops);
+my $index = slurp("$out/index.html");
+$index =~ s!<h2>.*?</h2>!<div id="photos">\n\t$html\n      </div>!;
+unless(open($fd, ">:encoding($ENCODING)", "$out/index.html")) {
+  fatal("cannot write new index file: $!");
+}
+print($fd $index);
+close($fd);
+
+# don't append on repeated runs
+my $css = slurp("$out/index.css");
+if ($css !~ /\n\@media (max-width: \d+px)\n  #photos/) {
+  unless(open($fd, ">>:raw", "$out/index.css")) {
+    fatal("cannot append to new css file: $!");
+  }
+  
+  for (reverse 1..10) {
+    print($fd sprintf(q!
+@media (max-width: %dpx) {
+  #photos {
+    -moz-column-count:    %d;
+    -webkit-column-count: %d;
+    column-count:         %d;
+  }
+}!, ($_ + 0.5) * $minthumb[0], $_, $_, $_));
+  }
+  close($fd);
+}
+
 print("completed\n");
