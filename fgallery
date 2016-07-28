@@ -33,6 +33,9 @@ my $JSON_cls = eval { require Cpanel::JSON::XS; "Cpanel::JSON::XS"; } //
 	       fatal("either Cpanel::JSON::XS or JSON::PP is required");
 $JSON_cls->import(qw{encode_json});
 
+use POSIX qw(setlocale LC_NUMERIC);
+setlocale( LC_NUMERIC, "C" );
+
 # constants
 our $VERSION = "1.8.2";
 our $ENCODING = encoding::_get_locale_encoding() || 'UTF-8';
@@ -62,6 +65,13 @@ my $verbose = 0;
 my $workers = 0;
 my $sRGB = 1;
 my $indexUrl = undef;
+my $dogeo = 0;
+my $geobaseUrl = "http://osm.org";
+my $geoZoom = 17;
+# This format string works with OSM
+# In case this should be adapted to other map providers a more
+# sophisticated format parsing than just sprintf() would be needed
+my $defaultgeoformat = "%s?zoom=%i&lat=%-10.9g&lon=%-10.9g";
 my @capmethods = ("txt", "xmp", "exif");
 
 
@@ -341,6 +351,7 @@ sub print_help
   -p			do not automatically include full-sized panoramas
   -d			do not generate a full album download
   -f			improve thumbnail cutting by performing face detection
+  -g                    respect available GPS coordinates in images
   -j N			set process-level parallelism
   --max-full WxH	maximum full image size ($maxfull[0]x$maxfull[1])
   --max-thumb WxH	maximum thumbnail size ($maxthumb[0]x$maxthumb[1])
@@ -348,6 +359,8 @@ sub print_help
   --no-sRGB		do not remap preview/thumbnail color profiles to sRGB
   --quality Q		preview image quality (0-100, currently: $imgq)
   --index url		specify the URL location for the index/back button
+  --geobase url		specify the URL location geolocation (default: $geobaseUrl)
+  --geozoom z		specify the zoom level of geo maps (default: $geoZoom)
 });
   exit(shift);
 }
@@ -360,6 +373,7 @@ my ($ret, @ARGS) = GetOptions(
   'c=s' => sub { @capmethods = parse_cap($_[0], $_[1]); },
   'd' => sub { $nodown = 1; },
   'f' => sub { $facedet = 1; },
+  'g' => sub { $dogeo = 1; },
   'i' => sub { $ofile = 1; },
   'j=i' => sub { $workers = parse_int($_[0], $_[1], 1, undef); },
   'o' => sub { $orient = 0; },
@@ -373,7 +387,9 @@ my ($ret, @ARGS) = GetOptions(
   'min-thumb=s' => sub { @minthumb = parse_wh(@_); },
   'no-sRGB' => sub { $sRGB = 0; },
   'quality=i' => sub { $imgq = parse_int($_[0], $_[1], 0, 100); },
-  'index=s' => sub { $indexUrl = decode($_[1]); });
+  'index=s' => sub { $indexUrl = decode($_[1]); },
+  'geobase=s' => sub { $geobaseUrl = decode($_[1]); $dogeo = 1; },
+  'geozoom=i' => sub { $geoZoom = parse_int($_[0], $_[1], 0, 19); $dogeo = 1; });
 
 if(@ARGV < 2 || @ARGV > 3 || !$ret) {
   print_help(2);
@@ -526,6 +542,11 @@ sub analyze_file
   {
     $props->{'OrigImageWidth'} = $props->{"ExifImageWidth ($n)"};
     $props->{'OrigImageHeight'} = $props->{"ExifImageHeight ($n)"};
+  }
+  if($dogeo) {
+    my $mlat = $props->{"GPSLatitude"};
+    my $mlon = $props->{"GPSLongitude"};
+    $props->{'geourl'} = sprintf($defaultgeoformat, $geobaseUrl, $geoZoom, $mlat, $mlon);
   }
 
   # extract caption
@@ -839,7 +860,7 @@ foreach my $fdata(@adata)
       $data{$_} = $fdata->{$_};
     }
   }
-  foreach('date', 'stamp', 'caption') {
+  foreach('date', 'stamp', 'caption', 'geourl') {
     if(defined($fdata->{props}{$_})) {
       $data{$_} = $fdata->{props}{$_};
     }

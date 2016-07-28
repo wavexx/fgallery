@@ -6,7 +6,7 @@
 .Nd static HTML+JavaScript photo album generator
 .Sh SYNOPSIS
 .Nm
-.Op Fl hvsiotrpdf
+.Op Fl hvsiotrpdfg
 .Op Fl c Ar methods
 .Op Fl j Ar N
 .Op Fl -max-full Ar WxH
@@ -15,6 +15,8 @@
 .Op Fl -no-sRGB
 .Op Fl -quality Ar Q
 .Op Fl -index Ar URL
+.Op Fl -geobase Ar URL
+.Op Fl -geozoom Ar z
 .Ar input-dir
 .Ar output-dir
 .Op Ar album name
@@ -103,6 +105,8 @@ Improve thumbnail cutting by performing face detection.
 Requires
 .Xr facedetect 1
 to be installed.
+.It Fl g
+Respect GPS cooredinates of images
 .It Fl c Ar methods
 Set the caption extraction method (txt, xmp, exif, cmt or none).
 Multiple methods can be specified by giving a comma-separated list.
@@ -131,6 +135,12 @@ Set the JPEG quality of the preview images to
 The default is 90.
 .It Fl -index Ar URL
 Specify the URL location for the index and back buttons.
+.It Fl -geobase Ar url
+Specify the URL location geolocation (default: http://osm.org)
+(when --geobase is specified -g is implicitly set)
+.It Fl -geozoom Ar z
+Specify the zoom level of geo maps (default: 17)
+(when --geozoom is specified -g is implicitly set)
 .El
 .Sh SEE ALSO
 .Xr ImageMagick 1 ,
