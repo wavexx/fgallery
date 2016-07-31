@@ -55,6 +55,7 @@ my $fullpano = 1;
 my $nodown = 0;
 my $panort = 2.;
 my $facedet = 0;
+my $keeporig = 0;
 my $jpegoptim = 1;
 my $pngoptim = 1;
 my $p7zip = 1;
@@ -336,6 +337,7 @@ sub print_help
   -i			include individual originals
   -c methods		caption extraction methods (txt,xmp,exif,cmt or none)
   -o			do not auto-orient
+  -k			do not modify files, keep original
   -t			do not time-sort
   -r			reverse album order
   -p			do not automatically include full-sized panoramas
@@ -363,6 +365,7 @@ my ($ret, @ARGS) = GetOptions(
   'i' => sub { $ofile = 1; },
   'j=i' => sub { $workers = parse_int($_[0], $_[1], 1, undef); },
   'o' => sub { $orient = 0; },
+  'k' => sub { $keeporig = 1; },
   'p' => sub { $fullpano = 0; },
   'r' => sub { $revsort = 1; },
   's' => sub { $slim = 1; },
@@ -433,7 +436,7 @@ if($sRGB)
 }
 
 my $exiftrancmd;
-if($orient)
+if(!$keeporig && $orient)
 {
   if(!system("exiftran -h >/dev/null 2>&1")) {
     $exiftrancmd = "exiftran -aip";
@@ -638,19 +641,22 @@ sub process_img
   chmod(0600, $fout);
 
   # apply lossless transforms
-  if($orient && $props{FileType} eq "JPEG" && ($props{'Orientation'} // 0))
+  if(!$keeporig)
   {
-    sys("$exiftrancmd $fout 2>/dev/null");
-    if(($props{'Orientation'} // 0) > 4) {
-      ($props{ImageWidth}, $props{ImageHeight}) = ($props{ImageHeight}, $props{ImageWidth});
+    if($orient && $props{FileType} eq "JPEG" && ($props{'Orientation'} // 0))
+    {
+      sys("$exiftrancmd $fout 2>/dev/null");
+      if(($props{'Orientation'} // 0) > 4) {
+        ($props{ImageWidth}, $props{ImageHeight}) = ($props{ImageHeight}, $props{ImageWidth});
+      }
     }
-  }
-  if($jpegoptim && $props{FileType} eq "JPEG") {
-    sys('jpegoptim', '-q', $fout);
-  } elsif($pngoptim && $props{FileType} eq "PNG")
-  {
-    sys('pngcrush', '-q', $fout, $ftmp);
-    rename($ftmp, $fout);
+    if($jpegoptim && $props{FileType} eq "JPEG") {
+      sys('jpegoptim', '-q', $fout);
+    } elsif($pngoptim && $props{FileType} eq "PNG")
+    {
+      sys('pngcrush', '-q', $fout, $ftmp);
+      rename($ftmp, $fout);
+    }
   }
 
   # final file mode
