@@ -220,6 +220,9 @@ sub encode
     $cnt = 0;
     $llen = 0;
     print(pad($act . ' ...') . "\r");
+    # prevent warning regarding wide characters but without actually checking
+    # for valid UTF-8
+    binmode(STDOUT, ':utf8');
     STDOUT->flush();
   }
 
