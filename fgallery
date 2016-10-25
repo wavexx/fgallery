@@ -666,7 +666,7 @@ sub process_img
 
   # intermediate sRGB colorspace conversion
   if(!$sRGB || ($props{ColorSpace} // 65535) == 1 || !defined($props{ProfileID})) {
-    link($fout, $ftmp) or sys('cp', '-L', $fout, $ftmp);
+    $ftmp = $fout;
   } else
   {
     sys('convert', $fout, '-compress', 'LZW', "tiff:$ftmp");
@@ -754,7 +754,9 @@ sub process_img
   }
 
   # remove temporary files
-  unlink($ftmp);
+  if($ftmp ne $fout) {
+    unlink($ftmp);
+  }
 
   return \%fdata;
 }
