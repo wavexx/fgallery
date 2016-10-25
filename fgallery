@@ -8,6 +8,7 @@ use warnings;
 
 use locale;
 use utf8;
+use open qw{:std :locale};
 require Encode;
 require encoding;
 
@@ -111,7 +112,7 @@ sub isin
 sub slurp
 {
   my ($fn) = @_;
-  open(my $fd, "<:encoding($ENCODING)", "$fn") or fatal("cannot read $fn: $!");
+  open(my $fd, $fn) or fatal("cannot read $fn: $!");
   local $/;
   return <$fd> // "";
 }
@@ -188,7 +189,7 @@ sub clamp
 
 sub decode
 {
-  return Encode::decode($ENCODING, @_);
+  return Encode::decode($ENCODING, shift);
 }
 
 
