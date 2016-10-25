@@ -669,7 +669,7 @@ sub process_img
     $ftmp = $fout;
   } else
   {
-    sys('convert', $fout, '-compress', 'LZW', "tiff:$ftmp");
+    sys('convert', '-quiet', $fout, '-compress', 'LZW', "tiff:$ftmp");
     sys($tificccmd, '-t0', $ftmp, "$ftmp.tmp");
     rename("$ftmp.tmp", $ftmp);
   }
@@ -681,7 +681,7 @@ sub process_img
 
   # generate main image
   my @sfile = ($props{ImageWidth}, $props{ImageHeight});
-  my @simg = sys('convert', $ftmp,
+  my @simg = sys('convert', '-quiet', $ftmp,
 		 '-gamma', '0.454545',
 		 '-geometry', "$maxfull[0]x$maxfull[1]>",
 		 '-print', '%w\n%h',
@@ -717,7 +717,7 @@ sub process_img
   my $dy = $sthumb[1] - $mthumb[1];
   my $cy = clamp(0, $dy, int($center[1] * $sthumb[1] - $sthumb[1] / 2 + $dy / 2));
 
-  sys('convert', $ftmp,
+  sys('convert', '-quiet', $ftmp,
       '-gamma', '0.454545',
       '-resize', "$sthumb[0]x$sthumb[1]!",
       '-gravity', 'NorthWest',
@@ -727,7 +727,7 @@ sub process_img
       '-quality', $imgq, "$out/$fthumb");
 
   # blur
-  sys('convert', "$out/$fthumb",
+  sys('convert', '-quiet', "$out/$fthumb",
       '-virtual-pixel', 'Mirror',
       '-gaussian-blur', "0x$backblur",
       '-scale', "$backsize[0]x$backsize[1]",
