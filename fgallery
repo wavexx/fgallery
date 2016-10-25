@@ -670,7 +670,7 @@ sub process_img
     $ftmp = $fout;
   } else
   {
-    sys('convert', '-quiet', $fout, '-compress', 'LZW', "tiff:$ftmp");
+    sys('convert', '-quiet', $fout, '-compress', 'LZW', '-type', 'truecolor', "tiff:$ftmp");
     sys($tificccmd, '-t0', $ftmp, "$ftmp.tmp");
     rename("$ftmp.tmp", $ftmp);
   }
