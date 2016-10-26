@@ -8,7 +8,8 @@ use warnings;
 
 use locale;
 use utf8;
-use open qw{:std :locale};
+use if $^V lt v5.23.4, open => qw{:std :utf8};
+use if $^V ge v5.23.4, open => qw{:std :locale};
 require Encode;
 require encoding;
 
@@ -113,6 +114,9 @@ sub slurp
 {
   my ($fn) = @_;
   open(my $fd, $fn) or fatal("cannot read $fn: $!");
+  if($^V lt v5.23.4) {
+    binmode($fd, ":encoding($ENCODING)");
+  }
   local $/;
   return <$fd> // "";
 }
