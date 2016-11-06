@@ -22,25 +22,20 @@ use Fcntl;
 use File::Basename qw{fileparse};
 use File::Find qw{find};
 use File::Path qw{make_path remove_tree};
-use File::Spec::Functions qw{rel2abs};
-use FindBin qw{$RealBin};
+use File::Spec::Functions qw{rel2abs canonpath catfile};
 use Getopt::Long qw{:config bundling};
 use IO::Handle;
 use Image::ExifTool qw{ImageInfo};
 use Time::Piece;
 
-# We require either Cpanel::JSON::XS or JSON::PP (JSON::XS does not support ithreads)
-my $JSON_cls = eval { require Cpanel::JSON::XS; "Cpanel::JSON::XS"; } //
-	       eval { require JSON::PP; "JSON::PP"; } //
-	       fatal("either Cpanel::JSON::XS or JSON::PP is required");
-$JSON_cls->import(qw{encode_json});
+use JSON::PP;
 
 # constants
-our $VERSION = "1.8.2";
+our $VERSION = "1.8.2nb4";
 our $ENCODING = encoding::_get_locale_encoding() || 'UTF-8';
 
 # defaults
-my $mode = 0644;
+my $mode = oct(644);
 my $slim = 0;
 my $ofile = 0;
 my $orient = 1;
@@ -66,6 +61,8 @@ my $workers = 0;
 my $sRGB = 1;
 my $indexUrl = undef;
 my @capmethods = ("txt", "xmp", "exif");
+my $use_symlinks = 0;
+my $do_blur = 1;
 
 
 # support functions
@@ -73,6 +70,14 @@ sub fatal
 {
   print(STDERR "error: " . join(" ", @_) . "\n");
   exit(1);
+}
+
+
+# see if our environment has a given command installed
+sub cmd_exists
+{
+  my ($c) = @_;
+  return qx{/bin/sh -c "command -v $c"};
 }
 
 
@@ -90,13 +95,13 @@ sub sys
   }
 
   local $/ = undef;
-  my $out = <$fd>;
+  my $output = <$fd>;
 
   unless(close($fd)) {
     fatal("command \"@cmd\" failed");
   }
 
-  return split("\n", $out);
+  return split("\n", $output);
 }
 
 
@@ -113,7 +118,7 @@ sub isin
 sub slurp
 {
   my ($fn) = @_;
-  open(my $fd, $fn) or fatal("cannot read $fn: $!");
+  open(my $fd, '<', $fn) or fatal("cannot read $fn: $!");
   if($^V lt v5.23.4) {
     binmode($fd, ":encoding($ENCODING)");
   }
@@ -138,7 +143,7 @@ sub dispatch
     my $thr = threads->create(sub
     {
       while(defined(my $v = $queue->dequeue_nb())) {
-	&$fun($v);
+        &$fun($v);
       }
     });
     push(@threads, $thr);
@@ -193,7 +198,7 @@ sub clamp
 
 sub decode
 {
-  return Encode::decode($ENCODING, shift);
+  return Encode::decode($ENCODING, $_[0]);
 }
 
 
@@ -269,7 +274,7 @@ sub cap_clean_desc
 sub cap_from_str
 {
   my ($title, $desc) = split("\n", shift, 2);
-  return undef if(!$title && !$desc);
+  return unless $title || $desc;
   my $ret = [cap_clean_title($title), ($desc? cap_clean_desc($desc): '')];
   return $ret;
 }
@@ -328,33 +333,84 @@ sub parse_cap
 
 sub print_version
 {
-  print("fgallery $VERSION\n");
+  print("$0 $VERSION\n");
   exit(0);
+}
+
+sub init_noscript
+{
+  my ($d) = @_;
+  fatal("init_noscript: $d not a directory")
+    unless $d && -d $d;
+  my $fd;
+  my $f = "$d/noscript.html";
+  unless(open($fd, ">:raw", $f)) {
+    fatal("init_noscript: cannot write file '$f': $!");
+  }
+  chmod($mode, $f);
+  select $fd;
+  print join "\n",
+    '<!DOCTYPE html>',
+    '<html>',
+    '<head>',
+    '  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />',
+    '  <meta name="viewport" '
+       . 'content="width=device-width,initial-scale=1,'
+       . 'minimum-scale=1,minimal-ui" />',
+    '  <link href="view/noscript.css" rel="stylesheet" type="text/css" />',
+    '</head>',
+    '<body>',
+    '  <section id="photos">',
+    '';
+}
+
+sub print_noscript
+# <a href="imgs/DSC00712.jpg"><img src="thumbs/DSC00712.jpg" alt="c1 c2"></a>
+{
+  my ($f, $t, $c) = @_;
+  return unless @_ == 3 && $f && $t;
+  $c = [] unless $c && ref $c eq 'ARRAY';
+  my $x = '';
+  for (@$c) {
+    $x .= ' ' if $c =~ /\S$/o;
+    $x .= $_ if defined $_ && /\S/o;
+  }
+  my $a = '';
+  $a = sprintf ' alt="%s"', $x if $x && $x =~ /\S/o;
+  printf '    <a href="%s"><img src="%s"%s></a>' . "\n", $f, $t, $a;
+}
+
+sub finish_noscript
+{
+  print join "\n", '  </section>', '</body>', '</html>', '';
+  select STDOUT;
 }
 
 sub print_help
 {
   print(STDERR qq{Usage: $0 [options] input-dir output-dir [album name]
-  -h, --help		this help
-  --version		output current fgallery version
-  -v			verbose (show commands as being executed)
-  -s			slim output (no original files and downloads)
-  -i			include individual originals
-  -c methods		caption extraction methods (txt,xmp,exif,cmt or none)
-  -o			do not auto-orient
-  -k			do not modify files, keep original
-  -t			do not time-sort
-  -r			reverse album order
-  -p			do not automatically include full-sized panoramas
-  -d			do not generate a full album download
-  -f			improve thumbnail cutting by performing face detection
-  -j N			set process-level parallelism
-  --max-full WxH	maximum full image size ($maxfull[0]x$maxfull[1])
-  --max-thumb WxH	maximum thumbnail size ($maxthumb[0]x$maxthumb[1])
-  --min-thumb WxH	minimum thumbnail size ($minthumb[0]x$minthumb[1])
-  --no-sRGB		do not remap preview/thumbnail color profiles to sRGB
-  --quality Q		preview image quality (0-100, currently: $imgq)
-  --index url		specify the URL location for the index/back button
+  -h, --help            this help
+  --version             output current fgallery version
+  -v                    verbose (show commands as being executed)
+  -s                    slim output (no original files and downloads)
+  -i                    include individual originals
+  -c methods            caption extraction (txt, xmp, exif, cmt, or none)
+  -o                    do not auto-orient
+  -k                    do not modify files, keep original
+  -t                    do not time-sort
+  -r                    reverse album order
+  -p                    do not automatically include full-sized panoramas
+  -d                    do not generate a full album download
+  -f                    improve thumbnail cutting by performing face detection
+  -j N                  set process-level parallelism
+  -L                    symlink /usr/local/share/fgallery/view (instead of copy)
+  --max-full WxH        maximum full image size ($maxfull[0]x$maxfull[1])
+  --max-thumb WxH       maximum thumbnail size ($maxthumb[0]x$maxthumb[1])
+  --min-thumb WxH       minimum thumbnail size ($minthumb[0]x$minthumb[1])
+  --no-sRGB             do not remap preview/thumbnail color profiles to sRGB
+  --quality Q           preview image quality (0-100, currently: $imgq)
+  --index url           specify the URL location for the index/back button
+  --noblur              skip blurry backdrop generation (just dark noise)
 });
   exit(shift);
 }
@@ -376,12 +432,15 @@ my ($ret, @ARGS) = GetOptions(
   's' => sub { $slim = 1; },
   't' => sub { $timesort = 0; },
   'v' => sub { $verbose = 1; },
+  'L' => sub { $use_symlinks = 1; },
   'max-full=s' => sub { @maxfull = parse_wh(@_); },
   'max-thumb=s' => sub { @maxthumb = parse_wh(@_); },
   'min-thumb=s' => sub { @minthumb = parse_wh(@_); },
   'no-sRGB' => sub { $sRGB = 0; },
   'quality=i' => sub { $imgq = parse_int($_[0], $_[1], 0, 100); },
-  'index=s' => sub { $indexUrl = decode($_[1]); });
+  'index=s' => sub { $indexUrl = decode($_[1]); },
+  'noblur' => sub { $do_blur = 0; },
+);
 
 if(@ARGV < 2 || @ARGV > 3 || !$ret) {
   print_help(2);
@@ -391,8 +450,16 @@ my $out = $ARGV[1];
 my $name = (@ARGV < 3? undef: decode($ARGV[2]));
 
 # check paths
-my $absDir = rel2abs($dir) . '/';
-my $absOut = rel2abs($out) . '/';
+my $absDir = canonpath(rel2abs($dir)) . '/';
+my $absOut = canonpath(rel2abs($out)) . '/';
+
+sub is_fgallery_dir
+{
+    return unless -e catfile($out, 'view');
+    return unless -e catfile($out, 'index.html');
+    return unless -e catfile($out, 'data.json');
+    return 1;
+}
 
 if(!-d $dir) {
   fatal("input directory \"$dir\" does not exist");
@@ -401,55 +468,37 @@ if(!-d $dir) {
 } elsif(substr($absOut, 0, length($absDir)) eq $absDir) {
   fatal("output directory is a sub-directory of input, refusing to scan");
 } elsif(!-d $out) {
-  sys('cp', '-L', '-R', "$RealBin/view", $out);
-} elsif(!-f "$out/index.html") {
-  fatal("output directory already exists, but doesn't look like a template copy");
+  mkdir($out);
+  unless ($use_symlinks) {
+      sys('cp', '-L', '-R', '/usr/local/share/fgallery/view', $out);
+      sys('mv', "$out/view/index.html", $out);
+  }
+} elsif(!is_fgallery_dir) {
+  fatal("Output directory '$absOut' exists but wasn't generated by fgallery");
 }
 
 # check tools
-if(system("identify -version >/dev/null 2>&1")
-|| system("convert -version >/dev/null 2>&1")) {
-  fatal("cannot run \"identify\" or \"convert\" (check if ImageMagick is installed)");
-}
-if(system("7za -h >/dev/null 2>&1"))
-{
+fatal 'Missing identify or convert executable (from ImageMagick)'
+  unless cmd_exists('identify') || cmd_exists('convert');
+unless(cmd_exists('7za')) {
   $p7zip = 0;
-  if(system("zip -h >/dev/null 2>&1")) {
-    fatal("cannot run \"zip\" (check if 7za or zip is installed)");
-  }
+  cmd_exists('zip') || fatal('Missing 7z or zip command');
 }
-if(system("jpegoptim -V >/dev/null 2>&1")) {
-  $jpegoptim = 0;
-}
-if(system("pngcrush -h >/dev/null 2>&1")) {
-  $pngoptim = 0;
-}
-if($facedet && system("facedetect -h >/dev/null 2>&1")) {
-  fatal("cannot run \"facedetect\" (see https://www.thregr.org/~wavexx/software/facedetect/)");
-}
-
-my $tificccmd;
-if($sRGB)
-{
-  if(!system("tificc >/dev/null 2>&1")) {
-    $tificccmd = "tificc";
-  } elsif(!system("tificc2 >/dev/null 2>&1")) {
-    $tificccmd = "tificc2";
-  } else {
-    fatal("cannot run \"tificc\" or \"tificc2\" (check if liblcms2-utils is installed)");
-  }
-}
-
+$jpegoptim = 0 unless cmd_exists('jpegoptim');
+$pngoptim = 0 unless cmd_exists('pngcrush');
+fatal 'Missing facedetect (see http://www.thregr.org/~wavexx/hacks/facedetect/'
+  if $facedet && !cmd_exists('facedetect');
+fatal 'Missing tificc executable (from lcms2 library)'
+  if $sRGB && !cmd_exists('tificc');
+my $tificccmd = 'tificc';
 my $exiftrancmd;
-if(!$keeporig && $orient)
+while($orient)
 {
-  if(!system("exiftran -h >/dev/null 2>&1")) {
-    $exiftrancmd = "exiftran -aip";
-  } elsif(!system("exifautotran >/dev/null 2>&1")) {
-    $exiftrancmd = "exifautotran";
-  } else {
-    fatal("cannot execute exiftran or exifautotran for lossless JPEG autorotation");
-  }
+  $exiftrancmd = "exiftran -aip" if cmd_exists('exiftran');
+  last if $exiftrancmd;
+  $exiftrancmd = "exifautotran" if cmd_exists('exifautotran');
+  fatal 'Missing exiftran or exifautotran executable for JPEG autorotation'
+    unless $exiftrancmd;
 }
 
 # list available files
@@ -483,6 +532,7 @@ my @backsize = (int($minthumb[0] * 4), int($minthumb[1] * 3));
 for my $path("$out/thumbs", "$out/blurs", "$out/imgs", "$out/files")
 {
   remove_tree($path);
+  next if ($path eq "$out/blurs") && ! $do_blur;
   make_path($path);
 }
 
@@ -504,7 +554,7 @@ sub analyze_file
 
   my $props = ImageInfo($file, {PrintConv => 0, Sort => 'File'});
   unless(defined($props) && isin($props->{FileType}, @filetypes)) {
-    return undef;
+    return;
   }
 
   # sanitize file name
@@ -543,9 +593,9 @@ sub analyze_file
     {
       if($props->{'Comment'})
       {
-	my $cmt = Encode::decode_utf8($props->{'Comment'});
-	$props->{'caption'} = cap_from_str($cmt);
-	last;
+        my $cmt = Encode::decode_utf8($props->{'Comment'});
+        $props->{'caption'} = cap_from_str($cmt);
+        last;
       }
     }
     elsif($m eq "txt")
@@ -553,16 +603,16 @@ sub analyze_file
       my $txt = "$dir$base.txt";
       if(-f $txt)
       {
-	$props->{'caption'} = cap_from_str(slurp($txt));
-	last;
+        $props->{'caption'} = cap_from_str(slurp($txt));
+        last;
       }
     }
     elsif($m eq "exif")
     {
       if($props->{'Title'} || $props->{'Description'})
       {
-	$props->{'caption'} = cap_from_props($props);
-	last;
+        $props->{'caption'} = cap_from_props($props);
+        last;
       }
     }
     elsif($m eq "xmp")
@@ -570,8 +620,8 @@ sub analyze_file
       my $xmp = ImageInfo("$file.xmp", {PrintConv => 0, Sort => 'File'});
       if(defined($xmp) && ($xmp->{'Title'} || $xmp->{'Description'}))
       {
-	$props->{'caption'} = cap_from_props($xmp);
-	last;
+        $props->{'caption'} = cap_from_props($xmp);
+        last;
       }
     }
   }
@@ -643,7 +693,6 @@ sub process_img
 
   # copy source file
   sys('cp', '-L', $file, $fout);
-  chmod(0600, $fout);
 
   # apply lossless transforms
   if(!$keeporig)
@@ -687,12 +736,12 @@ sub process_img
   # generate main image
   my @sfile = ($props{ImageWidth}, $props{ImageHeight});
   my @simg = sys('convert', '-quiet', $ftmp,
-		 '-gamma', '0.454545',
-		 '-geometry', "$maxfull[0]x$maxfull[1]>",
-		 '-print', '%w\n%h',
-		 '-gamma', '2.2',
-		 '+profile', '!icc,*',
-		 '-quality', $imgq, "$out/$fimg");
+                 '-gamma', '0.454545',
+                 '-geometry', "$maxfull[0]x$maxfull[1]>",
+                 '-print', '%w\n%h',
+                 '-gamma', '2.2',
+                 '+profile', '!icc,*',
+                 '-quality', $imgq, "$out/$fimg");
 
   # face/center detection
   my @center = (0.5, 0.5);
@@ -713,7 +762,7 @@ sub process_img
     $thumbrt = $minthumb[1] / $sfile[1];
   }
   my @sthumb = (max(int($sfile[0] * $thumbrt + 0.5), $minthumb[0]),
-		max(int($sfile[1] * $thumbrt + 0.5), $minthumb[1]));
+                max(int($sfile[1] * $thumbrt + 0.5), $minthumb[1]));
   my @mthumb = (min($maxthumb[0], $sthumb[0]), min($maxthumb[1], $sthumb[1]));
 
   # cropping window
@@ -736,13 +785,13 @@ sub process_img
       '-virtual-pixel', 'Mirror',
       '-gaussian-blur', "0x$backblur",
       '-scale', "$backsize[0]x$backsize[1]",
-      '-quality', '90', "$out/$fblur");
+      '-quality', '90', "$out/$fblur") if $do_blur;
 
   my %fdata;
   $fdata{props} = \%props;
   $fdata{img} = [$fimg, [map { int } @simg]];
   $fdata{file} = [$ffile, [map { int } @sfile]];
-  $fdata{blur} = $fblur;
+  $fdata{blur} = $fblur if $do_blur;
 
   # do not store duplicate information
   my @tdata = ($fthumb, [map { int } @mthumb]);
@@ -821,7 +870,7 @@ if(!$ofile || $slim)
       my $omp = ($ox * $oy / 1e6);
 
       if($mp >= $omp && $mp > $amp && abs($x / $y) >= $panort) {
-	$keep = 1;
+        $keep = 1;
       }
     }
 
@@ -842,9 +891,11 @@ $json{version} = $VERSION;
 $json{name} = $name if($name);
 $json{download} = $fdownload if($fdownload);
 $json{index} = $indexUrl if($indexUrl);
-$json{blur} = \@backsize;
+$json{blur} = \@backsize if $do_blur;
 $json{thumb} = { min => \@minthumb, max => \@maxthumb };
 
+# prepare data.json and print out noscript.html file
+init_noscript($out);
 foreach my $fdata(@adata)
 {
   my %data;
@@ -859,13 +910,22 @@ foreach my $fdata(@adata)
     }
   }
   push(@{$json{data}}, \%data);
+  print_noscript($data{img}->[0], $data{thumb}->[0], $data{caption});
 }
+finish_noscript();
 
 my $fd;
-unless(open($fd, ">:raw", "$out/data.json")) {
-  fatal("cannot write data file: $!");
+my $dj = "$out/data.json";
+unless(open($fd, ">:raw", $dj)) {
+  fatal("cannot write file '$dj': $!");
 }
-print($fd encode_json(\%json));
+print($fd JSON::PP->new->ascii->pretty->canonical->allow_blessed->encode(\%json));
 close($fd);
 
-print("completed\n");
+if ($use_symlinks) {
+    chdir($absOut) || die "Failed to 'cd $absOut' for symlink creation";
+    sys('ln', '-s', '/usr/local/share/fgallery/view');
+    sys('ln', '-s', 'view/index.html');
+}
+
+print("$0 version $VERSION done for $absOut\n");

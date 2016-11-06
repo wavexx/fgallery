@@ -1,0 +1,53 @@
+html, body
+{
+  overflow: hidden; /* IE<9 */
+  padding: 0;
+  margin: 0;
+  border: 0;
+  height: 100.1% /* IOS>7.1 meta viewport minimal-ui to hide menu + bars */
+}
+
+body
+{
+  overflow: scroll;
+  background-color: #eee;
+}
+
+#overview
+{
+  margin: 1em;
+}
+
+.overview-img-div
+{
+  display: inline-block;
+  margin: 0.5em;
+}
+
+.overview-img, .overview-img-div
+{
+  -webkit-border-radius: 5px;
+     -moz-border-radius: 5px;
+          border-radius: 5px;
+}
+
+.overview-img-div {
+  display: inline-block;
+  background: black;
+  padding: 0;
+  box-shadow: 5px 5px 15px #888;
+}
+
+.overview-img-div img {
+  display: block;
+
+  -webkit-transition: all 0.05s linear;
+     -moz-transition: all 0.05s linear;
+      -ms-transition: all 0.05s linear;
+       -o-transition: all 0.05s linear;
+          transition: all 0.05s linear;
+}
+
+.overview-img-div:hover img {
+  opacity: 0.7;
+}
