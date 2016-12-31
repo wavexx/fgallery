@@ -56,6 +56,10 @@ Arch Linux:
 
 - https://aur.archlinux.org/packages/fgallery/
 
+Gentoo Linux:
+
+- https://github.com/robert7k/gentoo-overlay/tree/master/www-apps/fgallery/
+
 You can also try the latest `fgallery` bundled with facedetect_ in a Docker
 container using the following ``Dockerfile`` provided by Stavros Korokithakis:
 
