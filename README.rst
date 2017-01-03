@@ -47,18 +47,43 @@ and then navigate to http://localhost:8000.
 Pre-built packages
 ------------------
 
-Pre-built packages for `fgallery` (and `facedetect`) are available for Debian:
+Pre-built packages for `fgallery` (and `facedetect`) are available:
+
+**Debian/Ubuntu**
 
 - https://packages.debian.org/fgallery
 - https://packages.debian.org/facedetect
 
-Arch Linux:
+Install with::
+
+  sudo apt-get install fgallery facedetect
+
+**Arch Linux**
 
 - https://aur.archlinux.org/packages/fgallery/
 
-Gentoo Linux:
+Install with::
+
+  sudo pacman -S fgallery
+
+**Gentoo Linux**
 
 - https://github.com/robert7k/gentoo-overlay/tree/master/www-apps/fgallery/
+
+Install with::
+
+  sudo layman -a robert7k
+  sudo emerge www-apps/fgallery
+
+**NixOS**
+
+- https://github.com/NixOS/nixpkgs/blob/master/pkgs/tools/graphics/fgallery/
+
+Install with::
+
+  sudo nix-env -i fgallery
+
+**Docker**
 
 You can also try the latest `fgallery` bundled with facedetect_ in a Docker
 container using the following ``Dockerfile`` provided by Stavros Korokithakis:
