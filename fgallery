@@ -113,7 +113,7 @@ sub isin
 sub slurp
 {
   my ($fn) = @_;
-  open(my $fd, $fn) or fatal("cannot read $fn: $!");
+  open(my $fd, '<', $fn) or fatal("cannot read $fn: $!");
   if($^V lt v5.23.4) {
     binmode($fd, ":encoding($ENCODING)");
   }
@@ -862,7 +862,7 @@ foreach my $fdata(@adata)
 }
 
 my $fd;
-unless(open($fd, ">:raw", "$out/data.json")) {
+unless(open($fd, '>:raw', "$out/data.json")) {
   fatal("cannot write data file: $!");
 }
 print($fd encode_json(\%json));
