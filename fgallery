@@ -887,7 +887,7 @@ my $html = join("\n\t", map {
   . qq{<img src="thumbs/$fbase" alt="$caption"/></a>}
 		} @aprops);
 my $index = slurp("$out/index.html");
-$index =~ s!<h2>.*?</h2>!<div id="photos">\n\t$html\n      </div>!;
+$index =~ s!<noscript>.*?</noscript>!<noscript>\n      <div id="photos">\n\t$html\n      </div>\n    </noscript>!s;
 unless(open($fd, ">:encoding($ENCODING)", "$out/index.html")) {
   fatal("cannot write new index file: $!");
 }
