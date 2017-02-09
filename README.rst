@@ -44,6 +44,53 @@ the gallery locally is to run::
 and then navigate to http://localhost:8000.
 
 
+Pre-built packages
+------------------
+
+Pre-built packages for `fgallery` (and `facedetect`) are available:
+
+**Debian/Ubuntu**
+
+- https://packages.debian.org/fgallery
+- https://packages.debian.org/facedetect
+
+Install with::
+
+  sudo apt-get install fgallery facedetect
+
+**Arch Linux**
+
+- https://aur.archlinux.org/packages/fgallery/
+
+Install with::
+
+  sudo pacman -S fgallery
+
+**Gentoo Linux**
+
+- https://github.com/robert7k/gentoo-overlay/tree/master/www-apps/fgallery/
+
+Install with::
+
+  sudo layman -a robert7k
+  sudo emerge www-apps/fgallery
+
+**NixOS**
+
+- https://github.com/NixOS/nixpkgs/blob/master/pkgs/tools/graphics/fgallery/
+
+Install with::
+
+  sudo nix-env -i fgallery
+
+**Docker**
+
+You can also try the latest `fgallery` bundled with facedetect_ in a Docker
+container using the following ``Dockerfile`` provided by Stavros Korokithakis:
+
+- https://github.com/skorokithakis/docker-fgallery
+
+
 Usage notes
 -----------
 
@@ -236,11 +283,10 @@ Backend:
 * perl >= 5.14 (threading support enabled), with the following `required` modules:
 
   - Image::ExifTool (``libimage-exiftool-perl``: http://owl.phy.queensu.ca/~phil/exiftool/)
-  - JSON (``libjson-perl``, http://search.cpan.org/dist/JSON/lib/JSON.pm)
 
   and the following additional `recommended` modules:
 
-  - JSON::XS (``libjson-xs-perl``)
+  - Cpanel::JSON::XS (``libcpanel-json-xs-perl``)
 
 Several other tools are supported, but are only used when installed.
 Therefore it's also helpful to install:
@@ -253,7 +299,7 @@ Therefore it's also helpful to install:
 On Debian/Ubuntu, you can install all the required dependencies with::
 
   sudo apt-get install imagemagick exiftran zip liblcms2-utils
-  sudo apt-get install libimage-exiftool-perl libjson-perl libjson-xs-perl
+  sudo apt-get install libimage-exiftool-perl libcpanel-json-xs-perl
 
 To save more space in the generated galleries, we recommend installing also the
 optional dependencies::
@@ -272,7 +318,7 @@ On a Mac, we recommend installing the dependencies using `MacPorts
 <http://www.macports.org/>`_. After installing MacPorts, type::
 
   sudo port install imagemagick lcms2 jpeg jpegoptim pngcrush
-  sudo port install p5-image-exiftool p5-json p5-json-xs
+  sudo port install p5-image-exiftool p5-cpanel-json-xs
 
 
 Installation
@@ -283,11 +329,6 @@ a directory of your liking and link `fgallery` appropriately::
 
   sudo cp -r fgallery-X.Y /usr/local/share/fgallery
   sudo ln -s /usr/local/share/fgallery/fgallery /usr/local/bin
-
-You can also try the latest `fgallery` bundled with facedetect_ in a Docker
-container using the following ``Dockerfile`` provided by Stavros Korokithakis:
-
-https://github.com/skorokithakis/docker-fgallery
 
 
 Authors and Copyright

@@ -8,6 +8,8 @@ use warnings;
 
 use locale;
 use utf8;
+use if $^V lt v5.23.4, open => qw{:std :utf8};
+use if $^V ge v5.23.4, open => qw{:std :locale};
 require Encode;
 require encoding;
 
@@ -25,11 +27,16 @@ use FindBin qw{$RealBin};
 use Getopt::Long qw{:config bundling};
 use IO::Handle;
 use Image::ExifTool qw{ImageInfo};
-use JSON qw{encode_json};
 use Time::Piece;
 
+# We require either Cpanel::JSON::XS or JSON::PP (JSON::XS does not support ithreads)
+my $JSON_cls = eval { require Cpanel::JSON::XS; "Cpanel::JSON::XS"; } //
+	       eval { require JSON::PP; "JSON::PP"; } //
+	       fatal("either Cpanel::JSON::XS or JSON::PP is required");
+$JSON_cls->import(qw{encode_json});
+
 # constants
-our $VERSION = "1.9~";
+our $VERSION = "1.8.2";
 our $ENCODING = encoding::_get_locale_encoding() || 'UTF-8';
 
 # defaults
@@ -51,6 +58,7 @@ my $fullpano = 1;
 my $nodown = 0;
 my $panort = 2.;
 my $facedet = 0;
+my $keeporig = 0;
 my $jpegoptim = 1;
 my $pngoptim = 1;
 my $p7zip = 1;
@@ -106,7 +114,10 @@ sub isin
 sub slurp
 {
   my ($fn) = @_;
-  open(my $fd, "<:encoding($ENCODING)", "$fn") or fatal("cannot read $fn: $!");
+  open(my $fd, '<', $fn) or fatal("cannot read $fn: $!");
+  if($^V lt v5.23.4) {
+    binmode($fd, ":encoding($ENCODING)");
+  }
   local $/;
   return <$fd> // "";
 }
@@ -183,7 +194,7 @@ sub clamp
 
 sub decode
 {
-  return Encode::decode($ENCODING, @_);
+  return Encode::decode($ENCODING, shift);
 }
 
 
@@ -243,7 +254,7 @@ sub decode
 sub cap_clean_title
 {
   $_ = shift;
-  s/^\s+|\s+$//;
+  s/^\s+|\s+$//g;
   s/\s+/ /g;
   return $_;
 }
@@ -251,7 +262,7 @@ sub cap_clean_title
 sub cap_clean_desc
 {
   $_ = shift;
-  s/^\s+|\s+$//;
+  s/^\s+|\s+$//g;
   s/[ \t]+/ /g;
   return $_;
 }
@@ -332,6 +343,7 @@ sub print_help
   -i			include individual originals
   -c methods		caption extraction methods (txt,xmp,exif,cmt or none)
   -o			do not auto-orient
+  -k			do not modify files, keep original
   -t			do not time-sort
   -r			reverse album order
   -p			do not automatically include full-sized panoramas
@@ -360,6 +372,7 @@ my ($ret, @ARGS) = GetOptions(
   'i' => sub { $ofile = 1; },
   'j=i' => sub { $workers = parse_int($_[0], $_[1], 1, undef); },
   'o' => sub { $orient = 0; },
+  'k' => sub { $keeporig = 1; },
   'p' => sub { $fullpano = 0; },
   'r' => sub { $revsort = 1; },
   's' => sub { $slim = 1; },
@@ -392,7 +405,7 @@ if(!-d $dir) {
 } elsif(substr($absOut, 0, length($absDir)) eq $absDir) {
   fatal("output directory is a sub-directory of input, refusing to scan");
 } elsif(!-d $out) {
-  sys('cp', '-L', '-r', "$RealBin/view", $out);
+  sys('cp', '-L', '-R', "$RealBin/view", $out);
 } elsif(!-f "$out/index.html") {
   fatal("output directory already exists, but doesn't look like a template copy");
 }
@@ -432,7 +445,7 @@ if($sRGB)
 }
 
 my $exiftrancmd;
-if($orient)
+if(!$keeporig && $orient)
 {
   if(!system("exiftran -h >/dev/null 2>&1")) {
     $exiftrancmd = "exiftran -aip";
@@ -593,16 +606,16 @@ foreach my $props(@aprops)
 {
   # file timestamp
   my $idate = $props->{'DateTimeOriginal'} || $props->{'DateTime'} || "";
-  $idate =~ s/^\s+|\s+$//;
+  $idate =~ s/^\s+|\s+$//g;
 
-  if(!$idate || $idate eq "0000:00:00 00:00:00")
+  my $t = eval { Time::Piece->strptime($idate, "%Y:%m:%d %H:%M:%S"); };
+  if(!$t || !$t->epoch)
   {
     # no date available, cheat by using the previous timestamp
     $props->{stamp} = $ostamp = $ostamp + 1;
   }
   else
   {
-    my $t = Time::Piece->strptime($idate, "%Y:%m:%d %H:%M:%S");
     $props->{date} = $t->strftime("%Y-%m-%d %H:%M");
     $props->{stamp} = $ostamp = $t->epoch;
   }
@@ -637,19 +650,22 @@ sub process_img
   chmod(0600, $fout);
 
   # apply lossless transforms
-  if($orient && $props{FileType} eq "JPEG" && ($props{'Orientation'} // 0))
+  if(!$keeporig)
   {
-    sys("$exiftrancmd $fout 2>/dev/null");
-    if(($props{'Orientation'} // 0) > 4) {
-      ($props{ImageWidth}, $props{ImageHeight}) = ($props{ImageHeight}, $props{ImageWidth});
+    if($orient && $props{FileType} eq "JPEG" && ($props{'Orientation'} // 0))
+    {
+      sys("$exiftrancmd $fout 2>/dev/null");
+      if(($props{'Orientation'} // 0) > 4) {
+        ($props{ImageWidth}, $props{ImageHeight}) = ($props{ImageHeight}, $props{ImageWidth});
+      }
     }
-  }
-  if($jpegoptim && $props{FileType} eq "JPEG") {
-    sys('jpegoptim', '-q', $fout);
-  } elsif($pngoptim && $props{FileType} eq "PNG")
-  {
-    sys('pngcrush', '-q', $fout, $ftmp);
-    rename($ftmp, $fout);
+    if($jpegoptim && $props{FileType} eq "JPEG") {
+      sys('jpegoptim', '-q', $fout);
+    } elsif($pngoptim && $props{FileType} eq "PNG")
+    {
+      sys('pngcrush', '-q', $fout, $ftmp);
+      rename($ftmp, $fout);
+    }
   }
 
   # final file mode
@@ -657,11 +673,12 @@ sub process_img
   sys('touch', '-r', $file, $fout);
 
   # intermediate sRGB colorspace conversion
-  if(!$sRGB || ($props{ColorSpace} // 65535) == 1 || !defined($props{ProfileID})) {
-    link($fout, $ftmp) or sys('cp', '-L', $fout, $ftmp);
+  if(!$sRGB || !defined($props{ProfileID}) || ($props{ColorSpace} // 65535) == 1
+  || ($props{DeviceModel} // '') eq 'sRGB') {
+    $ftmp = $fout;
   } else
   {
-    sys('convert', $fout, '-compress', 'LZW', "tiff:$ftmp");
+    sys('convert', '-quiet', $fout, '-compress', 'LZW', '-type', 'truecolor', "tiff:$ftmp");
     sys($tificccmd, '-t0', $ftmp, "$ftmp.tmp");
     rename("$ftmp.tmp", $ftmp);
   }
@@ -673,7 +690,7 @@ sub process_img
 
   # generate main image
   my @sfile = ($props{ImageWidth}, $props{ImageHeight});
-  my @simg = sys('convert', $ftmp,
+  my @simg = sys('convert', '-quiet', $ftmp,
 		 '-gamma', '0.454545',
 		 '-geometry', "$maxfull[0]x$maxfull[1]>",
 		 '-print', '%w\n%h',
@@ -709,7 +726,7 @@ sub process_img
   my $dy = $sthumb[1] - $mthumb[1];
   my $cy = clamp(0, $dy, int($center[1] * $sthumb[1] - $sthumb[1] / 2 + $dy / 2));
 
-  sys('convert', $ftmp,
+  sys('convert', '-quiet', $ftmp,
       '-gamma', '0.454545',
       '-resize', "$sthumb[0]x$sthumb[1]!",
       '-gravity', 'NorthWest',
@@ -720,7 +737,7 @@ sub process_img
 
   if ($do_blur) {
       # blur
-      sys('convert', "$out/$fthumb",
+      sys('convert', '-quiet', "$out/$fthumb",
           '-virtual-pixel', 'Mirror',
           '-gaussian-blur', "0x$backblur",
           '-scale', "$backsize[0]x$backsize[1]",
@@ -750,7 +767,9 @@ sub process_img
   }
 
   # remove temporary files
-  unlink($ftmp);
+  if($ftmp ne $fout) {
+    unlink($ftmp);
+  }
 
   return \%fdata;
 }
@@ -853,7 +872,7 @@ foreach my $fdata(@adata)
 }
 
 my $fd;
-unless(open($fd, ">:raw", "$out/data.json")) {
+unless(open($fd, '>:raw', "$out/data.json")) {
   fatal("cannot write data file: $!");
 }
 print($fd encode_json(\%json));
