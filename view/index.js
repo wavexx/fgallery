@@ -445,6 +445,13 @@ function setupHeader()
     el.set('html', '<img src=\"eye.png\"/>');
     ehdr.adopt(el);
   }
+  if(imgs.data[eidx].geourl)
+  {
+    var geourl = imgs.data[eidx].geourl;
+    var el = new Element('a', { 'target': 'map', 'title': 'Show map position', 'href': geourl });
+    el.set('html', '<img src=\"map.png\"/>');
+    ehdr.adopt(el);
+  }
   if(imgs.download)
   {
     var el = new Element('a', { 'title': 'Download album', 'href': imgs.download });
