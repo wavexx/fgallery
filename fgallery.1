@@ -131,6 +131,12 @@ Set the JPEG quality of the preview images to
 The default is 90.
 .It Fl -index Ar URL
 Specify the URL location for the index and back buttons.
+.It Fl -link-orig[=TYPE]
+Change the method used to copy the original images.  If this option is
+not given, the method defaults to "copy".  If the type is not specified
+it sets the method to "hard".  Otherwise the type must be one of "copy",
+"hard", "soft" or "ref" - for normal copy, hard-linking, soft-linking or
+ref-linking respectively.
 .El
 .Sh SEE ALSO
 .Xr ImageMagick 1 ,
