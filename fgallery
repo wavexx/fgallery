@@ -194,7 +194,13 @@ sub clamp
 
 sub decode
 {
-  return Encode::decode($ENCODING, shift);
+  return Encode::decode($ENCODING, shift // $_);
+}
+
+
+sub encode
+{
+  return Encode::encode($ENCODING, shift // $_);
 }
 
 
@@ -363,6 +369,7 @@ sub print_help
 
 
 # main program
+@ARGV = map(decode, @ARGV);
 my ($ret, @ARGS) = GetOptions(
   'help|h' => sub { print_help(0); },
   'version' => \&print_version,
@@ -383,16 +390,15 @@ my ($ret, @ARGS) = GetOptions(
   'min-thumb=s' => sub { @minthumb = parse_wh(@_); },
   'no-sRGB' => sub { $sRGB = 0; },
   'quality=i' => sub { $imgq = parse_int($_[0], $_[1], 0, 100); },
-  'index=s' => sub { $indexUrl = decode($_[1]); },
   'noblur' => sub { $do_blur = 0; },
-);
+  'index=s' => sub { $indexUrl = $_[1]; });
 
 if(@ARGV < 2 || @ARGV > 3 || !$ret) {
   print_help(2);
 }
 my $dir = $ARGV[0];
 my $out = $ARGV[1];
-my $name = (@ARGV < 3? undef: decode($ARGV[2]));
+my $name = (@ARGV < 3? undef: $ARGV[2]);
 
 # check paths
 my $absDir = rel2abs($dir) . '/';
@@ -463,7 +469,7 @@ find(
   no_chdir => 1,
   wanted => sub
   {
-    my $file = $_;
+    my $file = decode($_);
     return if(!-f $file);
     my ($base, undef, $suffix) = fileparse($file, qr/\.[^.]*$/);
     return if(length($suffix) < 2 || $base =~ /^\./);
@@ -472,7 +478,7 @@ find(
       push(@files, $file);
     }
   }
-}, $dir);
+}, encode($dir));
 @files = sort(@files);
 
 if(!@files) {
@@ -501,7 +507,7 @@ if($workers)
 sub analyze_file
 {
   my $file = shift;
-  my ($base, $dir, $suffix) = fileparse(decode($file), qr/\.[^.]*$/);
+  my ($base, $dir, $suffix) = fileparse($file, qr/\.[^.]*$/);
   $suffix = lc(substr($suffix, 1));
 
   progress::status("$base.$suffix");
