@@ -66,7 +66,9 @@ my $workers = 0;
 my $sRGB = 1;
 my $indexUrl = undef;
 my @capmethods = ("txt", "xmp", "exif");
-
+my $galleryTitle = "";
+my $galleryDescription = "";
+my $galleryUrl = "";
 
 # support functions
 sub fatal
@@ -361,6 +363,13 @@ sub print_help
   --no-sRGB		do not remap preview/thumbnail color profiles to sRGB
   --quality Q		preview image quality (0-100, currently: $imgq)
   --index url		specify the URL location for the index/back button
+  --title "Foo"		the title to use for Facebook and Twitter previews
+  --description "bar"	the description to use for Facebook and Twitter previews
+  --url url		the URL of your gallery (should probably end with output-dir and a slash)
+
+As title, description and url are used for social media, it makes no sense to
+only provide some of these parameters. You need to provide all three of them, or
+none.
 });
   exit(shift);
 }
@@ -388,10 +397,17 @@ my ($ret, @ARGS) = GetOptions(
   'min-thumb=s' => sub { @minthumb = parse_wh(@_); },
   'no-sRGB' => sub { $sRGB = 0; },
   'quality=i' => sub { $imgq = parse_int($_[0], $_[1], 0, 100); },
-  'index=s' => sub { $indexUrl = $_[1]; });
+  'index=s' => sub { $indexUrl = $_[1]; },
+  'title=s' => sub { $galleryTitle = $_[1]; },
+  'description=s' => sub { $galleryDescription = $_[1]; },
+  'url=s' => sub { $galleryUrl = $_[1]; });
 
 if(@ARGV < 2 || @ARGV > 3 || !$ret) {
   print_help(2);
+}
+if (($galleryTitle || $galleryDescription || $galleryUrl)
+    && !($galleryTitle && $galleryDescription && $galleryUrl)) {
+  fatal("all three are required: --title, --description, and --url");
 }
 my $dir = $ARGV[0];
 my $out = $ARGV[1];
@@ -888,6 +904,24 @@ my $html = join("\n\t", map {
 		} @aprops);
 my $index = slurp("$out/index.html");
 $index =~ s!<noscript>.*?</noscript>!<noscript>\n      <div id="photos">\n\t$html\n      </div>\n    </noscript>!s;
+if ($galleryTitle && $galleryDescription && $galleryUrl) {
+  # default to the first image
+  my $galleryImage = $aprops[0]->{root} . ".$ext";
+  $html = qq{    <!-- for Facebook -->
+    <meta property="og:title" content="$galleryTitle" />
+    <meta property="og:description" content="$galleryDescription" />
+    <meta property="og:type" content="article" />
+    <meta property="og:image" content="${galleryUrl}imgs/$galleryImage" />
+    <meta property="og:url" content="$galleryUrl" />
+    <!-- for Twitter -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="$galleryTitle" />
+    <meta name="twitter:description" content="$galleryDescription" />
+    <meta name="twitter:image" content="${galleryUrl}imgs/$galleryImage" />
+};
+  $index =~ s/    <!-- for Facebook -->\n(    .*\n)*//;
+  $index =~ s!  </head>!$html  </head>!;
+}
 unless(open($fd, ">:encoding($ENCODING)", "$out/index.html")) {
   fatal("cannot write new index file: $!");
 }
