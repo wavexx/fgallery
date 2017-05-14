@@ -673,7 +673,7 @@ sub process_img
   {
     if($orient && $props{FileType} eq "JPEG" && ($props{'Orientation'} // 0))
     {
-      sys("$exiftrancmd $fout 2>/dev/null");
+      sys("$exiftrancmd '$fout' 2>/dev/null");
       if(($props{'Orientation'} // 0) > 4) {
         ($props{ImageWidth}, $props{ImageHeight}) = ($props{ImageHeight}, $props{ImageWidth});
       }
