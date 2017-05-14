@@ -357,6 +357,12 @@ img
   column-gap:           0px;  
 }
 
+#photos p, #photos h1 {
+  line-height: 1em;
+  font-size: 1em;
+  padding-left: 1ex;
+}
+
 #photos img {
   /* Just in case there are inline attributes */
   width: 100% !important;
