@@ -892,14 +892,16 @@ print($fd encode_json(\%json));
 close($fd);
 
 # provide alternative for nojavascript
+my $id = -1;
 my $html = join("\n\t", map {
+  $id++;
   my $props = $_;
   my $caption = $props->{'caption'} ? $props->{'caption'}[0] : "";
   my $root = $props->{root};
   my $fbase = "$root.$ext";
   my $file = $props->{'file'};
   # no alt text or title attribute with caption?
-  qq{<a href="imgs/$fbase" title="$caption">}
+  qq{<a id="$id" href="imgs/$fbase" title="$caption">}
   . qq{<img src="thumbs/$fbase" alt="$caption"/></a>}
 		} @aprops);
 my $index = slurp("$out/index.html");
