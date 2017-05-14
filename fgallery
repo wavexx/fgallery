@@ -893,7 +893,11 @@ close($fd);
 
 # provide alternative for nojavascript
 my $id = -1;
-my $html = join("\n\t", map {
+my $html = qq{\n      <div id="photos" itemscope itemtype="http://schema.org/ImageGallery">\n};
+$html .= qq{\t<h1 itemprop="name">$galleryTitle</h1>\n} if $galleryTitle;
+$html .= qq{\t<p itemprop="description">$galleryDescription</p>\n} if $galleryDescription;
+$html .= qq{\t};
+$html .= join("\n\t", map {
   $id++;
   my $props = $_;
   my $caption = $props->{'caption'} ? $props->{'caption'}[0] : "";
@@ -904,8 +908,10 @@ my $html = join("\n\t", map {
   qq{<a id="$id" href="imgs/$fbase" title="$caption">}
   . qq{<img src="thumbs/$fbase" alt="$caption"/></a>}
 		} @aprops);
+$html .= qq{\n      </div>\n};
+$html .= qq{    };
 my $index = slurp("$out/index.html");
-$index =~ s!<noscript>.*?</noscript>!<noscript>\n      <div id="photos">\n\t$html\n      </div>\n    </noscript>!s;
+$index =~ s!<noscript>.*?</noscript>!<noscript>$html</noscript>!s;
 if ($galleryTitle && $galleryDescription && $galleryUrl) {
   # default to the first image
   my $galleryImage = $aprops[0]->{root} . ".$ext";
