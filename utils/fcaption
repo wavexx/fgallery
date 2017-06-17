@@ -218,14 +218,16 @@ class MainWindow(QtGui.QMainWindow):
 
 # main application
 def expand_dir(path):
-    for root, dirs, files in os.walk(path):
-        for tmp in files:
-            if tmp[0] == '.': continue
-            tmp = os.path.join(root, tmp)
-            ext = os.path.splitext(tmp)[1]
-            if ext: ext = ext[1:].lower()
-            if ext in FILE_EXT:
-                yield tmp
+    for root, dirs, files in os.walk(path, topdown=True):
+        if files is not None:
+            files.sort()
+            for tmp in files:
+                if tmp[0] == '.': continue
+                tmp = os.path.join(root, tmp)
+                ext = os.path.splitext(tmp)[1]
+                if ext: ext = ext[1:].lower()
+                if ext in FILE_EXT:
+                    yield tmp
 
 
 class Application(QtGui.QApplication):
