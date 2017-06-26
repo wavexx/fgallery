@@ -451,9 +451,9 @@ my $exiftrancmd;
 if(!$keeporig && $orient)
 {
   if(!system("exiftran -h >/dev/null 2>&1")) {
-    $exiftrancmd = "exiftran -aip";
+    $exiftrancmd = ["exiftran", "-aip"];
   } elsif(!system("exifautotran >/dev/null 2>&1")) {
-    $exiftrancmd = "exifautotran";
+    $exiftrancmd = ["exifautotran"];
   } else {
     fatal("cannot execute exiftran or exifautotran for lossless JPEG autorotation");
   }
@@ -657,7 +657,7 @@ sub process_img
   {
     if($orient && $props{FileType} eq "JPEG" && ($props{'Orientation'} // 0))
     {
-      sys("$exiftrancmd $fout 2>/dev/null");
+      sys(@$exiftrancmd, $fout);
       if(($props{'Orientation'} // 0) > 4) {
         ($props{ImageWidth}, $props{ImageHeight}) = ($props{ImageHeight}, $props{ImageWidth});
       }
