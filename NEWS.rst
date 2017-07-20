@@ -1,4 +1,4 @@
-fgallery 1.8.2: 25/05/2016
+fgallery 1.8.2: 2016-05-25
 --------------------------
 
 * Allow to generate a gallery directly on filesystems without hard-links.
@@ -9,14 +9,14 @@ fgallery 1.8.2: 25/05/2016
 * New ``fgallery`` man page provided by Guus Sliepen.
 
 
-fgallery 1.8.1: 02/02/2016
+fgallery 1.8.1: 2016-02-02
 --------------------------
 
 * Fixed txt/xmp caption extraction for filenames with special characters.
 * Fixed unicode handling in xmp/exif captions.
 
 
-fgallery 1.8: 14/01/2016
+fgallery 1.8: 2016-01-14
 ------------------------
 
 * Handle bogus whitespace in EXIF timestamps.
@@ -28,7 +28,7 @@ fgallery 1.8: 14/01/2016
 * Added ``utils/fcaption`` to edit image captions.
 
 
-fgallery 1.7: 05/09/2014
+fgallery 1.7: 2014-09-05
 ------------------------
 
 * Improved support for IE8.
@@ -38,7 +38,7 @@ fgallery 1.7: 05/09/2014
 * Fixed invalid check with newer versions of ImageMagick.
 
 
-fgallery 1.6: 17/04/2014
+fgallery 1.6: 2014-04-17
 ------------------------
 
 * Do not produce warnings when reading files without suffix.
@@ -53,7 +53,7 @@ fgallery 1.6: 17/04/2014
 * Reduced the payload size.
 
 
-fgallery 1.5: 03/03/2014
+fgallery 1.5: 2014-03-03
 ------------------------
 
 * Allow to reverse the album order (`-r`).
@@ -62,7 +62,7 @@ fgallery 1.5: 03/03/2014
 * Fixed time sorting.
 
 
-fgallery 1.4: 28/01/2014
+fgallery 1.4: 2014-01-28
 ------------------------
 
 * Manual copying of the template directory is no longer required.
@@ -70,7 +70,7 @@ fgallery 1.4: 28/01/2014
 * Fixed encoding of the album name.
 
 
-fgallery 1.3: 05/01/2014
+fgallery 1.3: 2014-01-05
 ------------------------
 
 * Improved browser behavior of the `back` button.
@@ -83,7 +83,7 @@ fgallery 1.3: 05/01/2014
 * Minor/cosmetic improvements.
 
 
-fgallery 1.2: 30/11/2013
+fgallery 1.2: 2013-11-30
 ------------------------
 
 * Faster loading of large galleries.
@@ -92,7 +92,7 @@ fgallery 1.2: 30/11/2013
 * Swiping support.
 
 
-fgallery 1.1: 21/10/2013
+fgallery 1.1: 2013-10-21
 ------------------------
 
 * Degrades more gracefully on IE<10.
