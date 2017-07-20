@@ -84,6 +84,15 @@ Install with::
 
   sudo nix-env -i fgallery
 
+**FreeBSD**
+
+- http://www.freshports.org/www/fgallery/
+- http://www.freshports.org/graphics/facedetect/
+
+Install with::
+
+  pkg install fgallery
+
 **Docker**
 
 You can also try the latest `fgallery` bundled with facedetect_ in a Docker
