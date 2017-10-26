@@ -540,10 +540,10 @@ sub analyze_file
 
   my $root = $sane;
 
-  # FIXME: need a way to identify existing files with the
-  # autoincrement below. For the moment, this breaks for all filenames
-  # that result in duplicates after sanitzing.
-  if ($update && exists $ofiles{"imgs/$root.$ext"}) {
+  # FIXME: Need a way to identify existing files with the autoincrement below.
+  # For the moment, this breaks for all filenames that result in duplicates
+  # after sanitzing.
+  if ($update && exists $ofiles{"imgs/$root.$ext"} && -f "$out/imgs/$root.$ext") {
     return undef;
   }
 
