@@ -619,7 +619,7 @@ my @aprops = par_map(\&analyze_file, @files);
 progress::done();
 
 # remove unprocessable files
-for(my $n = 0; $n < $#files;)
+for(my $n = 0; $n <= $#files;)
 {
   if(defined($aprops[$n]))
   {
