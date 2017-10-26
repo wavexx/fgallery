@@ -131,7 +131,22 @@ Set the JPEG quality of the preview images to
 The default is 90.
 .It Fl -index Ar URL
 Specify the URL location for the index and back buttons.
+.It Fl -title Ar TITLE
+The title for your gallery, for social media.
+.It Fl -description Ar DESCRIPTION
+A description of your gallery, for social media.
+.It Fl -url Ar URL
+The URL where you will install the gallery, for social media.
 .El
+.Ss Social Media
+Linking to your gallery on social media will not produce a nice
+preview unless you provide these three arguments: the title to use
+.Pq Fl -title Ns ,
+a short description
+.Pq Fl -description Ns ,
+and the entry URL
+.Pq Fl -url Ns .
+The first image in the gallery will be used as the preview image.
 .Sh SEE ALSO
 .Xr ImageMagick 1 ,
 .Xr exiftran 1 ,
