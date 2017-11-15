@@ -95,10 +95,19 @@ Install with::
 
 **Docker**
 
-You can also try the latest `fgallery` bundled with facedetect_ in a Docker
-container using the following ``Dockerfile`` provided by Stavros Korokithakis:
+You can also try the latest ```fgallery``` bundled with [facedetect](https://github.com/wavexx/facedetect) in a Docker
+container using the following [Dockerfile](Dockerfile).
 
-- https://github.com/skorokithakis/docker-fgallery
+Build docker file:
+
+     $ docker build -t fgallery .
+
+Run the docker image build previously:
+
+     $ ls -ld directory_with_jpegs/*jpg
+     -rw-r--r-- 1 user user 690978 Feb  4  2003 directory_with_jpegs/20030204-222803.jpg
+     -rw-r--r-- 1 user user 733873 Feb  4  2003 directory_with_jpegs/20030204-222819.jpg
+     $ docker run -it --rm -u $(id -u):$(id -g) -v $PWD:/mnt fgallery /mnt/directory_with_jpegs /mnt/my_output_directory
 
 
 Usage notes
