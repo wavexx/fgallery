@@ -1,7 +1,6 @@
 /* General reset */
 html, body
 {
-  overflow: hidden; /* IE<9 */
   padding: 0;
   margin: 0;
   border: 0;
@@ -344,27 +343,19 @@ img
   background: url(cut-mov.png) top left repeat-y, url(cut-mov.png) top right repeat-y;
 }
 
-/* noscript environment, based on https://css-tricks.com/seamless-responsive-photo-grid/ */
 #photos {
-  /* Prevent vertical gaps */
-  line-height: 0;
-  /* max number of columns */
-  -webkit-column-count: 11;
-  -webkit-column-gap:   0px;
-  -moz-column-count:    11;
-  -moz-column-gap:      0px;
-  column-count:         11;
-  column-gap:           0px;  
+    padding: 10px;
 }
 
-#photos p, #photos h1 {
-  line-height: 1em;
-  font-size: 1em;
-  padding-left: 1ex;
+#wrapper {
+    display: grid;
+    grid-gap: 5px;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    line-height: 0;
 }
 
 #photos img {
-  /* Just in case there are inline attributes */
-  width: 100% !important;
-  height: auto !important;
+  width: 100%;
+  height: 100px;
+  object-fit: cover;
 }

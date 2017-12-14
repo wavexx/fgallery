@@ -896,25 +896,27 @@ my $id = -1;
 my $html = qq{\n      <div id="photos" itemscope itemtype="http://schema.org/ImageGallery">\n};
 $html .= qq{\t<h1 itemprop="name">$galleryTitle</h1>\n} if $galleryTitle;
 $html .= qq{\t<p itemprop="description">$galleryDescription</p>\n} if $galleryDescription;
-$html .= qq{\t};
-$html .= join("\n\t", map {
+$html .= qq{\t<div id="wrapper">\n};
+$html .= qq{\t  };
+$html .= join("\n\t  ", map {
   $id++;
-  my $props = $_;
-  my $caption = $props->{'caption'} ? $props->{'caption'}[0] : "";
+  my $props = $_->{props};
+  my $caption = $props->{caption} ? $props->{caption}[0] : "";
   my $root = $props->{root};
   my $fbase = "$root.$ext";
-  my $file = $props->{'file'};
+  my $file = $props->{file};
   # no alt text or title attribute with caption?
   qq{<a id="$id" href="imgs/$fbase" title="$caption">}
   . qq{<img src="thumbs/$fbase" alt="$caption"/></a>}
-		} @aprops);
-$html .= qq{\n      </div>\n};
+		} @adata);
+$html .= qq{\n\t</div>\n};
+$html .= qq{      </div>\n};
 $html .= qq{    };
 my $index = slurp("$out/index.html");
 $index =~ s!<noscript>.*?</noscript>!<noscript>$html</noscript>!s;
 if ($galleryTitle && $galleryDescription && $galleryUrl) {
   # default to the first image
-  my $galleryImage = $aprops[0]->{root} . ".$ext";
+  my $galleryImage = $adata[0]->{root} . ".$ext";
   $html = qq{    <!-- for Facebook -->
     <meta property="og:title" content="$galleryTitle" />
     <meta property="og:description" content="$galleryDescription" />
@@ -935,25 +937,5 @@ unless(open($fd, ">:encoding($ENCODING)", "$out/index.html")) {
 }
 print($fd $index);
 close($fd);
-
-# don't append on repeated runs
-my $css = slurp("$out/index.css");
-if ($css !~ /\n\@media (max-width: \d+px)\n  #photos/) {
-  unless(open($fd, ">>:raw", "$out/index.css")) {
-    fatal("cannot append to new css file: $!");
-  }
-  
-  for (reverse 1..10) {
-    print($fd sprintf(q!
-@media (max-width: %dpx) {
-  #photos {
-    -moz-column-count:    %d;
-    -webkit-column-count: %d;
-    column-count:         %d;
-  }
-}!, ($_ + 0.5) * $minthumb[0], $_, $_, $_));
-  }
-  close($fd);
-}
 
 print("completed\n");
