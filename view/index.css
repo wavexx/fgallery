@@ -344,14 +344,14 @@ img
 }
 
 #photos {
-    padding: 10px;
+  padding: 10px;
 }
 
 #wrapper {
-    display: grid;
-    grid-gap: 5px;
-    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-    line-height: 0;
+  display: grid;
+  grid-gap: 5px;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  line-height: 0;
 }
 
 #photos img {

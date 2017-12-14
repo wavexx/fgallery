@@ -467,9 +467,9 @@ my $exiftrancmd;
 if(!$keeporig && $orient)
 {
   if(!system("exiftran -h >/dev/null 2>&1")) {
-    $exiftrancmd = "exiftran -aip";
+    $exiftrancmd = ["exiftran", "-aip"];
   } elsif(!system("exifautotran >/dev/null 2>&1")) {
-    $exiftrancmd = "exifautotran";
+    $exiftrancmd = ["exifautotran"];
   } else {
     fatal("cannot execute exiftran or exifautotran for lossless JPEG autorotation");
   }
@@ -673,7 +673,7 @@ sub process_img
   {
     if($orient && $props{FileType} eq "JPEG" && ($props{'Orientation'} // 0))
     {
-      sys("$exiftrancmd '$fout' 2>/dev/null");
+      sys(@$exiftrancmd, $fout);
       if(($props{'Orientation'} // 0) > 4) {
         ($props{ImageWidth}, $props{ImageHeight}) = ($props{ImageHeight}, $props{ImageWidth});
       }
@@ -916,7 +916,7 @@ my $index = slurp("$out/index.html");
 $index =~ s!<noscript>.*?</noscript>!<noscript>$html</noscript>!s;
 if ($galleryTitle && $galleryDescription && $galleryUrl) {
   # default to the first image
-  my $galleryImage = $adata[0]->{root} . ".$ext";
+  my $galleryImage = $adata[0]->{props}->{root} . ".$ext";
   $html = qq{    <!-- for Facebook -->
     <meta property="og:title" content="$galleryTitle" />
     <meta property="og:description" content="$galleryDescription" />
