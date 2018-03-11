@@ -4,6 +4,8 @@
 "use strict";
 
 var datafile = 'data.json';
+
+// dimensions
 var padding = 22;
 var duration = 500;      // for scrolling
 var thrdelay = 1500;     // throbber delay
@@ -15,6 +17,34 @@ var thumbrt = 16/9 - 5/3;
 var cutrt = 0.15;
 var capdelay = 5000;
 var rdwdelay = 500;
+
+// state variables
+var emain;      // main object
+var eback;      // background
+var enoise;     // additive noise
+var eflash;     // flashing object
+var ehdr;       // header
+var ecap;       // caption
+var capst;      // caption status
+var captm;      // caption timeout
+var elist;      // thumbnail list
+var fscr;       // thumbnail list scroll fx
+var econt;      // picture container
+var ebuff;      // picture buffer
+var oimg;       // old image
+var eimg;       // new image
+var cthumb;     // current thumbnail
+var mthumb;     // thumbnail measurement cache
+var eidx;       // current index
+var tthr;       // throbber timeout
+var imgs;       // image list
+var first;      // first image
+var idle;       // general idle timer
+var idleMouse;  // idle mouse timer
+var clayout;    // current layout
+var csr;        // current scaling ratio
+var sdir;       // scrolling direction
+var slideshow;  // slideshow status
 
 Element.Events.hashchange =
 {
@@ -33,40 +63,12 @@ Element.Events.hashchange =
     };
 
     if("onhashchange" in window
-    && (!Browser.ie || Browser.version > 7))
+        && (!Browser.ie || Browser.version > 7))
       window.onhashchange = hashchange;
     else
       hashchange.periodical(50);
   }
 };
-
-// some state variables
-var emain;	// main object
-var eback;	// background
-var enoise;	// additive noise
-var eflash;	// flashing object
-var ehdr;	// header
-var ecap;	// caption
-var capst;      // caption status
-var captm;      // caption timeout
-var elist;	// thumbnail list
-var fscr;	// thumbnail list scroll fx
-var econt;	// picture container
-var ebuff;	// picture buffer
-var oimg;	// old image
-var eimg;	// new image
-var cthumb;	// current thumbnail
-var mthumb;	// thumbnail measurement cache
-var eidx;	// current index
-var tthr;	// throbber timeout
-var imgs;	// image list
-var first;	// first image
-var idle;	// general idle timer
-var idleMouse;	// idle mouse timer
-var clayout;	// current layout
-var csr;	// current scaling ratio
-var sdir;	// scrolling direction
-var slideshow;	// slideshow status
 
 function resize()
 {
@@ -120,6 +122,7 @@ function resize()
 
 function onResize()
 {
+  setSlideshowOff();
   resize();
   onScroll();
 }
@@ -132,9 +135,9 @@ function onLayoutChanged(layout, sr)
   imgs.data.each(function(x, i)
   {
     var crop = x.thumb[1];
-    var size = (x.thumb[2]? x.thumb[2]: crop);
-    var offset = (x.thumb[3]? x.thumb[3]: [0, 0]);
-    var center = (x.center? [x.center[0] / 1000, x.center[1] / 1000]: [0.5, 0.5]);
+    var size = (x.thumb[2]? x.thumb[2] : crop);
+    var offset = (x.thumb[3]? x.thumb[3] : [0, 0]);
+    var center = (x.center? [x.center[0]/1000, x.center[1]/1000] : [0.5, 0.5]);
 
     var maxw, maxh;
     if(layout == 'horizontal')
@@ -156,7 +159,8 @@ function onLayoutChanged(layout, sr)
     {
       'width': Math.round(maxw * sr),
       'height': Math.round(maxh * sr),
-      'background-size': Math.round(crop[0] * sr) + "px " + Math.round(crop[1] * sr) + "px"
+      'background-size':
+         Math.round(crop[0] * sr) + 'px ' + Math.round(crop[1] * sr) + 'px'
     });
 
     // center cropped thumbnail
@@ -170,7 +174,8 @@ function onLayoutChanged(layout, sr)
     cy = Math.round(crop[1] / 2 - cy + dy / 2);
     cy = Math.max(Math.min(0, cy), dy);
 
-    x.eimg.setStyle('background-position', Math.round(cx * sr) + 'px ' + Math.round(cy * sr) + 'px');
+    x.eimg.setStyle('background-position',
+      Math.round(cx * sr) + 'px ' + Math.round(cy * sr) + 'px');
 
     // border styles
     var classes = ['cut-left', 'cut-right', 'cut-top', 'cut-bottom'];
@@ -245,13 +250,17 @@ function resizeMainImg(img)
 {
   var contSize = econt.getSize();
   var listSize = elist.getSize();
-  var thumbWidth = (slideshow == 'on'? 0: clayout == 'horizontal'? listSize.x: listSize.y);
   var data = imgs.data[img.idx].img;
   var width = data[1][0];
   var height = data[1][1];
   var imgrt = width / height;
-  var pad = (slideshow == 'on'? 0: padding * 2);
-
+  var thumbWidth = 0;
+  var pad = 0;
+  if(slideshow != 'on')
+  {
+    thumbWidth = clayout == 'horizontal'? listSize.x: listSize.y;
+    pad = padding * 2;
+  }
   if(imgrt > (contSize.x / contSize.y))
   {
     img.width = Math.max(thumbWidth + pad, contSize.x - pad);
@@ -334,7 +343,6 @@ function onScroll()
     beg = Math.max(0, beg - psize);
     end = Math.min(imgs.data.length, end + psize);
   }
-
   for(var i = beg; i != end; ++i)
   {
     if(!imgs.data[i].thumbLoaded)
@@ -430,22 +438,30 @@ function toggleCap()
   showHdr();
 }
 
+function setSlideshowOff()
+{
+  if(slideshow == 'off') return;
+  idle.removeEvent('idle', next);
+  showHdr();
+  elist.setStyle('display', 'block');
+  slideshow = 'off';
+}
+
+function setSlideshowOn()
+{
+  if(slideshow == 'on') return;
+  idle.addEvent('idle', next);
+  hideHdr();
+  elist.setStyle('display', 'none');
+  slideshow = 'on';
+}
+
 function toggleSlideshow()
 {
   if(slideshow == 'on')
-  {
-    idle.removeEvent('idle', next);
-    showHdr();
-    elist.setStyle('display', 'block');
-    slideshow = 'off';
-  }
+    setSlideshowOff();
   else
-  {
-    idle.addEvent('idle', next);
-    hideHdr();
-    elist.setStyle('display', 'none');
-    slideshow = 'on';
-  }
+    setSlideshowOn();
   resize();
 }
 
@@ -538,11 +554,11 @@ function onMainReady()
     {
       var diff = umod(eidx - oimg.idx, imgs.data.length);
       if(diff == 1)
-	sdir = 1;
+        sdir = 1;
       else if(diff == imgs.data.length - 1)
-	sdir = -1;
+        sdir = -1;
       else
-	sdir = 0;
+        sdir = 0;
     }
 
     // fade old image
@@ -578,8 +594,7 @@ function onMainReady()
 
   tthr = resetTimeout(tthr);
   idle.start();
-  if(slideshow != 'on')
-    showHdr();
+  if(slideshow != 'on') showHdr();
   centerThumb(d);
 
   // prefetch next image
@@ -825,6 +840,12 @@ function initGallery(data)
   // general idle callback
   idle = new IdleTimer(window, { timeout: slidedelay }).start();
 
+  // start slide show immediately if specified in data.json
+  if(imgs.startslideshow == 'yes')
+    setSlideshowOn();
+  else
+    setSlideshowOff();
+
   // prepare first image
   sdir = 1;
   first = getLocationIndex();
@@ -833,7 +854,10 @@ function initGallery(data)
   loadThumb(first);
   centerThumb(0);
 
+  // set visibility
   emain.setStyle('visibility', 'visible');
+  if(slideshow == 'on')
+    elist.setStyle('display', 'none');
 }
 
 function initFailure()
@@ -859,7 +883,7 @@ function init()
     onRequest: function()
     {
       if(this.xhr.overrideMimeType)
-	this.xhr.overrideMimeType('application/json');
+        this.xhr.overrideMimeType('application/json');
     },
     isSuccess: function()
     {
@@ -870,11 +894,12 @@ function init()
   }).get();
 
   // preload some resources
-  Asset.images(['view/throbber.gif', 'view/overview.png',
-		'view/eye.png', 'view/download.png', 'view/back.png',
-		'view/cap-normal.png', 'view/cap-always.png', 'view/cap-never.png',
-		'view/cut-left.png', 'view/cut-right.png',
-		'view/cut-top.png', 'view/cut-mov.png']);
+  Asset.images([
+    'view/throbber.gif', 'view/overview.png', 'view/eye.png',
+    'view/download.png', 'view/back.png', 'view/cap-normal.png',
+    'view/cap-always.png', 'view/cap-never.png', 'view/cut-left.png',
+    'view/cut-right.png', 'view/cut-top.png', 'view/cut-mov.png'
+   ]);
 }
 
 window.addEvent('domready', init);

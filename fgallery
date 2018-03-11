@@ -1,4 +1,4 @@
-#!/usr/bin/env perl
+#!/usr/pkg/bin/perl
 # fgallery: a modern, minimalist javascript photo gallery
 # Copyright(c) 2011-2016 by wave++ "Yuri D'Elia" <wavexx@thregr.org>
 # Distributed under GPLv2+ (see COPYING) WITHOUT ANY WARRANTY.
@@ -22,7 +22,7 @@ use Fcntl;
 use File::Basename qw{fileparse};
 use File::Find qw{find};
 use File::Path qw{make_path remove_tree};
-use File::Spec::Functions qw{rel2abs canonpath catfile};
+use File::Spec::Functions qw{rel2abs canonpath catfile splitpath};
 use Getopt::Long qw{:config bundling};
 use IO::Handle;
 use Image::ExifTool qw{ImageInfo};
@@ -31,10 +31,17 @@ use Time::Piece;
 use JSON::PP;
 
 # constants
-our $VERSION = "1.8.2nb4";
+our $VERSION = "2.0.0";
 our $ENCODING = encoding::_get_locale_encoding() || 'UTF-8';
 
+# where the view subdirectory lives (JavaScript and CSS code)
+our $ShareDir = '/usr/pkg/share/fgallery';
+
+# directory creation mask
+umask 0022;
+
 # defaults
+my (undef, undef, $me) = splitpath($0);
 my $mode = oct(644);
 my $slim = 0;
 my $ofile = 0;
@@ -59,17 +66,22 @@ my $p7zip = 1;
 my $verbose = 0;
 my $workers = 0;
 my $sRGB = 1;
+my $do_blur = 1;
 my $indexUrl = undef;
 my @capmethods = ("txt", "xmp", "exif");
-my $use_symlinks = 0;
-my $do_blur = 1;
+my $galleryTitle = "";
+my $galleryDescription = "";
+my $galleryUrl = "";
+my $update = 0;
+my @copy_method_ok = qw(copy hard sym ref);
+my $copy_method_default = 'copy';
+my $copy_method = $copy_method_default;
 
 
 # support functions
 sub fatal
 {
-  print(STDERR "error: " . join(" ", @_) . "\n");
-  exit(1);
+  die map { "$_\n" } 'Fatal error:', @_;
 }
 
 
@@ -85,9 +97,7 @@ sub sys
 {
   my @cmd = @_;
 
-  if($verbose) {
-    print(STDERR "+ " . join(" ", @cmd) . "\n")
-  }
+  warn join(" ", '+', @cmd) . "\n" if $verbose;
 
   my $fd;
   unless(open($fd, '-|', @cmd)) {
@@ -95,13 +105,13 @@ sub sys
   }
 
   local $/ = undef;
-  my $output = <$fd>;
+  my $o = <$fd>;
 
   unless(close($fd)) {
     fatal("command \"@cmd\" failed");
   }
 
-  return split("\n", $output);
+  return split("\n", $o);
 }
 
 
@@ -115,11 +125,21 @@ sub isin
 }
 
 
+sub is_fgallery_dir
+{
+    my ($d) = @_;
+    return unless -e catfile($d, 'view');
+    return unless -e catfile($d, 'index.html');
+    return unless -e catfile($d, 'data.json');
+    return 1;
+}
+
+
 sub slurp
 {
   my ($fn) = @_;
   open(my $fd, '<', $fn) or fatal("cannot read $fn: $!");
-  if($^V lt v5.23.4) {
+  if ($^V lt v5.23.4) {
     binmode($fd, ":encoding($ENCODING)");
   }
   local $/;
@@ -163,13 +183,14 @@ sub par_map
   my @idx = 0 .. $n - 1;
   my @res :shared = (undef) x $n;
 
-  dispatch(sub
-  {
-    my $i = shift;
-    my $r = &$fun($seq[$i]);
-    $res[$i] = defined($r)? freeze($r): undef;
-  },
-  @idx);
+  dispatch(
+    sub {
+      my $i = shift;
+      my $r = &$fun($seq[$i]);
+      $res[$i] = defined($r) ? freeze($r) : undef;
+    },
+    @idx
+  );
 
   return map { thaw $_ } @res;
 }
@@ -202,6 +223,12 @@ sub decode
 }
 
 
+sub encode
+{
+  return Encode::encode($ENCODING, $_[0]);
+}
+
+
 # thread-safe progress bar
 {
   package progress;
@@ -224,11 +251,9 @@ sub decode
 
   sub pad
   {
-    my $str = shift;
+    my ($str) = @_;
     my $len = length($str);
-    if($len < $llen) {
-      $str .= " " x ($llen - $len);
-    }
+    $str .= " " x ($llen - $len) if $len < $llen;
     $llen = $len;
     return $str;
   }
@@ -240,10 +265,8 @@ sub decode
 
     my $pc = ($cnt++ / $total * 100);
     my $str = sprintf("%s %2.0f%%", $act, $pc);
-    if(defined($msg)) {
-      $str .= ": " . $msg;
-    }
-    print(pad($str) . "\r");
+    $str .= ": " . $msg if $msg;
+    print pad($str) . "\r";
     STDOUT->flush();
   }
 
@@ -255,43 +278,36 @@ sub decode
 
 
 # caption utilities
-sub cap_clean_title
+sub cap_clean
 {
-  $_ = shift;
-  s/^\s+|\s+$//g;
-  s/\s+/ /g;
-  return $_;
-}
-
-sub cap_clean_desc
-{
-  $_ = shift;
-  s/^\s+|\s+$//g;
-  s/[ \t]+/ /g;
-  return $_;
+  my ($x) = @_;
+  return '' unless $x;
+  $x =~ s/^\s+|\s+$//go;
+  $x =~ s/\s+/ /go;
+  return $x;
 }
 
 sub cap_from_str
 {
-  my ($title, $desc) = split("\n", shift, 2);
-  return unless $title || $desc;
-  my $ret = [cap_clean_title($title), ($desc? cap_clean_desc($desc): '')];
-  return $ret;
+  my ($title, $desc) = @_;
+  return unless $title;
+  ($title, $desc) = split /\n+/o, $title unless $desc;
+  return [cap_clean($title), cap_clean($desc)];
 }
 
 sub cap_from_props
 {
   my ($props) = @_;
   my $ret = ['', ''];
-  if($props->{'Title'})
+  if ($props->{'Title'})
   {
     my $title = Encode::decode_utf8($props->{'Title'});
-    $ret->[0] = cap_clean_title($title);
+    $ret->[0] = cap_clean($title);
   }
-  if($props->{'Description'})
+  if ($props->{'Description'})
   {
     my $desc = Encode::decode_utf8($props->{'Description'});
-    $ret->[1] = cap_clean_desc($desc);
+    $ret->[1] = cap_clean($desc);
   }
   return $ret;
 }
@@ -311,7 +327,7 @@ sub parse_wh
 sub parse_int
 {
   my ($opt, $value, $min, $max) = @_;
-  if((defined($min) && $value < $min) || (defined($max) && $value > $max)) {
+  if ((defined($min) && $value < $min) || (defined($max) && $value > $max)) {
     fatal("bad value for option $opt");
   }
   return int($value);
@@ -324,17 +340,20 @@ sub parse_cap
   my @capmethods = split(",", $value);
   foreach my $m(@capmethods)
   {
-    if(!isin($m, ("txt", "xmp", "exif", "cmt"))) {
+    if (!isin($m, ("txt", "xmp", "exif", "cmt"))) {
       fatal("invalid caption extraction method: $m");
     }
   }
   return @capmethods;
 }
 
-sub print_version
+sub parse_copy_method
 {
-  print("$0 $VERSION\n");
-  exit(0);
+  my ($o, $v) = @_;
+  $v = $copy_method_default unless $v;
+  fatal "'$v' not a copy method; use one of ", join ', ', @copy_method_ok
+    unless isin($v, @copy_method_ok);
+  return $v;
 }
 
 sub init_noscript
@@ -388,38 +407,44 @@ sub finish_noscript
 
 sub print_help
 {
-  print(STDERR qq{Usage: $0 [options] input-dir output-dir [album name]
+  warn qq{Usage: $me [options] INPUT_DIR OUTPUT_DIR [ALBUM_NAME]
   -h, --help            this help
   --version             output current fgallery version
   -v                    verbose (show commands as being executed)
   -s                    slim output (no original files and downloads)
   -i                    include individual originals
-  -c methods            caption extraction (txt, xmp, exif, cmt, or none)
+  -c methods            caption extraction methods (txt,xmp,exif,cmt, or none)
   -o                    do not auto-orient
   -k                    do not modify files, keep original
   -t                    do not time-sort
   -r                    reverse album order
+  -u                    update existing gallery
   -p                    do not automatically include full-sized panoramas
   -d                    do not generate a full album download
   -f                    improve thumbnail cutting by performing face detection
   -j N                  set process-level parallelism
-  -L                    symlink /usr/local/share/fgallery/view (instead of copy)
+  --noblur              skip blurry backdrop generation (just dark noise)
   --max-full WxH        maximum full image size ($maxfull[0]x$maxfull[1])
   --max-thumb WxH       maximum thumbnail size ($maxthumb[0]x$maxthumb[1])
   --min-thumb WxH       minimum thumbnail size ($minthumb[0]x$minthumb[1])
   --no-sRGB             do not remap preview/thumbnail color profiles to sRGB
   --quality Q           preview image quality (0-100, currently: $imgq)
-  --index url           specify the URL location for the index/back button
-  --noblur              skip blurry backdrop generation (just dark noise)
-});
+  --link-orig           copy method (hard,sym,ref, or copy); default: $copy_method_default
+  --index url           URL location for the index/back button
+  These options are for Facebook or Twitter and must all be provided:
+  --url URL             URL of gallery
+  --title "TITLE"       title for Facebook and Twitter previews
+  --description "DESC"  description for Facebook and Twitter previews
+};
   exit(shift);
 }
 
 
 # main program
-my ($ret, @ARGS) = GetOptions(
+@ARGV = map { decode($_) } @ARGV;
+my ($rc, @ARGS) = GetOptions(
   'help|h' => sub { print_help(0); },
-  'version' => \&print_version,
+  'version' => sub { print "$0 $VERSION\n"; exit 0; },
   'c=s' => sub { @capmethods = parse_cap($_[0], $_[1]); },
   'd' => sub { $nodown = 1; },
   'f' => sub { $facedet = 1; },
@@ -431,50 +456,50 @@ my ($ret, @ARGS) = GetOptions(
   'r' => sub { $revsort = 1; },
   's' => sub { $slim = 1; },
   't' => sub { $timesort = 0; },
+  'u' => sub { $update = 1; },
   'v' => sub { $verbose = 1; },
-  'L' => sub { $use_symlinks = 1; },
+  'noblur' => sub { $do_blur = 0; },
   'max-full=s' => sub { @maxfull = parse_wh(@_); },
   'max-thumb=s' => sub { @maxthumb = parse_wh(@_); },
   'min-thumb=s' => sub { @minthumb = parse_wh(@_); },
   'no-sRGB' => sub { $sRGB = 0; },
   'quality=i' => sub { $imgq = parse_int($_[0], $_[1], 0, 100); },
-  'index=s' => sub { $indexUrl = decode($_[1]); },
-  'noblur' => sub { $do_blur = 0; },
+  'index=s' => sub { $indexUrl = $_[1]; },
+  'title=s' => sub { $galleryTitle = $_[1]; },
+  'description=s' => sub { $galleryDescription = $_[1]; },
+  'url=s' => sub { $galleryUrl = $_[1]; },
+  'link-orig:s' => sub { $copy_method = parse_copy_method($_[0], $_[1]); },
 );
 
-if(@ARGV < 2 || @ARGV > 3 || !$ret) {
-  print_help(2);
-}
-my $dir = $ARGV[0];
-my $out = $ARGV[1];
-my $name = (@ARGV < 3? undef: decode($ARGV[2]));
+print_help(2) unless $rc && ((@ARGV == 2) || (@ARGV == 3));
 
-# check paths
+if (($galleryTitle || $galleryDescription || $galleryUrl)
+    && !($galleryTitle && $galleryDescription && $galleryUrl)) {
+  fatal("all three are required: --title, --description, and --url");
+}
+
+my ($dir, $out, $name) = @ARGV;
 my $absDir = canonpath(rel2abs($dir)) . '/';
 my $absOut = canonpath(rel2abs($out)) . '/';
 
-sub is_fgallery_dir
-{
-    return unless -e catfile($out, 'view');
-    return unless -e catfile($out, 'index.html');
-    return unless -e catfile($out, 'data.json');
-    return 1;
-}
-
-if(!-d $dir) {
-  fatal("input directory \"$dir\" does not exist");
-} elsif($absDir eq $absOut) {
+if (!-d $absDir) {
+  fatal("input directory '$absDir' does not exist");
+} elsif ($absDir eq $absOut) {
   fatal("input and output directory are the same");
-} elsif(substr($absOut, 0, length($absDir)) eq $absDir) {
+} elsif (substr($absOut, 0, length($absDir)) eq $absDir) {
   fatal("output directory is a sub-directory of input, refusing to scan");
-} elsif(!-d $out) {
-  mkdir($out);
-  unless ($use_symlinks) {
-      sys('cp', '-L', '-R', '/usr/local/share/fgallery/view', $out);
-      sys('mv', "$out/view/index.html", $out);
+} elsif (!-d $absOut) {
+  mkdir $absOut || fatal "Failed to create output directory $absOut";
+  if ($copy_method eq 'sym') {
+    chdir($absOut) || die "Failed to 'cd $absOut' for symlink creation";
+    sys('ln', '-s', catfile($ShareDir, 'view'));
+    sys('ln', '-s', catfile('view', 'index.html'));
+   } else {
+    sys('cp', '-L', '-R', catfile($ShareDir,'view'), $absOut);
+    sys('mv', catfile(catfile($absOut,'view'),'index.html'), $absOut);
   }
-} elsif(!is_fgallery_dir) {
-  fatal("Output directory '$absOut' exists but wasn't generated by fgallery");
+} elsif (!is_fgallery_dir($absOut)) {
+  fatal("output dir '$absOut' exists, but doesn't look like a ${me} dir");
 }
 
 # check tools
@@ -508,20 +533,20 @@ find(
   no_chdir => 1,
   wanted => sub
   {
-    my $file = $_;
-    return if(!-f $file);
+    my $file = decode($_);
+    return unless -f $file;
     my ($base, undef, $suffix) = fileparse($file, qr/\.[^.]*$/);
-    return if(length($suffix) < 2 || $base =~ /^\./);
+    return if (length($suffix) < 2 || $base =~ /^\./);
     $suffix = lc(substr($suffix, 1));
-    if(isin($suffix, @exts)) {
+    if (isin($suffix, @exts)) {
       push(@files, $file);
     }
   }
-}, $dir);
+}, encode($absDir));
 @files = sort(@files);
 
-if(!@files) {
-  fatal("no available files inside \"$dir\"");
+if (!@files) {
+  fatal("no files found in '$absDir'");
 }
 
 # derived arguments
@@ -529,44 +554,63 @@ my $backblur = int(($minthumb[0] + $minthumb[1]) / 2 * 0.1);
 my @backsize = (int($minthumb[0] * 4), int($minthumb[1] * 3));
 
 # cleanup target paths
-for my $path("$out/thumbs", "$out/blurs", "$out/imgs", "$out/files")
-{
-  remove_tree($path);
-  next if ($path eq "$out/blurs") && ! $do_blur;
-  make_path($path);
+unless ($update) {
+  for ( qw(thumbs blurs imgs files) ) {
+    remove_tree(catfile($absOut, $_));
+    make_path(catfile($absOut, $_));
+  }
 }
 
 # disable sub-process parallelism when threading ourselves
-if($workers)
+if ($workers)
 {
   $ENV{MAGICK_THREAD_LIMIT} = 1;
   $ENV{OMP_NUM_THREADS} = 1;
+}
+
+# updates require data from the original JSON file
+my @odata;
+my %ofiles;
+if ($update) {
+  # FIXME: use slurp but avoid wide character warning?
+  my $fn = catfile($absOut, 'data.json');
+  open(my $fd, '<:raw', $fn) or fatal("cannot read $fn: $!");
+  local $/;
+  my $json = <$fd>;
+  my $data = decode_json($json);
+  @odata = @{$data->{data}};
+  foreach(@odata) {
+    $ofiles{$_->{img}->[0]} = 1; # this is $fdata{img}
+  }
 }
 
 # 1st pass: extract/prepare input file data
 sub analyze_file
 {
   my $file = shift;
-  my ($base, $dir, $suffix) = fileparse(decode($file), qr/\.[^.]*$/);
+  my ($base, $absDir, $suffix) = fileparse(decode($file), qr/\.[^.]*$/);
   $suffix = lc(substr($suffix, 1));
 
   progress::status("$base.$suffix");
 
   my $props = ImageInfo($file, {PrintConv => 0, Sort => 'File'});
-  unless(defined($props) && isin($props->{FileType}, @filetypes)) {
-    return;
-  }
+  return unless defined $props && isin($props->{FileType}, @filetypes);
 
   # sanitize file name
   my $sane = $base;
   $sane =~ s/[^\w\-]/_/gu;
 
   my $root = $sane;
-  for(my $c = 0;; ++$c)
-  {
-    my $tmp = "$out/imgs/$root.$ext";
-    if(sysopen(my $fd, $tmp, O_WRONLY|O_CREAT|O_EXCL, $mode))
-    {
+
+  # Skip this file if we're updating and it already exists in the output
+  # data.json. FIXME: Need a way to identify existing files with the
+  # autoincrement below. For the moment, this breaks for all filenames that
+  # result in duplicates after sanitzing.
+  return if $update && exists $ofiles{catfile('imgs', "$root.$ext")};
+
+  for(my $c = 0;; ++$c) {
+    my $tmp = catfile(catfile($absOut, 'imgs'), "$root.$ext");
+    if (sysopen(my $fd, $tmp, O_WRONLY|O_CREAT|O_EXCL, $mode)) {
       close($fd);
       last;
     }
@@ -589,36 +633,36 @@ sub analyze_file
   # extract caption
   foreach my $m(@capmethods)
   {
-    if($m eq "cmt")
+    if ($m eq "cmt")
     {
-      if($props->{'Comment'})
+      if ($props->{'Comment'})
       {
         my $cmt = Encode::decode_utf8($props->{'Comment'});
         $props->{'caption'} = cap_from_str($cmt);
         last;
       }
     }
-    elsif($m eq "txt")
+    elsif ($m eq "txt")
     {
-      my $txt = "$dir$base.txt";
-      if(-f $txt)
+      my $txt = catfile($absDir, $base . '.txt');
+      if (-f $txt)
       {
         $props->{'caption'} = cap_from_str(slurp($txt));
         last;
       }
     }
-    elsif($m eq "exif")
+    elsif ($m eq "exif")
     {
-      if($props->{'Title'} || $props->{'Description'})
+      if ($props->{'Title'} || $props->{'Description'})
       {
         $props->{'caption'} = cap_from_props($props);
         last;
       }
     }
-    elsif($m eq "xmp")
+    elsif ($m eq "xmp")
     {
       my $xmp = ImageInfo("$file.xmp", {PrintConv => 0, Sort => 'File'});
-      if(defined($xmp) && ($xmp->{'Title'} || $xmp->{'Description'}))
+      if (defined($xmp) && ($xmp->{'Title'} || $xmp->{'Description'}))
       {
         $props->{'caption'} = cap_from_props($xmp);
         last;
@@ -634,15 +678,19 @@ my @aprops = par_map(\&analyze_file, @files);
 progress::done();
 
 # remove unprocessable files
-for(my $n = 0; $n < $#files;)
+for(my $n = 0; $n <= $#files;)
 {
-  if(defined($aprops[$n]))
+  if (defined($aprops[$n]))
   {
     ++$n;
     next;
   }
   splice(@files, $n, 1);
   splice(@aprops, $n, 1);
+}
+
+unless(@files) {
+  fatal("nothing to be done");
 }
 
 # gather some statistics
@@ -655,7 +703,7 @@ foreach my $props(@aprops)
   $idate =~ s/^\s+|\s+$//g;
 
   my $t = eval { Time::Piece->strptime($idate, "%Y:%m:%d %H:%M:%S"); };
-  if(!$t || !$t->epoch)
+  if (!$t || !$t->epoch)
   {
     # no date available, cheat by using the previous timestamp
     $props->{stamp} = $ostamp = $ostamp + 1;
@@ -672,6 +720,27 @@ foreach my $props(@aprops)
 }
 $amp /= @files;
 
+sub copy_source_file
+{
+  my ($file, $fout) = @_;
+  my @options = ('-L');
+  my %option = (
+    hard => '--link',
+    sym  => '--symbolic-link',
+    ref  => '--reflink',
+  );
+  push @options, $option{$copy_method} if $option{$copy_method};
+
+  # symlinks need the right dest path - simplest is to give them an abs path
+  $file = rel2abs($file) if $copy_method eq 'sym';
+
+  sys('cp', @options, $file, $fout);
+
+  # adjust file mode on copy methods that create a new inode
+  chmod($mode, $fout) if ($copy_method eq 'copy')
+                      || ($copy_method eq 'ref');
+}
+
 # 2nd pass: produce output files
 sub process_img
 {
@@ -681,51 +750,51 @@ sub process_img
   my $file = $props{file};
 
   # derived file names
+  my $ffile = catfile('files', "$root.$suffix");
   my $fbase = "$root.$ext";
-  my $ffile = "files/$root.$suffix";
-  my $fout = "$out/$ffile";
-  my $ftmp = "$out/$ffile.tmp";
-  my $fimg = "imgs/$fbase";
-  my $fthumb = "thumbs/$fbase";
-  my $fblur = "blurs/$fbase";
+  my $fimg = catfile('imgs', $fbase);
+  my $fthumb = catfile('thumbs', $fbase);
+  my $fblur = catfile('blurs', $fbase);
+
+  my $absFout = catfile($absOut, $ffile);
+  my $absFtmp = catfile($absOut, "$ffile.tmp");
 
   progress::status($fbase);
 
   # copy source file
-  sys('cp', '-L', $file, $fout);
+  copy_source_file($file, $absFout);
 
   # apply lossless transforms
-  if(!$keeporig)
-  {
-    if($orient && $props{FileType} eq "JPEG" && ($props{'Orientation'} // 0))
-    {
-      sys("$exiftrancmd $fout 2>/dev/null");
-      if(($props{'Orientation'} // 0) > 4) {
-        ($props{ImageWidth}, $props{ImageHeight}) = ($props{ImageHeight}, $props{ImageWidth});
+  if (!$keeporig) {
+    if ($orient && $props{FileType} eq "JPEG" && ($props{'Orientation'} // 0)) {
+      sys("$exiftrancmd $absFout 2>/dev/null");
+      if (($props{'Orientation'} // 0) > 4) {
+        ($props{ImageWidth}, $props{ImageHeight})
+          = ($props{ImageHeight}, $props{ImageWidth});
       }
     }
-    if($jpegoptim && $props{FileType} eq "JPEG") {
-      sys('jpegoptim', '-q', $fout);
-    } elsif($pngoptim && $props{FileType} eq "PNG")
-    {
-      sys('pngcrush', '-q', $fout, $ftmp);
-      rename($ftmp, $fout);
+    if ($jpegoptim && $props{FileType} eq "JPEG") {
+      sys('jpegoptim', '-q', $absFout);
+    } elsif ($pngoptim && $props{FileType} eq "PNG") {
+      sys('pngcrush', '-q', $absFout, $absFtmp);
+      rename($absFtmp, $absFout);
     }
   }
 
   # final file mode
-  chmod($mode, $fout);
-  sys('touch', '-r', $file, $fout);
+  chmod($mode, $absFout);
+  sys('touch', '-r', $file, $absFout);
 
   # intermediate sRGB colorspace conversion
-  if(!$sRGB || !defined($props{ProfileID}) || ($props{ColorSpace} // 65535) == 1
-  || ($props{DeviceModel} // '') eq 'sRGB') {
-    $ftmp = $fout;
-  } else
-  {
-    sys('convert', '-quiet', $fout, '-compress', 'LZW', '-type', 'truecolor', "tiff:$ftmp");
-    sys($tificccmd, '-t0', $ftmp, "$ftmp.tmp");
-    rename("$ftmp.tmp", $ftmp);
+  if ( !$sRGB || !defined($props{ProfileID})
+              || ($props{ColorSpace} // 65535) == 1
+              || ($props{DeviceModel} // '') eq 'sRGB') {
+    $absFtmp = $absFout;
+  } else {
+    sys('convert', '-quiet', $absFout, '-compress', 'LZW',
+                   '-type', 'truecolor', "tiff:$absFtmp");
+    sys($tificccmd, '-t0', $absFtmp, "$absFtmp.tmp");
+    rename("$absFtmp.tmp", $absFtmp);
   }
 
   # avoid conversion to string
@@ -735,28 +804,28 @@ sub process_img
 
   # generate main image
   my @sfile = ($props{ImageWidth}, $props{ImageHeight});
-  my @simg = sys('convert', '-quiet', $ftmp,
+  my @simg = sys('convert', '-quiet', $absFtmp,
                  '-gamma', '0.454545',
                  '-geometry', "$maxfull[0]x$maxfull[1]>",
                  '-print', '%w\n%h',
                  '-gamma', '2.2',
                  '+profile', '!icc,*',
-                 '-quality', $imgq, "$out/$fimg");
+                 '-quality', $imgq, catfile($absOut, $fimg)
+             );
 
   # face/center detection
   my @center = (0.5, 0.5);
-  if($facedet)
-  {
-    if(my @faces = sys("facedetect", "--best", "--center", "$out/$fimg"))
-    {
-      my @tmp = split(" ", $faces[0]);
+  if ($facedet) {
+    my @f = sys("facedetect", "--best", "--center", catfile($absOut, $fimg));
+    if (@f) {
+      my @tmp = split(" ", $f[0]);
       @center = ($tmp[0] / $simg[0], $tmp[1] / $simg[1]);
     }
   }
 
   # thumbnail size
   my $thumbrt;
-  if($sfile[0] / $sfile[1] < $minthumb[0] / $minthumb[1]) {
+  if ($sfile[0] / $sfile[1] < $minthumb[0] / $minthumb[1]) {
     $thumbrt = $minthumb[0] / $sfile[0];
   } else {
     $thumbrt = $minthumb[1] / $sfile[1];
@@ -771,21 +840,23 @@ sub process_img
   my $dy = $sthumb[1] - $mthumb[1];
   my $cy = clamp(0, $dy, int($center[1] * $sthumb[1] - $sthumb[1] / 2 + $dy / 2));
 
-  sys('convert', '-quiet', $ftmp,
+  sys('convert', '-quiet', $absFtmp,
       '-gamma', '0.454545',
       '-resize', "$sthumb[0]x$sthumb[1]!",
       '-gravity', 'NorthWest',
       '-crop', "$mthumb[0]x$mthumb[1]+$cx+$cy",
       '-gamma', '2.2',
       '+profile', '!icc,*',
-      '-quality', $imgq, "$out/$fthumb");
+      '-quality', $imgq, catfile($absOut, $fthumb)
+  );
 
   # blur
-  sys('convert', '-quiet', "$out/$fthumb",
+  sys('convert', '-quiet', catfile($absOut, $fthumb),
       '-virtual-pixel', 'Mirror',
       '-gaussian-blur', "0x$backblur",
       '-scale', "$backsize[0]x$backsize[1]",
-      '-quality', '90', "$out/$fblur") if $do_blur;
+      '-quality', '90', catfile($absOut, $fblur)
+   ) if $do_blur;
 
   my %fdata;
   $fdata{props} = \%props;
@@ -795,7 +866,7 @@ sub process_img
 
   # do not store duplicate information
   my @tdata = ($fthumb, [map { int } @mthumb]);
-  if($sthumb[0] != $mthumb[0] || $sthumb[1] != $mthumb[1]) {
+  if ($sthumb[0] != $mthumb[0] || $sthumb[1] != $mthumb[1]) {
     push(@tdata, [map { int } @sthumb], [map { int } $cx, $cy]);
   }
   $fdata{thumb} = \@tdata;
@@ -803,14 +874,12 @@ sub process_img
   # truncate some floats
   $center[0] = int($center[0] * 1000);
   $center[1] = int($center[1] * 1000);
-  if(abs($center[0] - 500) > 1 || abs($center[0] - 500) > 1) {
+  if (abs($center[0] - 500) > 1 || abs($center[0] - 500) > 1) {
     $fdata{center} = \@center;
   }
 
   # remove temporary files
-  if($ftmp ne $fout) {
-    unlink($ftmp);
-  }
+  unlink($absFtmp) if $absFtmp ne $absFout;
 
   return \%fdata;
 }
@@ -820,46 +889,44 @@ my @adata = par_map(\&process_img, @aprops);
 progress::done();
 
 # sorting
-if($timesort) {
-  @adata = sort { $a->{props}{stamp} <=> $b->{props}{stamp}; } @adata;
-}
-if($revsort) {
-  @adata = reverse @adata;
+if ($timesort) {
+  @adata = sort { $a->{props}{stamp} <=> $b->{props}{stamp} } @adata;
+  @adata = reverse @adata if $revsort;
 }
 
 # generate zip file
 my $fdownload = undef;
-if(!$nodown && !$slim)
+if (!$nodown && !$slim)
 {
   print("generating archive...\n");
 
   $fdownload = "files/album.zip";
-  my @files = map { "$out/$_->{'file'}[0]" } @adata;
+  my @files = map { catfile($absOut, $_->{file}[0]) } @adata;
 
-  if(!$p7zip) {
-    sys('zip', '-q9j', "$out/$fdownload", @files);
+  if (!$p7zip) {
+    sys('zip', '-q9j', catfile($absOut, $fdownload), @files);
   } else
   {
     # make paths explicitly absolute/relative to strip file path info with 7za
-    my $dot = substr($out, 0, 1);
-    if($dot ne '/' && $dot ne '.') {
+    my $dot = substr($absOut, 0, 1);
+    if ($dot ne '/' && $dot ne '.') {
       @files = map { "./$_" } @files;
     }
 
     my @mt = $workers? ("-mmt=$workers"): ();
-    sys('7za', '-tzip', @mt, 'a', '--', "$out/$fdownload", @files);
+    sys('7za', '-tzip', @mt, 'a', '--', catfile($absOut, $fdownload), @files);
   }
 }
 
 # remove unnecessary raw files
-if(!$ofile || $slim)
+if (!$ofile || $slim)
 {
   for my $fdata(@adata)
   {
-    my $file = "$out/$fdata->{'file'}[0]";
+    my $file = catfile($absOut, $fdata->{file}[0]);
     my $keep = !$slim && $ofile;
 
-    if(!$slim && !$keep && $fullpano)
+    if (!$slim && !$keep && $fullpano)
     {
       my ($x, $y) = @{$fdata->{file}[1]};
       my $mp = ($x * $y / 1e6);
@@ -869,12 +936,12 @@ if(!$ofile || $slim)
       my $oy = $fdata->{props}{'OrigImageHeight'} // 0;
       my $omp = ($ox * $oy / 1e6);
 
-      if($mp >= $omp && $mp > $amp && abs($x / $y) >= $panort) {
+      if ($mp >= $omp && $mp > $amp && abs($x / $y) >= $panort) {
         $keep = 1;
       }
     }
 
-    if(!$keep)
+    if (!$keep)
     {
       unlink($file);
       delete($fdata->{file});
@@ -883,49 +950,92 @@ if(!$ofile || $slim)
 }
 
 # only attempt to remove the directory (if empty)
-rmdir("$out/files");
+rmdir(catfile($absOut, 'files'));
 
 # generate json
 my %json;
 $json{version} = $VERSION;
-$json{name} = $name if($name);
-$json{download} = $fdownload if($fdownload);
-$json{index} = $indexUrl if($indexUrl);
+$json{name} = $name if ($name);
+$json{download} = $fdownload if ($fdownload);
+$json{index} = $indexUrl if ($indexUrl);
 $json{blur} = \@backsize if $do_blur;
 $json{thumb} = { min => \@minthumb, max => \@maxthumb };
 
 # prepare data.json and print out noscript.html file
-init_noscript($out);
-foreach my $fdata(@adata)
-{
+init_noscript($absOut);
+for my $fdata (@adata) {
   my %data;
-  foreach('img', 'thumb', 'file', 'blur', 'center') {
-    if(defined($fdata->{$_})) {
-      $data{$_} = $fdata->{$_};
-    }
+  for ( qw(img thumb file blur center) ) {
+    $data{$_} = $fdata->{$_} if defined $fdata->{$_};
   }
-  foreach('date', 'stamp', 'caption') {
-    if(defined($fdata->{props}{$_})) {
-      $data{$_} = $fdata->{props}{$_};
-    }
+  for ( qw(date stamp caption) ) {
+    $data{$_} = $fdata->{props}{$_} if defined $fdata->{props}{$_};
   }
   push(@{$json{data}}, \%data);
   print_noscript($data{img}->[0], $data{thumb}->[0], $data{caption});
 }
 finish_noscript();
 
+if ($update) {
+  $json{data} = [sort { $a->{stamp} <=> $b->{stamp} } @{$json{data}}, @odata];
+}
+
+# write out json
 my $fd;
-my $dj = "$out/data.json";
-unless(open($fd, ">:raw", $dj)) {
-  fatal("cannot write file '$dj': $!");
-}
-print($fd JSON::PP->new->ascii->pretty->canonical->allow_blessed->encode(\%json));
-close($fd);
+my $dj = catfile($absOut, 'data.json');
+fatal("cannot write file '$dj': $!") unless open($fd, ">:raw", $dj);
+print $fd
+      JSON::PP->new->ascii->pretty->canonical->allow_blessed->encode(\%json);
+close $fd;
 
-if ($use_symlinks) {
-    chdir($absOut) || die "Failed to 'cd $absOut' for symlink creation";
-    sys('ln', '-s', '/usr/local/share/fgallery/view');
-    sys('ln', '-s', 'view/index.html');
+if ($galleryTitle && $galleryDescription && $galleryUrl) {
+  my $id = -1;
+  my $html = qq{\n      <div id="photos" itemscope itemtype="http://schema.org/ImageGallery">\n};
+  $html .= qq{\t<h1 itemprop="name">$galleryTitle</h1>\n} if $galleryTitle;
+  $html .= qq{\t<p itemprop="description">$galleryDescription</p>\n} if $galleryDescription;
+  $html .= qq{\t<div id="wrapper">\n};
+  $html .= qq{\t  };
+  $html .= join("\n\t  ", map {
+    $id++;
+    my $props = $_->{props};
+    my $caption = $props->{caption} ? $props->{caption}[0] : "";
+    my $root = $props->{root};
+    my $fbase = "$root.$ext";
+    my $file = $props->{file};
+    # no alt text or title attribute with caption?
+    qq{<a id="$id" href="imgs/$fbase" title="$caption">}
+    . qq{<img src="thumbs/$fbase" alt="$caption"/></a>}
+  } @adata);
+  $html .= qq{\n\t</div>\n};
+  $html .= qq{      </div>\n};
+  $html .= qq{    };
+  my $index = slurp(catfile($absOut, 'index.html'));
+  $index =~ s@<noscript>.*?</noscript>@<noscript>$html</noscript>@s;
+
+  # default to the first image
+  my $galleryImage = $adata[0]->{props}->{root} . ".$ext";
+  $html = qq{
+    <!-- for Facebook -->
+    <meta property="og:title" content="$galleryTitle" />
+    <meta property="og:description" content="$galleryDescription" />
+    <meta property="og:type" content="article" />
+    <meta property="og:image" content="${galleryUrl}imgs/$galleryImage" />
+    <meta property="og:url" content="$galleryUrl" />
+    <!-- for Twitter -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="$galleryTitle" />
+    <meta name="twitter:description" content="$galleryDescription" />
+    <meta name="twitter:image" content="${galleryUrl}imgs/$galleryImage" />
+  };
+  $index =~ s@    <!-- for Facebook -->\n(    .*\n)*@@;
+  $index =~ s@  </head>@$html  </head>@;
+
+  fatal("cannot write new index file: $!")
+    unless open($fd, ">:encoding($ENCODING)", catfile($absOut, 'index.html'));
+  print $fd $index;
+  close $fd;
 }
 
-print("$0 version $VERSION done for $absOut\n");
+print "$0 version $VERSION done for $absOut\n";
+
+exit 0;
