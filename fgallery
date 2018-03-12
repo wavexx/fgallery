@@ -38,11 +38,11 @@ our $ENCODING = encoding::_get_locale_encoding() || 'UTF-8';
 our $ShareDir = '/usr/pkg/share/fgallery';
 
 # directory creation mask
-umask 0022;
+umask oct('0022');
 
 # defaults
 my (undef, undef, $me) = splitpath($0);
-my $mode = oct(644);
+my $filemode = oct('0644');
 my $slim = 0;
 my $ofile = 0;
 my $orient = 1;
@@ -366,7 +366,7 @@ sub init_noscript
   unless(open($fd, ">:raw", $f)) {
     fatal("init_noscript: cannot write file '$f': $!");
   }
-  chmod($mode, $f);
+  chmod($filemode, $f);
   select $fd;
   print join "\n",
     '<!DOCTYPE html>',
@@ -610,7 +610,7 @@ sub analyze_file
 
   for(my $c = 0;; ++$c) {
     my $tmp = catfile(catfile($absOut, 'imgs'), "$root.$ext");
-    if (sysopen(my $fd, $tmp, O_WRONLY|O_CREAT|O_EXCL, $mode)) {
+    if (sysopen(my $fd, $tmp, O_WRONLY|O_CREAT|O_EXCL, $filemode)) {
       close($fd);
       last;
     }
@@ -737,7 +737,7 @@ sub copy_source_file
   sys('cp', @options, $file, $fout);
 
   # adjust file mode on copy methods that create a new inode
-  chmod($mode, $fout) if ($copy_method eq 'copy')
+  chmod($filemode, $fout) if ($copy_method eq 'copy')
                       || ($copy_method eq 'ref');
 }
 
@@ -782,7 +782,7 @@ sub process_img
   }
 
   # final file mode
-  chmod($mode, $absFout);
+  chmod($filemode, $absFout);
   sys('touch', '-r', $file, $absFout);
 
   # intermediate sRGB colorspace conversion
