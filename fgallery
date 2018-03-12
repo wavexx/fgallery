@@ -1,4 +1,4 @@
-#!/usr/pkg/bin/perl
+#!/usr/local/bin/perl
 # fgallery: a modern, minimalist javascript photo gallery
 # Copyright(c) 2011-2016 by wave++ "Yuri D'Elia" <wavexx@thregr.org>
 # Distributed under GPLv2+ (see COPYING) WITHOUT ANY WARRANTY.
@@ -35,7 +35,7 @@ our $VERSION = "2.0.0";
 our $ENCODING = encoding::_get_locale_encoding() || 'UTF-8';
 
 # where the view subdirectory lives (JavaScript and CSS code)
-our $ShareDir = '/usr/pkg/share/fgallery';
+our $ShareDir = '/usr/local/share/fgallery';
 
 # directory creation mask
 umask oct('0022');
